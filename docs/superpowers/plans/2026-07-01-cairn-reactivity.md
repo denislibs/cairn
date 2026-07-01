@@ -87,7 +87,7 @@ packages:
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc --noEmit -p packages/reactivity/tsconfig.json"
   },
   "devDependencies": {
     "typescript": "^5.5.0",
@@ -145,8 +145,7 @@ export default defineConfig({
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src"
+    "outDir": "dist"
   },
   "include": ["src", "test"]
 }
@@ -660,7 +659,8 @@ export function updateIfNecessary(node: Computation<any>): void {
       for (let i = 0; i < sources.length; i++) {
         const source = sources[i] as Computation<any>;
         if (source.isMemo) updateIfNecessary(source);
-        if (node.state === STALE) break;
+        // cast: TS can't see that the recursive call above may mutate node.state
+        if ((node.state as State) === STALE) break;
       }
     }
   }
@@ -670,6 +670,10 @@ export function updateIfNecessary(node: Computation<any>): void {
 
 function runComputation<T>(node: Computation<T>): void {
   cleanNode(node);
+  // Clear state BEFORE running fn. If fn writes one of this node's own
+  // dependencies, markDirty must see a CLEAN node so it re-schedules this node
+  // (and the runaway guard can trip on a genuine self-perpetuating loop).
+  node.state = CLEAN;
   const prevListener = currentListener;
   const prevOwner = currentOwner;
   currentListener = node;
@@ -691,7 +695,6 @@ function runComputation<T>(node: Computation<T>): void {
   } else {
     node.value = next;
   }
-  node.state = CLEAN;
 }
 
 function cleanNode(node: Computation<any>): void {
