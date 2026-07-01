@@ -85,3 +85,16 @@ test('onCleanup runs before each re-run and on dispose', () => {
   dispose(); // cleanup for the second run fires on dispose
   expect(cleanup).toHaveBeenCalledTimes(2);
 });
+
+test('reading the same signal multiple times still re-runs the effect only once', () => {
+  const [a, setA] = createSignal(0);
+  const spy = vi.fn(() => {
+    a();
+    a();
+    a();
+  });
+  createRoot(() => createEffect(spy));
+  expect(spy).toHaveBeenCalledTimes(1);
+  setA(1);
+  expect(spy).toHaveBeenCalledTimes(2); // not once per duplicate read
+});
