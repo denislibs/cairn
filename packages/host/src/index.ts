@@ -12,3 +12,6 @@ export type {
   TextMeasurement,
   ImageHandle,
 } from './types';
+
+export type { Path, PathCommand, PathBuilder } from './path';
+export { createPath } from './path';
