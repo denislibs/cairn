@@ -87,7 +87,7 @@ packages:
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc --noEmit -p packages/reactivity/tsconfig.json"
   },
   "devDependencies": {
     "typescript": "^5.5.0",
@@ -145,8 +145,7 @@ export default defineConfig({
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src"
+    "outDir": "dist"
   },
   "include": ["src", "test"]
 }
