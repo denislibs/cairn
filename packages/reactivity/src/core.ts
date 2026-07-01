@@ -100,6 +100,10 @@ export function updateIfNecessary(node: Computation<any>): void {
 
 function runComputation<T>(node: Computation<T>): void {
   cleanNode(node);
+  // Clear state BEFORE running fn. If fn writes one of this node's own
+  // dependencies, markDirty must see a CLEAN node so it re-schedules this node
+  // (and the runaway guard can trip on a genuine self-perpetuating loop).
+  node.state = CLEAN;
   const prevListener = currentListener;
   const prevOwner = currentOwner;
   currentListener = node;
@@ -121,7 +125,6 @@ function runComputation<T>(node: Computation<T>): void {
   } else {
     node.value = next;
   }
-  node.state = CLEAN;
 }
 
 function cleanNode(node: Computation<any>): void {

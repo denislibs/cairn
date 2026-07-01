@@ -54,6 +54,20 @@ test('dependencies are re-collected each run (dynamic deps)', () => {
   expect(seen).toEqual(['a', 'b2', 'b3']);
 });
 
+test('an effect that writes its own dependency progresses until stable', () => {
+  const [a, setA] = createSignal(0);
+  const seen: number[] = [];
+  createRoot(() => {
+    createEffect(() => {
+      const v = a();
+      seen.push(v);
+      if (v < 3) setA(v + 1);
+    });
+  });
+  expect(seen).toEqual([0, 1, 2, 3]);
+  expect(a()).toBe(3);
+});
+
 test('onCleanup runs before each re-run and on dispose', () => {
   const [count, setCount] = createSignal(0);
   const cleanup = vi.fn();
