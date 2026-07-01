@@ -12,6 +12,11 @@ import type {
 import type { Path } from './path';
 
 export interface Renderer {
+  // Configure the drawing surface for a logical size at a given device pixel ratio.
+  // Backends may reset all context state here, so call it BETWEEN frames — never
+  // between beginFrame() and endFrame(). All other coordinates are logical pixels.
+  resize(logicalWidth: number, logicalHeight: number, devicePixelRatio: number): void;
+
   beginFrame(): void;
   endFrame(): void;
   clear(rect?: Rect): void;
@@ -20,6 +25,8 @@ export interface Renderer {
   restore(): void;
   translate(x: number, y: number): void;
   scale(x: number, y: number): void;
+  // Intersects the current clip region (does not replace it). Wrap in
+  // save()/restore() to scope a clip to a subtree.
   clipRect(rect: Rect): void;
   setShadow(shadow: Shadow | null): void;
 

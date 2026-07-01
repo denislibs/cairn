@@ -11,6 +11,7 @@ import type {
 // A trivial no-op renderer proves the interface is implementable and exported.
 function makeNoopRenderer(): Renderer {
   return {
+    resize() {},
     beginFrame() {},
     endFrame() {},
     clear() {},

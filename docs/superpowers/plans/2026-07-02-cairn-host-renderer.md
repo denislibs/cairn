@@ -449,6 +449,7 @@ import type {
 // A trivial no-op renderer proves the interface is implementable and exported.
 function makeNoopRenderer(): Renderer {
   return {
+    resize() {},
     beginFrame() {},
     endFrame() {},
     clear() {},
@@ -527,6 +528,10 @@ import type {
 import type { Path } from './path';
 
 export interface Renderer {
+  // Configure the surface for a logical size at a given DPR. May reset context
+  // state — call BETWEEN frames, never between beginFrame()/endFrame().
+  resize(logicalWidth: number, logicalHeight: number, devicePixelRatio: number): void;
+
   beginFrame(): void;
   endFrame(): void;
   clear(rect?: Rect): void;
@@ -535,6 +540,7 @@ export interface Renderer {
   restore(): void;
   translate(x: number, y: number): void;
   scale(x: number, y: number): void;
+  // Intersects the current clip; wrap in save()/restore() to scope it.
   clipRect(rect: Rect): void;
   setShadow(shadow: Shadow | null): void;
 
