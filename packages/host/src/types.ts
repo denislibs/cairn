@@ -25,11 +25,15 @@ export type Gradient =
   | { kind: 'linear'; from: Point; to: Point; stops: GradientStop[] }
   | { kind: 'radial'; center: Point; radius: number; stops: GradientStop[] };
 
+// If both `gradient` and `color` are set, `gradient` takes precedence.
+// If neither is set, renderers default to opaque black.
 export interface FillStyle {
   color?: Color;
   gradient?: Gradient;
 }
 
+// If both `gradient` and `color` are set, `gradient` takes precedence.
+// If neither is set, renderers default to opaque black; `width` defaults to 1.
 export interface StrokeStyle {
   color?: Color;
   gradient?: Gradient;
