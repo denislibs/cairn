@@ -1256,7 +1256,7 @@ test('setShadow sets shadow props; null resets them', () => {
   expect(ctx.calls).toContainEqual(['set:shadowOffsetY', 2]);
 
   r.setShadow(null);
-  expect(ctx.calls).toContainEqual(['set:shadowColor', 'transparent']);
+  expect(ctx.calls).toContainEqual(['set:shadowColor', 'rgba(0,0,0,0)']);
   expect(ctx.calls).toContainEqual(['set:shadowBlur', 0]);
 });
 
@@ -1317,7 +1317,7 @@ In `packages/platform-web/src/canvas2d-renderer.ts`, replace the placeholder met
       this.ctx.shadowOffsetX = shadow.offsetX;
       this.ctx.shadowOffsetY = shadow.offsetY;
     } else {
-      this.ctx.shadowColor = 'transparent';
+      this.ctx.shadowColor = 'rgba(0,0,0,0)';
       this.ctx.shadowBlur = 0;
       this.ctx.shadowOffsetX = 0;
       this.ctx.shadowOffsetY = 0;

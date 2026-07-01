@@ -59,7 +59,9 @@ export class Canvas2DRenderer implements Renderer {
       this.ctx.shadowOffsetX = shadow.offsetX;
       this.ctx.shadowOffsetY = shadow.offsetY;
     } else {
-      this.ctx.shadowColor = 'transparent';
+      // rgba(0,0,0,0) is the canvas spec's initial shadowColor — unambiguous
+      // and free of the cross-browser variance some engines have with 'transparent'.
+      this.ctx.shadowColor = 'rgba(0,0,0,0)';
       this.ctx.shadowBlur = 0;
       this.ctx.shadowOffsetX = 0;
       this.ctx.shadowOffsetY = 0;
