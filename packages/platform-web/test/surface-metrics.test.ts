@@ -77,6 +77,30 @@ test('unsubscribe stops notifications', () => {
   expect(cb).not.toHaveBeenCalled();
 });
 
+test('notifies subscribers when the device pixel ratio changes', () => {
+  let dprHandler: (() => void) | undefined;
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn(() => ({
+      addEventListener(_type: string, cb: () => void) {
+        dprHandler = cb;
+      },
+      removeEventListener() {},
+    })),
+  );
+  const el = makeEl(300, 150);
+  const metrics = new WebSurfaceMetrics(el);
+  const cb = vi.fn();
+  metrics.onResize(cb);
+
+  vi.stubGlobal('devicePixelRatio', 3);
+  dprHandler?.(); // simulate the media-query 'change' firing
+
+  expect(metrics.devicePixelRatio).toBe(3);
+  expect(cb).toHaveBeenCalledTimes(1);
+  expect(cb.mock.calls[0][0].devicePixelRatio).toBe(3);
+});
+
 test('dispose disconnects the observer and stops notifications', () => {
   const el = makeEl(300, 150);
   const metrics = new WebSurfaceMetrics(el);

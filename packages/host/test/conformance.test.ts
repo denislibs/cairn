@@ -57,6 +57,7 @@ test('FrameScheduler / SurfaceMetrics / Host are implementable', () => {
     onResize() {
       return () => {};
     },
+    dispose() {},
   };
   const host: Host = { renderer: makeNoopRenderer(), scheduler, metrics };
   const img: ImageHandle = { width: 4, height: 4 };

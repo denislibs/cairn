@@ -1,6 +1,8 @@
 import type { SurfaceMetrics } from '@cairn/host';
 
 export class WebSurfaceMetrics implements SurfaceMetrics {
+  // Declared mutable (the interface exposes them readonly to consumers); update()
+  // rewrites them in place when the surface changes.
   width: number;
   height: number;
   devicePixelRatio: number;

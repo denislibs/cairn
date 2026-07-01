@@ -495,6 +495,7 @@ test('FrameScheduler / SurfaceMetrics / Host are implementable', () => {
     onResize() {
       return () => {};
     },
+    dispose() {},
   };
   const host: Host = { renderer: makeNoopRenderer(), scheduler, metrics };
   const img: ImageHandle = { width: 4, height: 4 };
@@ -571,6 +572,7 @@ export interface SurfaceMetrics {
   readonly height: number;
   readonly devicePixelRatio: number;
   onResize(cb: (metrics: SurfaceMetrics) => void): () => void; // returns unsubscribe
+  dispose(): void; // tear down platform observers/listeners (call on unmount)
 }
 ```
 
