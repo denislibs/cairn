@@ -7,6 +7,9 @@ export class WebSurfaceMetrics implements SurfaceMetrics {
 
   private subscribers = new Set<(m: SurfaceMetrics) => void>();
   private observer: ResizeObserver;
+  private disposed = false;
+  private currentMql?: MediaQueryList;
+  private currentHandler?: () => void;
 
   constructor(private element: HTMLElement) {
     this.width = element.clientWidth;
@@ -25,6 +28,16 @@ export class WebSurfaceMetrics implements SurfaceMetrics {
     };
   }
 
+  // Tear down observers and listeners; safe to call once when the surface goes away.
+  dispose(): void {
+    this.disposed = true;
+    this.observer.disconnect();
+    if (this.currentMql && this.currentHandler) {
+      this.currentMql.removeEventListener('change', this.currentHandler);
+    }
+    this.subscribers.clear();
+  }
+
   private update(): void {
     const w = this.element.clientWidth;
     const h = this.element.clientHeight;
@@ -38,11 +51,16 @@ export class WebSurfaceMetrics implements SurfaceMetrics {
 
   // Re-check on DPR changes (e.g. moving the window between monitors / zoom).
   private watchDprChanges(): void {
+    if (this.disposed) return;
     const mql = matchMedia(`(resolution: ${this.devicePixelRatio}dppx)`);
     const handler = () => {
+      // update() first so this.devicePixelRatio reflects the new value before
+      // watchDprChanges() reads it to build the next DPR-specific query.
       this.update();
-      this.watchDprChanges(); // media query is DPR-specific; re-arm for the new DPR
+      this.watchDprChanges();
     };
+    this.currentMql = mql;
+    this.currentHandler = handler;
     mql.addEventListener('change', handler, { once: true });
   }
 }

@@ -70,6 +70,20 @@ test('unsubscribe stops notifications', () => {
   const cb = vi.fn();
   const off = metrics.onResize(cb);
   off();
+  // Change the size so update() would notify if the sub were still active —
+  // this isolates the unsubscribe behavior from the no-change early-exit.
+  (el as unknown as { clientWidth: number }).clientWidth = 500;
+  resizeCbs.forEach((fn) => fn());
+  expect(cb).not.toHaveBeenCalled();
+});
+
+test('dispose disconnects the observer and stops notifications', () => {
+  const el = makeEl(300, 150);
+  const metrics = new WebSurfaceMetrics(el);
+  const cb = vi.fn();
+  metrics.onResize(cb);
+  metrics.dispose();
+  (el as unknown as { clientWidth: number }).clientWidth = 600;
   resizeCbs.forEach((fn) => fn());
   expect(cb).not.toHaveBeenCalled();
 });
