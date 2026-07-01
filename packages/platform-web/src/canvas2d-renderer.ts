@@ -1,4 +1,17 @@
-import type { Rect, Renderer, Shadow, FillStyle, StrokeStyle, Gradient } from '@cairn/host';
+import type {
+  Rect,
+  Renderer,
+  Shadow,
+  FillStyle,
+  StrokeStyle,
+  Gradient,
+  Radii,
+  Path,
+  Point,
+  TextStyle,
+  TextMeasurement,
+  ImageHandle,
+} from '@cairn/host';
 import type { CanvasSurface } from './canvas-surface';
 
 export class Canvas2DRenderer implements Renderer {
@@ -108,13 +121,88 @@ export class Canvas2DRenderer implements Renderer {
     return gradient;
   }
 
-  fillRoundRect(): void {}
-  strokeRoundRect(): void {}
-  fillPath(): void {}
-  strokePath(): void {}
-  drawText(): void {}
-  measureText(): { width: number } {
-    return { width: 0 };
+  fillRoundRect(rect: Rect, radii: Radii, style: FillStyle): void {
+    this.ctx.fillStyle = this.resolveFill(style);
+    this.ctx.beginPath();
+    this.ctx.roundRect(rect.x, rect.y, rect.width, rect.height, normalizeRadii(radii));
+    this.ctx.fill();
   }
-  drawImage(): void {}
+
+  strokeRoundRect(rect: Rect, radii: Radii, style: StrokeStyle): void {
+    this.applyStroke(style);
+    this.ctx.beginPath();
+    this.ctx.roundRect(rect.x, rect.y, rect.width, rect.height, normalizeRadii(radii));
+    this.ctx.stroke();
+  }
+
+  fillPath(path: Path, style: FillStyle): void {
+    this.ctx.fillStyle = this.resolveFill(style);
+    this.tracePath(path);
+    this.ctx.fill();
+  }
+
+  strokePath(path: Path, style: StrokeStyle): void {
+    this.applyStroke(style);
+    this.tracePath(path);
+    this.ctx.stroke();
+  }
+
+  drawText(text: string, pos: Point, style: TextStyle): void {
+    this.ctx.font = style.font;
+    this.ctx.fillStyle = style.color ?? '#000';
+    this.ctx.textAlign = style.align ?? 'left';
+    this.ctx.textBaseline = style.baseline ?? 'alphabetic';
+    this.ctx.fillText(text, pos.x, pos.y);
+  }
+
+  measureText(text: string, style: TextStyle): TextMeasurement {
+    this.ctx.font = style.font;
+    return { width: this.ctx.measureText(text).width };
+  }
+
+  drawImage(image: ImageHandle, dest: Rect, src?: Rect): void {
+    const img = image as unknown as CanvasImageSource;
+    if (src) {
+      this.ctx.drawImage(
+        img,
+        src.x,
+        src.y,
+        src.width,
+        src.height,
+        dest.x,
+        dest.y,
+        dest.width,
+        dest.height,
+      );
+    } else {
+      this.ctx.drawImage(img, dest.x, dest.y, dest.width, dest.height);
+    }
+  }
+
+  private tracePath(path: Path): void {
+    this.ctx.beginPath();
+    for (const cmd of path.commands) {
+      switch (cmd.type) {
+        case 'moveTo':
+          this.ctx.moveTo(cmd.x, cmd.y);
+          break;
+        case 'lineTo':
+          this.ctx.lineTo(cmd.x, cmd.y);
+          break;
+        case 'arc':
+          this.ctx.arc(cmd.cx, cmd.cy, cmd.r, cmd.start, cmd.end);
+          break;
+        case 'quadTo':
+          this.ctx.quadraticCurveTo(cmd.cx, cmd.cy, cmd.x, cmd.y);
+          break;
+        case 'close':
+          this.ctx.closePath();
+          break;
+      }
+    }
+  }
+}
+
+function normalizeRadii(r: Radii): [number, number, number, number] {
+  return typeof r === 'number' ? [r, r, r, r] : [r.tl, r.tr, r.br, r.bl];
 }

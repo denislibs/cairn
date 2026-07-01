@@ -1,6 +1,7 @@
 import { test, expect } from 'vitest';
 import { Canvas2DRenderer } from '../src/index';
 import { createFakeSurface } from './fakes';
+import { createPath } from '@cairn/host';
 
 test('resize sizes the backing store by DPR and sets the transform', () => {
   const { surface, ctx, sizes } = createFakeSurface();
@@ -131,4 +132,90 @@ test('gradient takes precedence over color when both are set', () => {
   expect(ctx.calls).toContainEqual(['createLinearGradient', 0, 0, 5, 0]);
   // the solid color must NOT have been applied as the fill style
   expect(ctx.calls).not.toContainEqual(['set:fillStyle', '#f00']);
+});
+
+test('fillRoundRect uses roundRect with normalized radii then fills', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  r.fillRoundRect({ x: 1, y: 2, width: 10, height: 20 }, 4, { color: '#abc' });
+  expect(ctx.calls).toContainEqual(['set:fillStyle', '#abc']);
+  expect(ctx.calls).toContainEqual(['beginPath']);
+  expect(ctx.calls).toContainEqual(['roundRect', 1, 2, 10, 20, [4, 4, 4, 4]]);
+  expect(ctx.calls).toContainEqual(['fill']);
+});
+
+test('fillRoundRect accepts per-corner radii', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  r.fillRoundRect(
+    { x: 0, y: 0, width: 8, height: 8 },
+    { tl: 1, tr: 2, br: 3, bl: 4 },
+    { color: '#000' },
+  );
+  expect(ctx.calls).toContainEqual(['roundRect', 0, 0, 8, 8, [1, 2, 3, 4]]);
+});
+
+test('fillPath plays back the path commands then fills', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  const path = createPath().moveTo(0, 0).lineTo(10, 0).quadTo(10, 10, 0, 10).close().build();
+  r.fillPath(path, { color: '#123' });
+  expect(ctx.calls).toContainEqual(['beginPath']);
+  expect(ctx.calls).toContainEqual(['moveTo', 0, 0]);
+  expect(ctx.calls).toContainEqual(['lineTo', 10, 0]);
+  expect(ctx.calls).toContainEqual(['quadraticCurveTo', 10, 10, 0, 10]);
+  expect(ctx.calls).toContainEqual(['closePath']);
+  expect(ctx.calls).toContainEqual(['fill']);
+});
+
+test('strokePath plays back the path then strokes', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  const path = createPath().moveTo(0, 0).arc(5, 5, 5, 0, 3.14).build();
+  r.strokePath(path, { color: '#456', width: 3 });
+  expect(ctx.calls).toContainEqual(['moveTo', 0, 0]);
+  expect(ctx.calls).toContainEqual(['arc', 5, 5, 5, 0, 3.14]);
+  expect(ctx.calls).toContainEqual(['set:lineWidth', 3]);
+  expect(ctx.calls).toContainEqual(['stroke']);
+});
+
+test('drawText sets font/color/align/baseline then fills text', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  r.drawText('hi', { x: 3, y: 4 }, {
+    font: '16px sans-serif',
+    color: '#222',
+    align: 'center',
+    baseline: 'middle',
+  });
+  expect(ctx.calls).toContainEqual(['set:font', '16px sans-serif']);
+  expect(ctx.calls).toContainEqual(['set:fillStyle', '#222']);
+  expect(ctx.calls).toContainEqual(['set:textAlign', 'center']);
+  expect(ctx.calls).toContainEqual(['set:textBaseline', 'middle']);
+  expect(ctx.calls).toContainEqual(['fillText', 'hi', 3, 4]);
+});
+
+test('measureText sets the font and returns the measured width', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  const m = r.measureText('hello', { font: '10px monospace' });
+  expect(ctx.calls).toContainEqual(['set:font', '10px monospace']);
+  expect(ctx.calls).toContainEqual(['measureText', 'hello']);
+  expect(m.width).toBe(35); // fake: 5 chars * 7
+});
+
+test('drawImage draws with dest only', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  const img = { width: 20, height: 10 };
+  r.drawImage(img, { x: 1, y: 2, width: 20, height: 10 });
+  expect(ctx.calls).toContainEqual(['drawImage', img, 1, 2, 20, 10]);
+});
+
+test('drawImage draws with src and dest rects', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  const img = { width: 20, height: 10 };
+  r.drawImage(img, { x: 0, y: 0, width: 10, height: 5 }, { x: 2, y: 3, width: 4, height: 6 });
+  expect(ctx.calls).toContainEqual(['drawImage', img, 2, 3, 4, 6, 0, 0, 10, 5]);
 });
