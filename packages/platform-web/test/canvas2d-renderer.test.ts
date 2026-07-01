@@ -155,6 +155,17 @@ test('fillRoundRect accepts per-corner radii', () => {
   expect(ctx.calls).toContainEqual(['roundRect', 0, 0, 8, 8, [1, 2, 3, 4]]);
 });
 
+test('strokeRoundRect strokes a rounded rect with normalized radii', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  r.strokeRoundRect({ x: 1, y: 1, width: 12, height: 6 }, 3, { color: '#0a0', width: 2 });
+  expect(ctx.calls).toContainEqual(['set:strokeStyle', '#0a0']);
+  expect(ctx.calls).toContainEqual(['set:lineWidth', 2]);
+  expect(ctx.calls).toContainEqual(['beginPath']);
+  expect(ctx.calls).toContainEqual(['roundRect', 1, 1, 12, 6, [3, 3, 3, 3]]);
+  expect(ctx.calls).toContainEqual(['stroke']);
+});
+
 test('fillPath plays back the path commands then fills', () => {
   const { surface, ctx } = createFakeSurface();
   const r = new Canvas2DRenderer(surface);
