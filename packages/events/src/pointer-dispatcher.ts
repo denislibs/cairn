@@ -18,9 +18,16 @@ export interface PointerDispatcher {
   handleWheel(input: WheelInput): void;
 }
 
+export interface PointerDispatcherHooks {
+  onPointerDown?(path: HitNode[]): void; // fires on every pointerdown, incl. empty path
+}
+
 // Translates raw pointer input into hit-tested bubble dispatch, synthesizing a
 // `click` on pointerup at the nearest common ancestor of the down and up paths.
-export function createPointerDispatcher(getRoot: () => HitNode): PointerDispatcher {
+export function createPointerDispatcher(
+  getRoot: () => HitNode,
+  hooks?: PointerDispatcherHooks,
+): PointerDispatcher {
   let downPath: HitNode[] | null = null;
   let hoverPath: HitNode[] = [];
 
@@ -44,6 +51,7 @@ export function createPointerDispatcher(getRoot: () => HitNode): PointerDispatch
     handlePointer(input: PointerInput): void {
       const path = hitTest(getRoot(), input.x, input.y);
       syncHover(path, input);
+      if (input.type === 'pointerdown') hooks?.onPointerDown?.(path);
       if (path.length === 0) {
         // Missing the surface on release drops any pending down.
         if (input.type === 'pointerup') downPath = null;
