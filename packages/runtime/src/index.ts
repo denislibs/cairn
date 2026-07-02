@@ -4,3 +4,4 @@ export { setFrameRequester, scheduleFrame } from './scheduler';
 export { bind } from './reactive-props';
 export type { MaybeReactive } from './reactive-props';
 export { jsx, jsxs, Fragment } from './jsx-runtime';
+export { mount } from './mount';
