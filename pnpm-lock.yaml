@@ -17,6 +17,12 @@ importers:
 
   packages/host: {}
 
+  packages/layout:
+    dependencies:
+      '@cairn/host':
+        specifier: workspace:*
+        version: link:../host
+
   packages/platform-web:
     dependencies:
       '@cairn/host':
