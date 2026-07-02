@@ -31,6 +31,18 @@ importers:
 
   packages/reactivity: {}
 
+  packages/runtime:
+    dependencies:
+      '@cairn/host':
+        specifier: workspace:*
+        version: link:../host
+      '@cairn/layout':
+        specifier: workspace:*
+        version: link:../layout
+      '@cairn/reactivity':
+        specifier: workspace:*
+        version: link:../reactivity
+
 packages:
 
   '@esbuild/aix-ppc64@0.21.5':
