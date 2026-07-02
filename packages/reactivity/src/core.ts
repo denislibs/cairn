@@ -274,6 +274,28 @@ function disposeOwner(owner: Owner): void {
   }
 }
 
+// Run `fn` in a child owner scope where useContext(ctx) yields `value`. The scope is
+// disposed together with its parent (via the parent's cleanups), so effects created
+// inside it do not leak.
+export function runWithContext<T, R>(ctx: Context<T>, value: T, fn: () => R): R {
+  const parent = currentOwner;
+  const scope: Owner = {
+    owned: null,
+    cleanups: null,
+    owner: parent,
+    context: { ...(parent ? parent.context : undefined), [ctx.id]: value },
+  };
+  currentOwner = scope;
+  try {
+    return fn();
+  } finally {
+    currentOwner = parent;
+    if (parent) {
+      (parent.cleanups || (parent.cleanups = [])).push(() => disposeOwner(scope));
+    }
+  }
+}
+
 // Create a context token carrying a default value.
 export function createContext<T>(defaultValue: T): Context<T> {
   return { id: Symbol('cairn-context'), defaultValue };

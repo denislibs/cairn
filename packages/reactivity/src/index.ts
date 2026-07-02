@@ -9,5 +9,5 @@ export type { MemoOptions } from './memo';
 
 export { createRoot, onCleanup, batch, untrack, getOwner } from './core';
 export type { Owner } from './core';
-export { createContext, useContext } from './core';
+export { createContext, useContext, runWithContext } from './core';
 export type { Context } from './core';
