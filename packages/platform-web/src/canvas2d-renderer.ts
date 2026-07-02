@@ -202,6 +202,9 @@ export class Canvas2DRenderer implements Renderer {
         case 'quadTo':
           this.ctx.quadraticCurveTo(cmd.cx, cmd.cy, cmd.x, cmd.y);
           break;
+        case 'cubicTo':
+          this.ctx.bezierCurveTo(cmd.c1x, cmd.c1y, cmd.c2x, cmd.c2y, cmd.x, cmd.y);
+          break;
         case 'close':
           this.ctx.closePath();
           break;
