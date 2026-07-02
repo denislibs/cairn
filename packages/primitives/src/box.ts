@@ -3,8 +3,9 @@ import { BoxNode } from '@cairn/layout';
 import { type Instance } from '@cairn/runtime';
 import { useTheme } from '@cairn/style';
 import { resolveStyleInput, type StyleInput } from './resolve-input';
+import { collectHandlers, type EventProps } from './events';
 
-export interface BoxProps {
+export interface BoxProps extends EventProps {
   style?: StyleInput;
   children?: Instance;
 }
@@ -21,6 +22,7 @@ export function Box(props: BoxProps = {}): Instance {
   return {
     layout,
     children: child ? [child] : [],
+    handlers: collectHandlers(props),
     paintSelf(r: Renderer) {
       if (s.backgroundColor) {
         r.fillRoundRect(

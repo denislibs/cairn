@@ -3,8 +3,9 @@ import { TextNode } from '@cairn/layout';
 import { type Instance, bind, type MaybeReactive } from '@cairn/runtime';
 import { useTheme } from '@cairn/style';
 import { resolveStyleInput, type StyleInput } from './resolve-input';
+import { collectHandlers, type EventProps } from './events';
 
-export interface TextProps {
+export interface TextProps extends EventProps {
   children?: MaybeReactive<string | number>;
   value?: MaybeReactive<string | number>;
   style?: StyleInput;
@@ -22,6 +23,7 @@ export function Text(props: TextProps = {}): Instance {
   return {
     layout,
     children: [],
+    handlers: collectHandlers(props),
     paintSelf(r: Renderer) {
       r.drawText(layout.text, { x: 0, y: 0 }, { font, color, baseline: 'top' });
     },

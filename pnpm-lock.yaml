@@ -37,6 +37,9 @@ importers:
 
   packages/primitives:
     dependencies:
+      '@cairn/events':
+        specifier: workspace:*
+        version: link:../events
       '@cairn/host':
         specifier: workspace:*
         version: link:../host
