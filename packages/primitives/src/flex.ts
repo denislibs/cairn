@@ -4,8 +4,9 @@ import { type BaseStyle } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
 import type { EventProps } from './events';
+import { applyLayoutChildProps, type LayoutChildProps } from './layout-child';
 
-export interface FlexProps extends EventProps {
+export interface FlexProps extends EventProps, LayoutChildProps {
   style?: StyleInput;
   children?: Instance | Instance[];
   focusable?: boolean;
@@ -29,7 +30,7 @@ function flex(direction: FlexDirection, props: FlexProps): Instance {
     layout.align = s.align ?? 'start';
   });
 
-  return {
+  const instance: Instance = {
     layout,
     children,
     handlers,
@@ -38,6 +39,8 @@ function flex(direction: FlexDirection, props: FlexProps): Instance {
       // containers have no own visuals
     },
   };
+  applyLayoutChildProps(instance, props);
+  return instance;
 }
 
 export function Row(props: FlexProps = {}): Instance {

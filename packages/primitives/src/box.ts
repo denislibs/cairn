@@ -5,8 +5,9 @@ import { type BaseStyle } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
 import type { EventProps } from './events';
+import { applyLayoutChildProps, type LayoutChildProps } from './layout-child';
 
-export interface BoxProps extends EventProps {
+export interface BoxProps extends EventProps, LayoutChildProps {
   style?: StyleInput;
   children?: Instance;
   focusable?: boolean;
@@ -26,7 +27,7 @@ export function Box(props: BoxProps = {}): Instance {
     layout.padding = toEdgeInsets(s.padding);
   });
 
-  return {
+  const instance: Instance = {
     layout,
     children: child ? [child] : [],
     handlers,
@@ -41,4 +42,6 @@ export function Box(props: BoxProps = {}): Instance {
       }
     },
   };
+  applyLayoutChildProps(instance, props);
+  return instance;
 }

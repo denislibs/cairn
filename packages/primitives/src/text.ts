@@ -5,8 +5,9 @@ import { type BaseStyle } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
 import type { EventProps } from './events';
+import { applyLayoutChildProps, type LayoutChildProps } from './layout-child';
 
-export interface TextProps extends EventProps {
+export interface TextProps extends EventProps, LayoutChildProps {
   children?: MaybeReactive<string | number>;
   value?: MaybeReactive<string | number>;
   style?: StyleInput;
@@ -29,7 +30,7 @@ export function Text(props: TextProps = {}): Instance {
     layout.text = String(v);
   });
 
-  return {
+  const instance: Instance = {
     layout,
     children: [],
     handlers,
@@ -42,4 +43,6 @@ export function Text(props: TextProps = {}): Instance {
       );
     },
   };
+  applyLayoutChildProps(instance, props);
+  return instance;
 }

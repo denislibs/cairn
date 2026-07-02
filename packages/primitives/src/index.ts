@@ -14,3 +14,5 @@ export { collectHandlers } from './events';
 export type { EventProps } from './events';
 export { createInteractive } from './interactive';
 export type { InteractiveProps, Interactive } from './interactive';
+export { applyLayoutChildProps } from './layout-child';
+export type { LayoutChildProps } from './layout-child';
