@@ -26,6 +26,8 @@ function flex(direction: FlexDirection, props: FlexProps): Instance {
 
   bind(resolved, (s: BaseStyle) => {
     layout.gap = s.gap ?? 0;
+    layout.rowGap = s.rowGap;
+    layout.columnGap = s.columnGap;
     layout.justify = s.justify ?? 'start';
     layout.align = s.align ?? 'start';
     layout.width = s.width;

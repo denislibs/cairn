@@ -8,6 +8,8 @@ export type Align = 'start' | 'center' | 'end' | 'stretch';
 export interface FlexNodeProps {
   direction?: FlexDirection;
   gap?: number;
+  rowGap?: number;
+  columnGap?: number;
   justify?: Justify;
   align?: Align;
   mainAxisSize?: 'min' | 'max';
@@ -19,6 +21,8 @@ export interface FlexNodeProps {
 export class FlexNode extends LayoutNode {
   direction: FlexDirection;
   gap: number;
+  rowGap?: number;
+  columnGap?: number;
   justify: Justify;
   align: Align;
   mainAxisSize: 'min' | 'max';
@@ -29,6 +33,8 @@ export class FlexNode extends LayoutNode {
     super();
     this.direction = props.direction ?? 'row';
     this.gap = props.gap ?? 0;
+    this.rowGap = props.rowGap;
+    this.columnGap = props.columnGap;
     this.justify = props.justify ?? 'start';
     this.align = props.align ?? 'start';
     this.mainAxisSize = props.mainAxisSize ?? 'max';
@@ -39,10 +45,11 @@ export class FlexNode extends LayoutNode {
 
   layout(c: Constraints, ctx: LayoutContext): Size {
     const isRow = this.direction === 'row';
+    const gap = (isRow ? this.columnGap : this.rowGap) ?? this.gap;
     const mainMax = isRow ? c.maxW : c.maxH;
     const crossMax = isRow ? c.maxH : c.maxW;
     const n = this.children.length;
-    const gapTotal = this.gap * Math.max(0, n - 1);
+    const gapTotal = gap * Math.max(0, n - 1);
 
     const mainSize = (s: Size): number => (isRow ? s.w : s.h);
     const crossSize = (s: Size): number => (isRow ? s.h : s.w);
@@ -110,7 +117,7 @@ export class FlexNode extends LayoutNode {
     // Position along the main axis per justify.
     const freeMain = Math.max(0, ownMain - contentMain);
     let cursor = 0;
-    let between = this.gap;
+    let between = gap;
     switch (this.justify) {
       case 'start':
         cursor = 0;
@@ -123,12 +130,12 @@ export class FlexNode extends LayoutNode {
         break;
       case 'space-between':
         cursor = 0;
-        between = this.gap + (n > 1 ? freeMain / (n - 1) : 0);
+        between = gap + (n > 1 ? freeMain / (n - 1) : 0);
         break;
       case 'space-around': {
         const around = n > 0 ? freeMain / n : 0;
         cursor = around / 2;
-        between = this.gap + around;
+        between = gap + around;
         break;
       }
     }

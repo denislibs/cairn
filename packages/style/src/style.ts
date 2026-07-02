@@ -33,6 +33,8 @@ export interface BaseStyle {
   padding?: number | Partial<EdgeInsets>;
   margin?: number | Partial<EdgeInsets>;
   gap?: number;
+  rowGap?: number;
+  columnGap?: number;
   justify?: Justify;
   align?: Align;
   // paint
