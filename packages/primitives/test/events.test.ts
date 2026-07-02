@@ -16,16 +16,26 @@ test('Box is always interactive: hover/pressed handlers present even without eve
 });
 
 test('Text collects onPointerDown', () => {
-  const fn = () => {};
+  let fired = false;
+  const fn = () => {
+    fired = true;
+  };
   const t = Text({ children: 'hi', onPointerDown: fn });
-  expect(t.handlers?.onPointerDown).toBe(fn);
+  // createInteractive wraps down/up; calling the wrapper must fire the user fn.
+  t.handlers!.onPointerDown!({} as never);
+  expect(fired).toBe(true);
 });
 
 test('Row collects onWheel and onPointerUp only', () => {
   const wheel = () => {};
-  const up = () => {};
+  let upFired = false;
+  const up = () => {
+    upFired = true;
+  };
   const row = Row({ onWheel: wheel, onPointerUp: up });
+  // onWheel is passed through by reference; onPointerUp is wrapped, so assert it fires.
   expect(row.handlers?.onWheel).toBe(wheel);
-  expect(row.handlers?.onPointerUp).toBe(up);
+  row.handlers!.onPointerUp!({} as never);
+  expect(upFired).toBe(true);
   expect(row.handlers?.onClick).toBeUndefined();
 });
