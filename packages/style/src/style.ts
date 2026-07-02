@@ -30,6 +30,11 @@ export interface BaseStyle {
   maxWidth?: number;
   minHeight?: number;
   maxHeight?: number;
+  left?: number;
+  top?: number;
+  right?: number;
+  bottom?: number;
+  inset?: number;
   padding?: number | Partial<EdgeInsets>;
   margin?: number | Partial<EdgeInsets>;
   gap?: number;

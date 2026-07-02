@@ -14,16 +14,23 @@ export class StackNode extends LayoutNode {
   layout(c: Constraints, ctx: LayoutContext): Size {
     // Bounding box measured from the stack origin (0,0): children placed at
     // negative left/top extend outside it and do not enlarge the unbounded size.
+    const cw = isFinite(c.maxW) ? c.maxW : c.minW;
+    const chh = isFinite(c.maxH) ? c.maxH : c.minH;
     let maxRight = 0;
     let maxBottom = 0;
     for (const ch of this.children) {
-      const s = ch.layout({ minW: 0, maxW: c.maxW, minH: 0, maxH: c.maxH }, ctx);
-      const l = ch.left ?? 0;
-      const t = ch.top ?? 0;
-      ch.offsetX = l;
-      ch.offsetY = t;
-      maxRight = Math.max(maxRight, l + s.w);
-      maxBottom = Math.max(maxBottom, t + s.h);
+      const bothX = ch.left != null && ch.right != null;
+      const bothY = ch.top != null && ch.bottom != null;
+      const tightW = bothX ? Math.max(0, cw - ch.left! - ch.right!) : undefined;
+      const tightH = bothY ? Math.max(0, chh - ch.top! - ch.bottom!) : undefined;
+      const s = ch.layout({
+        minW: tightW ?? 0, maxW: tightW ?? c.maxW,
+        minH: tightH ?? 0, maxH: tightH ?? c.maxH,
+      }, ctx);
+      ch.offsetX = ch.left != null ? ch.left : ch.right != null ? cw - ch.right - s.w : 0;
+      ch.offsetY = ch.top != null ? ch.top : ch.bottom != null ? chh - ch.bottom - s.h : 0;
+      maxRight = Math.max(maxRight, ch.offsetX + s.w);
+      maxBottom = Math.max(maxBottom, ch.offsetY + s.h);
     }
     const w = isFinite(c.maxW) ? c.maxW : maxRight;
     const h = isFinite(c.maxH) ? c.maxH : maxBottom;

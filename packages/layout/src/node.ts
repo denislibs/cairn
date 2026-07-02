@@ -10,6 +10,8 @@ export abstract class LayoutNode {
   flexShrink = 0; // parent-data: shrink factor when children overflow main axis (v1: simple weight split)
   left?: number; // parent-data: StackNode positions by these
   top?: number;
+  right?: number;
+  bottom?: number;
   margin: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 }; // parent-data: margin around this node
   alignSelf?: 'start' | 'center' | 'end' | 'stretch'; // parent-data: per-child cross-axis alignment override
 
