@@ -38,6 +38,7 @@ export function Box(props: BoxProps = {}): Instance {
       const s = current;
       const w = layout.size.w;
       const h = layout.size.h;
+      const numericRadius = typeof s.borderRadius === 'number' ? s.borderRadius : 0;
       if (s.backgroundColor) {
         r.fillRoundRect({ x: 0, y: 0, width: w, height: h }, s.borderRadius ?? 0, { color: s.backgroundColor });
       }
@@ -45,7 +46,7 @@ export function Box(props: BoxProps = {}): Instance {
         const bw = s.border.width;
         r.strokeRoundRect(
           { x: bw / 2, y: bw / 2, width: Math.max(0, w - bw), height: Math.max(0, h - bw) },
-          Math.max(0, (s.borderRadius ?? 0) - bw / 2),
+          Math.max(0, numericRadius - bw / 2),
           { color: s.border.color, width: bw },
         );
       }
