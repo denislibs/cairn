@@ -358,6 +358,11 @@ Expected: FAIL — `bind` / `setFrameRequester` not exported.
 let requester: (() => void) | null = null;
 
 export function setFrameRequester(fn: (() => void) | null): void {
+  if (fn !== null && requester !== null) {
+    throw new Error(
+      '[cairn] A frame requester is already installed (Phase 4 supports a single active root). Dispose the previous mount first.',
+    );
+  }
   requester = fn;
 }
 
@@ -593,9 +598,10 @@ export function mount(component: () => Instance, host: Host): () => void {
       });
     });
 
-    host.metrics.onResize(() => renderFrame());
+    const unsubscribeResize = host.metrics.onResize(() => renderFrame());
 
     return () => {
+      unsubscribeResize(); // avoid re-render on a disposed tree
       setFrameRequester(null);
       dispose();
     };

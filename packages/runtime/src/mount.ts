@@ -38,9 +38,10 @@ export function mount(component: () => Instance, host: Host): () => void {
       });
     });
 
-    host.metrics.onResize(() => renderFrame());
+    const unsubscribeResize = host.metrics.onResize(() => renderFrame());
 
     return () => {
+      unsubscribeResize(); // avoid re-render on a disposed tree
       setFrameRequester(null);
       dispose();
     };
