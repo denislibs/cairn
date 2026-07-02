@@ -54,6 +54,7 @@ export function Input(props: InputProps = {}): Instance {
   const interactiveProps = {
     ...props,
     onFocus: (e: CairnFocusEvent) => {
+      conn?.close(); // guard re-entrant focus: never orphan a live session
       conn = host.textInput.start(client, {
         text: untrack(text),
         selectionStart: untrack(caret),
