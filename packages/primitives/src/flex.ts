@@ -1,26 +1,22 @@
-import { FlexNode, type FlexDirection, type Justify, type Align } from '@cairn/layout';
-import type { Instance } from '@cairn/runtime';
-
-export interface FlexStyle {
-  gap?: number;
-  justify?: Justify;
-  align?: Align;
-}
+import { FlexNode, type FlexDirection } from '@cairn/layout';
+import { type Instance } from '@cairn/runtime';
+import { useTheme } from '@cairn/style';
+import { resolveStyleInput, type StyleInput } from './resolve-input';
 
 export interface FlexProps {
-  style?: FlexStyle;
+  style?: StyleInput;
   children?: Instance | Instance[];
 }
 
 function flex(direction: FlexDirection, props: FlexProps): Instance {
-  const style = props.style ?? {};
+  const s = resolveStyleInput(props.style, useTheme());
   const children =
     props.children == null ? [] : Array.isArray(props.children) ? props.children : [props.children];
   const layout = new FlexNode({
     direction,
-    gap: style.gap,
-    justify: style.justify,
-    align: style.align,
+    gap: s.gap,
+    justify: s.justify,
+    align: s.align,
     children: children.map((c) => c.layout),
   });
   return {

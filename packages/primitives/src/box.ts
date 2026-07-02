@@ -1,38 +1,32 @@
 import type { Renderer } from '@cairn/host';
-import { BoxNode, type EdgeInsets } from '@cairn/layout';
-import type { Instance } from '@cairn/runtime';
-
-export interface BoxStyle {
-  width?: number;
-  height?: number;
-  padding?: number | Partial<EdgeInsets>;
-  backgroundColor?: string;
-  borderRadius?: number;
-}
+import { BoxNode } from '@cairn/layout';
+import { type Instance } from '@cairn/runtime';
+import { useTheme } from '@cairn/style';
+import { resolveStyleInput, type StyleInput } from './resolve-input';
 
 export interface BoxProps {
-  style?: BoxStyle;
+  style?: StyleInput;
   children?: Instance;
 }
 
 export function Box(props: BoxProps = {}): Instance {
-  const style = props.style ?? {};
+  const s = resolveStyleInput(props.style, useTheme());
   const child = props.children;
   const layout = new BoxNode({
-    width: style.width,
-    height: style.height,
-    padding: style.padding,
+    width: s.width,
+    height: s.height,
+    padding: s.padding,
     child: child?.layout,
   });
   return {
     layout,
     children: child ? [child] : [],
     paintSelf(r: Renderer) {
-      if (style.backgroundColor) {
+      if (s.backgroundColor) {
         r.fillRoundRect(
           { x: 0, y: 0, width: layout.size.w, height: layout.size.h },
-          style.borderRadius ?? 0,
-          { color: style.backgroundColor },
+          s.borderRadius ?? 0,
+          { color: s.backgroundColor },
         );
       }
     },

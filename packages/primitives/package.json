@@ -12,7 +12,8 @@
   "dependencies": {
     "@cairn/runtime": "workspace:*",
     "@cairn/layout": "workspace:*",
-    "@cairn/host": "workspace:*"
+    "@cairn/host": "workspace:*",
+    "@cairn/style": "workspace:*"
   },
   "devDependencies": {
     "@cairn/reactivity": "workspace:*"

@@ -40,6 +40,9 @@ importers:
       '@cairn/runtime':
         specifier: workspace:*
         version: link:../runtime
+      '@cairn/style':
+        specifier: workspace:*
+        version: link:../style
     devDependencies:
       '@cairn/reactivity':
         specifier: workspace:*
