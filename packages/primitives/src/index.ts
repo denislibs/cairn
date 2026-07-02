@@ -4,6 +4,8 @@ export { Text } from './text';
 export type { TextProps } from './text';
 export { Row, Column } from './flex';
 export type { FlexProps } from './flex';
+export { Stack } from './stack';
+export type { StackProps } from './stack';
 export { Input } from './input';
 export type { InputProps } from './input';
 export { resolveStyleInput } from './resolve-input';
