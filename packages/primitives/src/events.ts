@@ -7,6 +7,8 @@ export interface EventProps {
   onPointerDown?: (e: CairnPointerEvent) => void;
   onPointerMove?: (e: CairnPointerEvent) => void;
   onPointerUp?: (e: CairnPointerEvent) => void;
+  onPointerEnter?: (e: CairnPointerEvent) => void;
+  onPointerLeave?: (e: CairnPointerEvent) => void;
   onWheel?: (e: CairnWheelEvent) => void;
 }
 
