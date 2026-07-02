@@ -13,5 +13,11 @@ export function createWebHost(canvas: HTMLCanvasElement): Host {
   configure(); // initial sizing
   metrics.onResize(configure); // keep backing store in sync
 
-  return { renderer, scheduler, metrics };
+  // Placeholder input; replaced by WebInputSource in a later task.
+  const input = {
+    onPointer: () => () => {},
+    onWheel: () => () => {},
+  };
+
+  return { renderer, scheduler, metrics, input };
 }

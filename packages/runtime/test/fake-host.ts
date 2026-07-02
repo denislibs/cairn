@@ -1,4 +1,12 @@
-import type { Renderer, FrameScheduler, SurfaceMetrics, Host } from '@cairn/host';
+import type {
+  Renderer,
+  FrameScheduler,
+  SurfaceMetrics,
+  Host,
+  InputSource,
+  PointerInput,
+  WheelInput,
+} from '@cairn/host';
 
 export function createFakeRenderer(): Renderer & { calls: unknown[][] } {
   const calls: unknown[][] = [];
@@ -74,14 +82,40 @@ export function createFakeMetrics(width = 200, height = 100) {
   };
 }
 
+export function createFakeInput() {
+  const pointerCbs = new Set<(e: PointerInput) => void>();
+  const wheelCbs = new Set<(e: WheelInput) => void>();
+  const input: InputSource = {
+    onPointer(cb) {
+      pointerCbs.add(cb);
+      return () => pointerCbs.delete(cb);
+    },
+    onWheel(cb) {
+      wheelCbs.add(cb);
+      return () => wheelCbs.delete(cb);
+    },
+  };
+  return {
+    input,
+    emitPointer(e: PointerInput) {
+      for (const cb of pointerCbs) cb(e);
+    },
+    emitWheel(e: WheelInput) {
+      for (const cb of wheelCbs) cb(e);
+    },
+  };
+}
+
 export function createFakeHost() {
   const renderer = createFakeRenderer();
   const scheduler = createFakeScheduler();
   const metrics = createFakeMetrics();
+  const input = createFakeInput();
   const host: Host = {
     renderer,
     scheduler: scheduler.scheduler,
     metrics: metrics.metrics,
+    input: input.input,
   };
-  return { host, renderer, scheduler, metrics };
+  return { host, renderer, scheduler, metrics, input };
 }

@@ -18,7 +18,8 @@ export function createFakeHost() {
     onResize: () => () => {},
     dispose: () => {},
   };
-  const host: Host = { renderer, scheduler, metrics };
+  const input = { onPointer: () => () => {}, onWheel: () => () => {} };
+  const host: Host = { renderer, scheduler, metrics, input };
   return {
     host,
     renderer,
