@@ -4,6 +4,7 @@ import { Canvas2DRenderer } from './canvas2d-renderer';
 import { WebFrameScheduler } from './frame-scheduler';
 import { WebSurfaceMetrics } from './surface-metrics';
 import { WebInputSource } from './web-input-source';
+import { WebTextInputService } from './web-text-input';
 
 export function createWebHost(canvas: HTMLCanvasElement): Host {
   const renderer = new Canvas2DRenderer(new HtmlCanvasSurface(canvas));
@@ -16,5 +17,7 @@ export function createWebHost(canvas: HTMLCanvasElement): Host {
 
   const input = new WebInputSource(canvas);
 
-  return { renderer, scheduler, metrics, input };
+  const textInput = new WebTextInputService();
+
+  return { renderer, scheduler, metrics, input, textInput };
 }

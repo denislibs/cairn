@@ -6,4 +6,5 @@ export type { MaybeReactive } from './reactive-props';
 export { jsx, jsxs, Fragment } from './jsx-runtime';
 export { mount } from './mount';
 export { Provider } from './provider';
+export { hostContext, useHost } from './host-context';
 export type { ProviderProps } from './provider';
