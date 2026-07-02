@@ -275,8 +275,10 @@ function disposeOwner(owner: Owner): void {
 }
 
 // Run `fn` in a child owner scope where useContext(ctx) yields `value`. The scope is
-// disposed together with its parent (via the parent's cleanups), so effects created
-// inside it do not leak.
+// disposed together with its parent (via the parent's cleanups) — including when the
+// parent is a computation that re-runs (cleanNode runs+clears cleanups each re-run) — so
+// effects created inside it do not leak. Called outside any owner (no parent), the scope
+// is standalone and not auto-disposed (same as a top-level createEffect).
 export function runWithContext<T, R>(ctx: Context<T>, value: T, fn: () => R): R {
   const parent = currentOwner;
   const scope: Owner = {
