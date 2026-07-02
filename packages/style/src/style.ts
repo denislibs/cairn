@@ -38,6 +38,8 @@ export interface BaseStyle {
   justify?: Justify;
   align?: Align;
   alignSelf?: 'start' | 'center' | 'end' | 'stretch';
+  flexBasis?: number;
+  flexShrink?: number;
   // paint
   backgroundColor?: string;
   borderRadius?: CornerRadius;

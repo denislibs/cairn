@@ -65,6 +65,9 @@ export class FlexNode extends LayoutNode {
         : { minW: crossLo, maxW: crossHi, minH: mainLo, maxH: mainHi };
 
     // Phase 1: non-flex children get loose main + align-driven cross constraints.
+    // If a child has flexBasis set, lay it out at a tight main constraint of flexBasis
+    // instead of the loose [0, mainMax] range. flexBasis does not make a child a grow
+    // child — it only sets the starting size (flex must be >0 for grow behaviour).
     let usedMain = gapTotal;
     let maxCross = 0;
     const flexChildren: LayoutNode[] = [];
@@ -76,7 +79,10 @@ export class FlexNode extends LayoutNode {
         continue;
       }
       const [clo, chi] = crossRange();
-      const s = ch.layout(make(0, mainMax, clo, chi), ctx);
+      const s =
+        ch.flexBasis != null
+          ? ch.layout(make(ch.flexBasis, ch.flexBasis, clo, chi), ctx)
+          : ch.layout(make(0, mainMax, clo, chi), ctx);
       usedMain += mainSize(s) + marginMain(ch);
       maxCross = Math.max(maxCross, crossSize(s) + marginCross(ch));
     }
@@ -94,7 +100,27 @@ export class FlexNode extends LayoutNode {
       maxCross = Math.max(maxCross, crossSize(s) + marginCross(ch));
     }
 
-    // Own size.
+    // Shrink pass: when total children main (incl. margins) exceeds available main,
+    // reduce each shrink candidate's (flexShrink>0 && flex===0) main proportionally.
+    // v1 simplification: uses simple flexShrink-weight split rather than CSS's
+    // basis×shrink weighting.
+    const signedFree = availMain - usedMain;
+    if (signedFree < 0) {
+      const shrinkers = this.children.filter((ch) => ch.flexShrink > 0 && ch.flex === 0);
+      const totalShrink = shrinkers.reduce((s, ch) => s + ch.flexShrink, 0);
+      if (totalShrink > 0) {
+        const overflow = -signedFree;
+        for (const ch of shrinkers) {
+          const reduce = (overflow * ch.flexShrink) / totalShrink;
+          const target = Math.max(0, mainSize(ch.size) - reduce);
+          const [clo, chi] = crossRange();
+          const s = ch.layout(make(target, target, clo, chi), ctx);
+          maxCross = Math.max(maxCross, crossSize(s) + marginCross(ch));
+        }
+      }
+    }
+
+    // Own size — computed after the shrink pass so ch.size reflects final dimensions.
     const contentMain = this.children.reduce((sum, ch) => sum + mainSize(ch.size) + marginMain(ch), 0) + gapTotal;
     const minMain = isRow ? c.minW : c.minH;
     const ownMain =

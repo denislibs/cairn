@@ -6,6 +6,8 @@ export abstract class LayoutNode {
   offsetX = 0; // relative to parent; set by the parent during its layout()
   offsetY = 0;
   flex = 0; // parent-data: FlexNode distributes free main-axis space by this
+  flexBasis?: number; // parent-data: child's main-axis starting size before grow/shrink
+  flexShrink = 0; // parent-data: shrink factor when children overflow main axis (v1: simple weight split)
   left?: number; // parent-data: StackNode positions by these
   top?: number;
   margin: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 }; // parent-data: margin around this node
