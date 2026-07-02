@@ -28,7 +28,7 @@ export class TextNode extends LayoutNode {
 
   layout(c: Constraints, ctx: LayoutContext): Size {
     const measured = ctx.measureText(this.text, this.style);
-    const w = clamp(Math.min(measured.width, c.maxW), c.minW, c.maxW);
+    const w = clamp(measured.width, c.minW, c.maxW);
     const h = clamp(this.lineHeight ?? fontSize(this.style.font), c.minH, c.maxH);
     this.size = { w, h };
     return this.size;

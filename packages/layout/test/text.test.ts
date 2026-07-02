@@ -29,3 +29,15 @@ test('TextNode defaults font size to 16 when the font has no px value', () => {
   const size = t.layout(LOOSE, fakeMeasure());
   expect(size.h).toBe(16);
 });
+
+test('TextNode raises width to the min constraint', () => {
+  const t = new TextNode({ text: 'x', style: { font: '10px sans-serif' } }); // measured 6
+  const size = t.layout({ minW: 50, maxW: 1000, minH: 0, maxH: 1000 }, fakeMeasure());
+  expect(size.w).toBe(50); // measured 6 raised to minW
+});
+
+test('TextNode clamps height to the max constraint', () => {
+  const t = new TextNode({ text: 'x', style: { font: '40px sans-serif' } }); // font height 40
+  const size = t.layout({ minW: 0, maxW: 1000, minH: 0, maxH: 10 }, fakeMeasure());
+  expect(size.h).toBe(10); // 40 clamped to maxH
+});
