@@ -59,6 +59,15 @@ importers:
         specifier: workspace:*
         version: link:../reactivity
 
+  packages/style:
+    dependencies:
+      '@cairn/layout':
+        specifier: workspace:*
+        version: link:../layout
+      '@cairn/reactivity':
+        specifier: workspace:*
+        version: link:../reactivity
+
 packages:
 
   '@esbuild/aix-ppc64@0.21.5':
