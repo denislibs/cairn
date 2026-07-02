@@ -21,6 +21,20 @@ function fakeCanvas() {
   return { canvas: canvas as unknown as HTMLCanvasElement, listeners };
 }
 
+// Fake document-level key target (window) so keyboard tests don't depend on the DOM.
+function fakeKeyTarget() {
+  const listeners: Record<string, (ev: unknown) => void> = {};
+  const target = {
+    addEventListener(type: string, cb: (ev: unknown) => void) {
+      listeners[type] = cb;
+    },
+    removeEventListener(type: string) {
+      delete listeners[type];
+    },
+  };
+  return { target: target as unknown as EventTarget, listeners };
+}
+
 test('normalizes a pointerdown into surface-local coordinates', () => {
   const { canvas, listeners } = fakeCanvas();
   const src = new WebInputSource(canvas);
@@ -77,37 +91,48 @@ test('canvas pointerleave emits an out-of-bounds pointermove to clear hover', ()
   expect(seen).toEqual([{ type: 'pointermove', x: -1, y: -1, button: 0, pointerType: 'mouse' }]);
 });
 
-test('sets tabIndex so the canvas can receive keyboard focus', () => {
+test('preventDefaults canvas mousedown so a click cannot steal focus from the text proxy', () => {
+  const { canvas, listeners } = fakeCanvas();
+  new WebInputSource(canvas);
+  let prevented = false;
+  listeners.mousedown({ preventDefault: () => { prevented = true; } });
+  expect(prevented).toBe(true);
+});
+
+test('does not make the canvas focusable (hidden text-input keeps DOM focus)', () => {
   const { canvas } = fakeCanvas();
   const c = canvas as unknown as { tabIndex: number };
   new WebInputSource(canvas);
-  expect(c.tabIndex).toBe(0);
+  expect(c.tabIndex).toBe(-1); // left untouched — keyboard is listened on the window instead
 });
 
-test('normalizes a keydown into KeyboardInput', () => {
-  const { canvas, listeners } = fakeCanvas();
-  const src = new WebInputSource(canvas);
+test('normalizes a keydown (from the window key target) into KeyboardInput', () => {
+  const { canvas } = fakeCanvas();
+  const key = fakeKeyTarget();
+  const src = new WebInputSource(canvas, key.target);
   const seen: Array<Record<string, unknown>> = [];
   src.onKey((e) => seen.push({ type: e.type, key: e.key, code: e.code, shift: e.shift, ctrl: e.ctrl, alt: e.alt, meta: e.meta }));
-  listeners.keydown({ key: 'Enter', code: 'Enter', shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, preventDefault: () => {} });
+  key.listeners.keydown({ key: 'Enter', code: 'Enter', shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, preventDefault: () => {} });
   expect(seen).toEqual([{ type: 'keydown', key: 'Enter', code: 'Enter', shift: false, ctrl: false, alt: false, meta: false }]);
 });
 
 test('KeyboardInput.preventDefault forwards to the DOM event', () => {
-  const { canvas, listeners } = fakeCanvas();
-  const src = new WebInputSource(canvas);
+  const { canvas } = fakeCanvas();
+  const key = fakeKeyTarget();
+  const src = new WebInputSource(canvas, key.target);
   let prevented = false;
   src.onKey((e) => e.preventDefault());
-  listeners.keydown({ key: 'Tab', code: 'Tab', shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, preventDefault: () => { prevented = true; } });
+  key.listeners.keydown({ key: 'Tab', code: 'Tab', shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, preventDefault: () => { prevented = true; } });
   expect(prevented).toBe(true);
 });
 
 test('onKey unsubscribe stops delivery', () => {
-  const { canvas, listeners } = fakeCanvas();
-  const src = new WebInputSource(canvas);
+  const { canvas } = fakeCanvas();
+  const key = fakeKeyTarget();
+  const src = new WebInputSource(canvas, key.target);
   const seen: unknown[] = [];
   const off = src.onKey((e) => seen.push(e));
   off();
-  listeners.keydown({ key: 'a', code: 'KeyA', shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, preventDefault: () => {} });
+  key.listeners.keydown({ key: 'a', code: 'KeyA', shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, preventDefault: () => {} });
   expect(seen).toEqual([]);
 });

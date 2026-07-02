@@ -9,6 +9,8 @@ export interface CairnPointerEvent {
   type: 'pointerdown' | 'pointermove' | 'pointerup' | 'click' | 'pointerenter' | 'pointerleave';
   x: number;
   y: number;
+  localX?: number; // x relative to the target's top-left (set on bubbling down/move/up/click)
+  localY?: number;
   button: number;
   pointerType: 'mouse' | 'touch' | 'pen';
   target: HitNode;
