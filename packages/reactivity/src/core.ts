@@ -304,6 +304,8 @@ export function createContext<T>(defaultValue: T): Context<T> {
 }
 
 // Read the current owner's context value for `ctx`, or the default.
+// Note: `undefined` cannot be used as a provided context value — it is treated as
+// "not provided" and falls back to the default (consistent with SolidJS).
 export function useContext<T>(ctx: Context<T>): T {
   const map = currentOwner ? currentOwner.context : undefined;
   const value = map ? map[ctx.id] : undefined;

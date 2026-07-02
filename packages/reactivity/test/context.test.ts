@@ -99,3 +99,30 @@ test('disposing the parent root disposes effects created inside a provider', () 
   setN(2);
   expect(runs).toBe(2); // effect inside the provider was disposed with the root
 });
+
+test('runWithContext inside a re-running effect disposes the old scope each run', () => {
+  const ctx = createContext('default');
+  const [outer, setOuter] = createSignal(0);
+  const [inner, setInner] = createSignal(0);
+  const seen: string[] = [];
+  const dispose = createRoot((d) => {
+    createEffect(() => {
+      outer(); // re-run trigger for the outer effect
+      runWithContext(ctx, 'provided', () => {
+        createEffect(() => {
+          inner();
+          seen.push(useContext(ctx)); // inner effect sees the provided context
+        });
+      });
+    });
+    return d;
+  });
+  expect(seen).toEqual(['provided']); // one live inner effect
+  setInner(1);
+  expect(seen).toEqual(['provided', 'provided']); // it re-runs, still sees context
+  setOuter(1); // outer re-runs: old scope+inner disposed, fresh scope+inner created
+  expect(seen).toEqual(['provided', 'provided', 'provided']);
+  setInner(2); // only the newest inner effect is alive → exactly one more run
+  expect(seen).toEqual(['provided', 'provided', 'provided', 'provided']);
+  dispose();
+});
