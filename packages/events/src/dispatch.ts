@@ -1,4 +1,4 @@
-import type { HitNode, CairnPointerEvent, CairnWheelEvent, EventHandlers } from './event';
+import type { HitNode, CairnPointerEvent, CairnWheelEvent, CairnKeyboardEvent, EventHandlers } from './event';
 
 const POINTER_HANDLERS: Record<CairnPointerEvent['type'], keyof EventHandlers> = {
   pointerdown: 'onPointerDown',
@@ -66,4 +66,31 @@ export function dispatchTo(
   const key = POINTER_HANDLERS[init.type];
   const fn = node.handlers?.[key] as ((e: CairnPointerEvent) => void) | undefined;
   fn?.(event);
+}
+
+const KEY_HANDLERS: Record<CairnKeyboardEvent['type'], keyof EventHandlers> = {
+  keydown: 'onKeyDown',
+  keyup: 'onKeyUp',
+};
+
+/** Bubble-only keyboard dispatch: keydown/keyup mapped along path[0] -> root. */
+export function dispatchKey(
+  path: HitNode[],
+  init: Omit<CairnKeyboardEvent, 'target' | 'stopPropagation'>,
+): void {
+  if (path.length === 0) return;
+  let stopped = false;
+  const event: CairnKeyboardEvent = {
+    ...init,
+    target: path[0],
+    stopPropagation() {
+      stopped = true;
+    },
+  };
+  const key = KEY_HANDLERS[init.type];
+  for (const node of path) {
+    if (stopped) break;
+    const fn = node.handlers?.[key] as ((e: CairnKeyboardEvent) => void) | undefined;
+    fn?.(event);
+  }
 }
