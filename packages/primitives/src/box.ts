@@ -5,8 +5,9 @@ import { type BaseStyle } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
 import type { EventProps } from './events';
+import { applyLayoutChildProps, type LayoutChildProps } from './layout-child';
 
-export interface BoxProps extends EventProps {
+export interface BoxProps extends EventProps, LayoutChildProps {
   style?: StyleInput;
   children?: Instance;
   focusable?: boolean;
@@ -24,21 +25,32 @@ export function Box(props: BoxProps = {}): Instance {
     layout.width = s.width;
     layout.height = s.height;
     layout.padding = toEdgeInsets(s.padding);
+    layout.alignX = s.alignX ?? 'start';
+    layout.alignY = s.alignY ?? 'start';
   });
 
-  return {
+  const instance: Instance = {
     layout,
     children: child ? [child] : [],
     handlers,
     focusable: props.focusable,
     paintSelf(r: Renderer) {
-      if (current.backgroundColor) {
-        r.fillRoundRect(
-          { x: 0, y: 0, width: layout.size.w, height: layout.size.h },
-          current.borderRadius ?? 0,
-          { color: current.backgroundColor },
+      const s = current;
+      const w = layout.size.w;
+      const h = layout.size.h;
+      if (s.backgroundColor) {
+        r.fillRoundRect({ x: 0, y: 0, width: w, height: h }, s.borderRadius ?? 0, { color: s.backgroundColor });
+      }
+      if (s.border) {
+        const bw = s.border.width;
+        r.strokeRoundRect(
+          { x: bw / 2, y: bw / 2, width: Math.max(0, w - bw), height: Math.max(0, h - bw) },
+          Math.max(0, (s.borderRadius ?? 0) - bw / 2),
+          { color: s.border.color, width: bw },
         );
       }
     },
   };
+  applyLayoutChildProps(instance, props);
+  return instance;
 }

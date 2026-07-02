@@ -24,6 +24,9 @@ export interface BaseStyle {
   // paint
   backgroundColor?: string;
   borderRadius?: number;
+  border?: { width: number; color: string };
+  alignX?: 'start' | 'center' | 'end';
+  alignY?: 'start' | 'center' | 'end';
   color?: string;
   font?: string;
 }
