@@ -81,6 +81,13 @@ export class Canvas2DRenderer implements Renderer {
     }
   }
 
+  setGlobalAlpha(alpha: number): void {
+    this.ctx.globalAlpha = alpha;
+  }
+  setLineDash(segments: number[]): void {
+    this.ctx.setLineDash(segments);
+  }
+
   fillRect(rect: Rect, style: FillStyle): void {
     this.ctx.fillStyle = this.resolveFill(style);
     this.ctx.fillRect(rect.x, rect.y, rect.width, rect.height);

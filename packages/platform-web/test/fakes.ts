@@ -26,6 +26,7 @@ const METHODS = [
   'clip',
   'fillText',
   'drawImage',
+  'setLineDash',
 ] as const;
 
 const PROPS = [
@@ -39,6 +40,7 @@ const PROPS = [
   'shadowBlur',
   'shadowOffsetX',
   'shadowOffsetY',
+  'globalAlpha',
 ] as const;
 
 export function createFakeContext(): FakeContext {

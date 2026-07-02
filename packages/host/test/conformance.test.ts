@@ -21,6 +21,8 @@ function makeNoopRenderer(): Renderer {
     scale() {},
     clipRect() {},
     setShadow() {},
+    setGlobalAlpha() {},
+    setLineDash() {},
     fillRect() {},
     strokeRect() {},
     fillRoundRect() {},
