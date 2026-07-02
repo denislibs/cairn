@@ -20,6 +20,12 @@ test('Text renders static content and paints drawText with style', () => {
   ]);
 });
 
+test('Text accepts a value prop (takes precedence over children)', () => {
+  const t = Text({ value: 'from-value', children: 'from-children' });
+  t.layout.layout(LOOSE, fakeCtx);
+  expect((t.layout as TextNode).text).toBe('from-value');
+});
+
 test('Text coerces numbers to strings', () => {
   const t = Text({ children: 7 });
   t.layout.layout(LOOSE, fakeCtx);

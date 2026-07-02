@@ -128,12 +128,13 @@ export function mount(component: () => Instance, host: Host): () => void {
       paint(root, host.renderer);
       host.renderer.endFrame();
     };
-    // install coalescing frame requester (see scheduler.ts) BEFORE building the tree
-    installRequester(host, renderFrame);
     root = component();      // build instance tree; reactive effects run initially
     renderFrame();           // initial layout + paint
-    host.metrics.onResize(renderFrame);
-    return dispose;
+    // Install the coalescing frame requester AFTER the initial render, so the binding
+    // effects' initial scheduleFrame() calls no-op (avoids a redundant first frame).
+    installRequester(host, renderFrame);
+    const unsub = host.metrics.onResize(renderFrame);
+    return () => { unsub(); setFrameRequester(null); dispose(); };
   });
 }
 ```
@@ -150,8 +151,9 @@ Style is a plain object; only the properties below are honored in Phase 4:
 - **Row** / **Column**: `children[]`, `gap`, `justify`, `align` → `FlexNode` (direction row/column).
   No own visuals.
 
-Reactive style props (function-valued) are bound with `bind`; each updates the underlying
-layout/paint field and schedules a frame.
+In Phase 4 only **content** is reactive (Text's children/value via `bind`). Reactive *style*
+props (function-valued `backgroundColor`, `font`, sizes, etc.) are a follow-up — style is read
+once at construction for now. This keeps M3 focused (the counter only animates text).
 
 ## Data flow (one change)
 
