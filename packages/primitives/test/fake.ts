@@ -18,6 +18,8 @@ export function createFakeRenderer(): Renderer & { calls: unknown[][] } {
     scale: rec('scale'),
     clipRect: rec('clipRect'),
     setShadow: rec('setShadow'),
+    setGlobalAlpha: rec('setGlobalAlpha'),
+    setLineDash: rec('setLineDash'),
     fillRect: rec('fillRect'),
     strokeRect: rec('strokeRect'),
     fillRoundRect: rec('fillRoundRect'),
