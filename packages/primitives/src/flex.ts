@@ -9,13 +9,19 @@ export interface FlexProps extends EventProps {
   style?: StyleInput;
   children?: Instance | Instance[];
   focusable?: boolean;
+  // 'min' shrink-wraps the main axis to content; default 'max' fills available space.
+  mainAxisSize?: 'min' | 'max';
 }
 
 function flex(direction: FlexDirection, props: FlexProps): Instance {
   const { resolved, handlers } = createInteractive(props);
   const children =
     props.children == null ? [] : Array.isArray(props.children) ? props.children : [props.children];
-  const layout = new FlexNode({ direction, children: children.map((c) => c.layout) });
+  const layout = new FlexNode({
+    direction,
+    mainAxisSize: props.mainAxisSize,
+    children: children.map((c) => c.layout),
+  });
 
   bind(resolved, (s: BaseStyle) => {
     layout.gap = s.gap ?? 0;
