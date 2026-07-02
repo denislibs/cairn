@@ -31,6 +31,8 @@ function fakeCanvas(w: number, h: number) {
     width: 0,
     height: 0,
     getContext: () => fakeCtx,
+    addEventListener() {},
+    removeEventListener() {},
   } as unknown as HTMLCanvasElement;
 }
 

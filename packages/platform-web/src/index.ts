@@ -4,3 +4,4 @@ export { Canvas2DRenderer } from './canvas2d-renderer';
 export { HtmlCanvasSurface } from './canvas-surface';
 export type { CanvasSurface } from './canvas-surface';
 export { createWebHost } from './create-web-host';
+export { WebInputSource } from './web-input-source';
