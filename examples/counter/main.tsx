@@ -4,12 +4,25 @@ import { mount, type Instance } from '@cairn/runtime';
 import { BoxNode } from '@cairn/layout';
 import type { Renderer } from '@cairn/host';
 import { Box, Column, Row, Text } from '@cairn/primitives';
+import { StyleSheet } from '@cairn/style';
 
 const canvas = document.getElementById('stage') as HTMLCanvasElement;
 const host = createWebHost(canvas);
 
 const [count, setCount] = createSignal(0);
 const [step, setStep] = createSignal(1);
+
+// Named, typed styles (like React Native's StyleSheet). Optional — inline Style
+// objects work too; this just organizes the static styles in one place.
+const s = StyleSheet.create({
+  card: { width: 440, height: 384, padding: 28, backgroundColor: '#1b1b1d', borderRadius: 28 },
+  inner: { justify: 'center', align: 'center', gap: 16 },
+  number: { font: 'bold 84px sans-serif', color: '#ffffff' },
+  subtitle: { font: '15px sans-serif', color: '#6b7280' },
+  stepRow: { gap: 14, align: 'center' },
+  stepLabel: { font: '15px sans-serif', color: '#9ca3af' },
+  stepValue: { font: 'bold 16px sans-serif', color: '#ffffff' },
+});
 
 // Local button helper (no Button primitive yet — Phase 10b). The label is centered
 // with the Box's own alignX/alignY (no wrapper nesting); width can be fixed or the
@@ -99,10 +112,10 @@ function Slider(props: {
 function App() {
   return (
     <Column style={{ justify: 'center', align: 'center' }}>
-      <Box style={{ width: 440, height: 384, padding: 28, backgroundColor: '#1b1b1d', borderRadius: 28 }}>
-        <Column style={{ justify: 'center', align: 'center', gap: 16 }}>
-          <Text style={{ font: 'bold 84px sans-serif', color: '#ffffff' }}>{() => String(count())}</Text>
-          <Text style={{ font: '15px sans-serif', color: '#6b7280' }}>начни считать</Text>
+      <Box style={s.card}>
+        <Column style={s.inner}>
+          <Text style={s.number}>{() => String(count())}</Text>
+          <Text style={s.subtitle}>начни считать</Text>
 
           <Row style={{ gap: 12, width: 384 }}>
             <Button
@@ -126,10 +139,10 @@ function App() {
             />
           </Row>
 
-          <Row style={{ gap: 14, align: 'center' }}>
-            <Text style={{ font: '15px sans-serif', color: '#9ca3af' }}>Шаг</Text>
+          <Row style={s.stepRow}>
+            <Text style={s.stepLabel}>Шаг</Text>
             <Slider value={step} min={1} max={10} width={286} onChange={setStep} />
-            <Text style={{ font: 'bold 16px sans-serif', color: '#ffffff' }}>{() => String(step())}</Text>
+            <Text style={s.stepValue}>{() => String(step())}</Text>
           </Row>
 
           <Button
