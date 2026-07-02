@@ -22,3 +22,5 @@ export { Path, Svg } from './svg';
 export type { PathProps } from './svg';
 export { Icon } from './icon';
 export type { IconProps } from './icon';
+export { Image, computeObjectFit } from './image';
+export type { ImageProps, ObjectFit } from './image';
