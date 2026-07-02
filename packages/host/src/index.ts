@@ -20,4 +20,4 @@ export type { Renderer } from './renderer';
 export type { FrameScheduler } from './scheduler';
 export type { SurfaceMetrics } from './metrics';
 export type { Host } from './host';
-export type { InputSource, PointerInput, WheelInput, PointerInputType } from './input';
+export type { InputSource, PointerInput, WheelInput, PointerInputType, KeyboardInput, KeyInputType } from './input';

@@ -8,6 +8,7 @@ import type { EventProps } from './events';
 export interface FlexProps extends EventProps {
   style?: StyleInput;
   children?: Instance | Instance[];
+  focusable?: boolean;
 }
 
 function flex(direction: FlexDirection, props: FlexProps): Instance {
@@ -26,6 +27,7 @@ function flex(direction: FlexDirection, props: FlexProps): Instance {
     layout,
     children,
     handlers,
+    focusable: props.focusable,
     paintSelf() {
       // containers have no own visuals
     },

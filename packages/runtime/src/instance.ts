@@ -7,6 +7,7 @@ export interface Instance {
   paintSelf(r: Renderer): void;
   children: Instance[];
   handlers?: EventHandlers;
+  focusable?: boolean;
 }
 
 // Walk the instance tree, translating into each node's local coordinate space.

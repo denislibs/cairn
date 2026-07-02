@@ -9,6 +9,7 @@ import type { EventProps } from './events';
 export interface BoxProps extends EventProps {
   style?: StyleInput;
   children?: Instance;
+  focusable?: boolean;
 }
 
 export function Box(props: BoxProps = {}): Instance {
@@ -29,6 +30,7 @@ export function Box(props: BoxProps = {}): Instance {
     layout,
     children: child ? [child] : [],
     handlers,
+    focusable: props.focusable,
     paintSelf(r: Renderer) {
       if (current.backgroundColor) {
         r.fillRoundRect(
