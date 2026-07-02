@@ -4,3 +4,5 @@ export { Button } from './button';
 export type { ButtonProps } from './button';
 export { Checkbox } from './checkbox';
 export type { CheckboxProps } from './checkbox';
+export { Switch } from './switch';
+export type { SwitchProps } from './switch';
