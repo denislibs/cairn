@@ -20,3 +20,5 @@ export { applyLayoutChildProps } from './layout-child';
 export type { LayoutChildProps } from './layout-child';
 export { Path, Svg } from './svg';
 export type { PathProps } from './svg';
+export { Icon } from './icon';
+export type { IconProps } from './icon';
