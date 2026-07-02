@@ -5,7 +5,7 @@ import { type BaseStyle } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
 import type { EventProps } from './events';
-import { applyLayoutChildProps, type LayoutChildProps } from './layout-child';
+import { applyLayoutChildProps, applyLayoutStyle, type LayoutChildProps } from './layout-child';
 
 export interface TextProps extends EventProps, LayoutChildProps {
   children?: MaybeReactive<string | number>;
@@ -49,6 +49,7 @@ export function Text(props: TextProps = {}): Instance {
   bind(resolved, (s) => {
     current = s;
     layout.style = { ...layout.style, font: s.font ?? '16px sans-serif' };
+    applyLayoutStyle(layout, s);
     instance.paintOpacity = s.opacity;
   });
 

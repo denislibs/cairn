@@ -5,7 +5,7 @@ import { type BaseStyle, type CornerRadius, type BorderSide, type StyleGradient 
 import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
 import type { EventProps } from './events';
-import { applyLayoutChildProps, type LayoutChildProps } from './layout-child';
+import { applyLayoutChildProps, applyLayoutStyle, type LayoutChildProps } from './layout-child';
 
 export interface BoxProps extends EventProps, LayoutChildProps {
   style?: StyleInput;
@@ -112,10 +112,10 @@ export function Box(props: BoxProps = {}): Instance {
     layout.minHeight = s.minHeight;
     layout.maxHeight = s.maxHeight;
     layout.padding = toEdgeInsets(s.padding);
-    layout.margin = toEdgeInsets(s.margin);
     layout.alignX = s.alignX ?? 'start';
     layout.alignY = s.alignY ?? 'start';
     layout.aspectRatio = s.aspectRatio;
+    applyLayoutStyle(layout, s);
     instance.paintOpacity = s.opacity;
   });
 

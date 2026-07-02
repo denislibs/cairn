@@ -21,10 +21,11 @@ const s = StyleSheet.create({
     borderRadius: 28,
     // Shadow and gradient to demo Phase-10b capabilities
     boxShadow: { color: '#0006', blur: 32, offsetX: 0, offsetY: 12 },
+    // Gradient coords are local pixels (box top-left origin); card is 440×420.
     backgroundGradient: {
       kind: 'linear',
       from: { x: 0, y: 0 },
-      to: { x: 0, y: 1 },
+      to: { x: 0, y: 420 },
       stops: [
         { offset: 0, color: '#222226' },
         { offset: 1, color: '#18181b' },

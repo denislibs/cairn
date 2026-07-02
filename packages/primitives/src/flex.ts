@@ -1,10 +1,10 @@
-import { FlexNode, toEdgeInsets, type FlexDirection } from '@cairn/layout';
+import { FlexNode, type FlexDirection } from '@cairn/layout';
 import { type Instance, bind } from '@cairn/runtime';
 import { type BaseStyle } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
 import type { EventProps } from './events';
-import { applyLayoutChildProps, type LayoutChildProps } from './layout-child';
+import { applyLayoutChildProps, applyLayoutStyle, type LayoutChildProps } from './layout-child';
 
 export interface FlexProps extends EventProps, LayoutChildProps {
   style?: StyleInput;
@@ -32,8 +32,8 @@ function flex(direction: FlexDirection, props: FlexProps): Instance {
     layout.align = s.align ?? 'start';
     layout.width = s.width;
     layout.height = s.height;
-    layout.margin = toEdgeInsets(s.margin);
     layout.wrap = s.flexWrap ?? 'nowrap';
+    applyLayoutStyle(layout, s);
   });
 
   const instance: Instance = {

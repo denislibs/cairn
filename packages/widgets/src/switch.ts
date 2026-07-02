@@ -1,4 +1,4 @@
-import { Show, type Instance } from '@cairn/runtime';
+import { type Instance } from '@cairn/runtime';
 import { createSignal, type Accessor } from '@cairn/reactivity';
 import { Box, Stack } from '@cairn/primitives';
 
@@ -43,23 +43,18 @@ export function Switch(props: SwitchProps): Instance {
     props.onChange?.(next);
   };
 
-  // Reactive thumb: Show swaps between on-thumb (left: 22) and off-thumb (left: 2).
-  // This mirrors how Checkbox uses Show to toggle the checkmark, giving reactive
-  // thumb repositioning without extra plumbing.
-  const thumb = Show({
-    when: read,
-    children: () =>
-      Box({
-        style: { width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: THUMB_RADIUS, backgroundColor: '#ffffff' },
-        left: THUMB_LEFT_ON,
-        top: THUMB_TOP,
-      }),
-    fallback: () =>
-      Box({
-        style: { width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: THUMB_RADIUS, backgroundColor: '#ffffff' },
-        left: THUMB_LEFT_OFF,
-        top: THUMB_TOP,
-      }),
+  // The thumb is a direct child of the Stack so the Stack reads its left/top.
+  // Position is driven reactively through `style` (a function style re-runs on
+  // read() change, and Box forwards left/top from style onto the layout node).
+  const thumb = Box({
+    style: () => ({
+      width: THUMB_SIZE,
+      height: THUMB_SIZE,
+      borderRadius: THUMB_RADIUS,
+      backgroundColor: '#ffffff',
+      left: read() ? THUMB_LEFT_ON : THUMB_LEFT_OFF,
+      top: THUMB_TOP,
+    }),
   });
 
   // Reactive track color via a theme-function style. The style callback re-runs

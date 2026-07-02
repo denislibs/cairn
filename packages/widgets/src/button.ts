@@ -52,12 +52,13 @@ export function Button(props: ButtonProps): Instance {
     if (!props.disabled) props.onClick?.();
   };
 
+  const labelColor = props.disabled ? variant.disabled?.color ?? variant.color : variant.color;
   const instance = Box({
     style: styles,
     focusable: true,
     onClick: () => activate(),
     onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') activate(); },
-    children: props.children ?? Text({ style: { color: variant.color }, children: props.label ?? '' }),
+    children: props.children ?? Text({ style: { color: labelColor }, children: props.label ?? '' }),
   });
   // Forward layout child-props (flex/margin/alignSelf/…) so a Button composes in Flex/Stack.
   applyLayoutChildProps(instance, props);

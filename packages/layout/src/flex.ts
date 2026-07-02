@@ -289,10 +289,17 @@ export class FlexNode extends LayoutNode {
       crossCursor += line.crossExtent + gap;
     }
 
-    // Phase 4: compute own size.
-    const ownMain = lines.reduce((m, l) => Math.max(m, l.usedMain), 0);
+    // Phase 4: compute own size. An explicit width/height overrides the content
+    // extent on its axis (matching the nowrap path). NOTE: `justify` and grow/shrink
+    // are not applied per line in wrap mode (v1 limitation — wrapped lines are
+    // start-packed at their natural size).
+    const explicitMain = isRow ? this.width : this.height;
+    const explicitCross = isRow ? this.height : this.width;
+    const contentMain = lines.reduce((m, l) => Math.max(m, l.usedMain), 0);
     // crossCursor has an extra trailing gap; remove it.
-    const ownCross = lines.length > 0 ? crossCursor - gap : 0;
+    const contentCross = lines.length > 0 ? crossCursor - gap : 0;
+    const ownMain = explicitMain != null ? explicitMain : contentMain;
+    const ownCross = explicitCross != null ? explicitCross : contentCross;
 
     const minMain = isRow ? c.minW : c.minH;
     const minCross = isRow ? c.minH : c.minW;
