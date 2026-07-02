@@ -29,6 +29,18 @@ importers:
         specifier: workspace:*
         version: link:../host
 
+  packages/primitives:
+    dependencies:
+      '@cairn/host':
+        specifier: workspace:*
+        version: link:../host
+      '@cairn/layout':
+        specifier: workspace:*
+        version: link:../layout
+      '@cairn/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+
   packages/reactivity: {}
 
   packages/runtime:
