@@ -32,3 +32,9 @@ test('StackNode sizes to the child bounding box when unbounded', () => {
   const size = stack.layout({ minW: 0, maxW: Infinity, minH: 0, maxH: Infinity }, ctx);
   expect(size).toEqual({ w: 15, h: 18 }); // left+w, top+h
 });
+
+test('StackNode floors its size at the constraint minimum', () => {
+  const stack = new StackNode({ children: [] });
+  const size = stack.layout({ minW: 20, maxW: Infinity, minH: 15, maxH: Infinity }, ctx);
+  expect(size).toEqual({ w: 20, h: 15 }); // empty bbox (0) floored to min
+});

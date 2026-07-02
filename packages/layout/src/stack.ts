@@ -12,6 +12,8 @@ export class StackNode extends LayoutNode {
   }
 
   layout(c: Constraints, ctx: LayoutContext): Size {
+    // Bounding box measured from the stack origin (0,0): children placed at
+    // negative left/top extend outside it and do not enlarge the unbounded size.
     let maxRight = 0;
     let maxBottom = 0;
     for (const ch of this.children) {
