@@ -7,9 +7,12 @@ test('Box onClick populates instance.handlers', () => {
   expect(box.handlers?.onClick).toBe(fn);
 });
 
-test('Box with no event props has undefined handlers', () => {
+test('Box is always interactive: hover/pressed handlers present even without event props', () => {
   const box = Box({ style: { width: 10 } });
-  expect(box.handlers).toBeUndefined();
+  // createInteractive always installs pointer handlers to track hover/pressed state.
+  expect(box.handlers?.onPointerEnter).toBeTypeOf('function');
+  expect(box.handlers?.onPointerLeave).toBeTypeOf('function');
+  expect(box.handlers?.onClick).toBeUndefined();
 });
 
 test('Text collects onPointerDown', () => {
