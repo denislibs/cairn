@@ -10,20 +10,30 @@ import type {
 // Attaches DOM pointer/wheel listeners to a canvas and normalizes them into the
 // DOM-free PointerInput/WheelInput contract. Coordinates are converted to logical
 // px relative to the canvas top-left via getBoundingClientRect().
+//
+// Keyboard is listened on a document-level target (window) rather than the canvas,
+// and the canvas is intentionally NOT made focusable: that lets the hidden <input>
+// text proxy hold DOM focus during editing (a focusable canvas would steal it back
+// on the trusted mousedown after a click), while keyboard still reaches the app.
 export class WebInputSource implements InputSource {
   private pointerCbs = new Set<(e: PointerInput) => void>();
   private wheelCbs = new Set<(e: WheelInput) => void>();
   private keyCbs = new Set<(e: KeyboardInput) => void>();
+  private keyTarget?: EventTarget;
 
-  constructor(private canvas: HTMLCanvasElement) {
+  constructor(private canvas: HTMLCanvasElement, keyTarget?: EventTarget) {
     canvas.addEventListener('pointerdown', this.down);
     canvas.addEventListener('pointermove', this.move);
     canvas.addEventListener('pointerup', this.up);
     canvas.addEventListener('wheel', this.wheel);
     canvas.addEventListener('pointerleave', this.leave);
-    if (canvas.tabIndex < 0) canvas.tabIndex = 0; // make the surface keyboard-focusable
-    canvas.addEventListener('keydown', this.keydown);
-    canvas.addEventListener('keyup', this.keyup);
+    // Stop a click on the canvas from moving DOM focus (which would blur the hidden
+    // text-input proxy right after we focus it). Keyboard is on the window, so the
+    // canvas never needs DOM focus.
+    canvas.addEventListener('mousedown', this.blockFocusSteal);
+    this.keyTarget = keyTarget ?? (typeof window !== 'undefined' ? window : undefined);
+    this.keyTarget?.addEventListener('keydown', this.keydown as EventListener);
+    this.keyTarget?.addEventListener('keyup', this.keyup as EventListener);
   }
 
   onPointer(cb: (e: PointerInput) => void): () => void {
@@ -47,8 +57,9 @@ export class WebInputSource implements InputSource {
     this.canvas.removeEventListener('pointerup', this.up);
     this.canvas.removeEventListener('wheel', this.wheel);
     this.canvas.removeEventListener('pointerleave', this.leave);
-    this.canvas.removeEventListener('keydown', this.keydown);
-    this.canvas.removeEventListener('keyup', this.keyup);
+    this.canvas.removeEventListener('mousedown', this.blockFocusSteal);
+    this.keyTarget?.removeEventListener('keydown', this.keydown as EventListener);
+    this.keyTarget?.removeEventListener('keyup', this.keyup as EventListener);
   }
 
   private emitPointer(type: PointerInputType, ev: PointerEvent): void {
@@ -62,6 +73,8 @@ export class WebInputSource implements InputSource {
     };
     for (const cb of this.pointerCbs) cb(input);
   }
+
+  private blockFocusSteal = (ev: MouseEvent) => ev.preventDefault();
 
   private down = (ev: PointerEvent) => this.emitPointer('pointerdown', ev);
   private move = (ev: PointerEvent) => this.emitPointer('pointermove', ev);

@@ -22,6 +22,19 @@ export interface PointerDispatcherHooks {
   onPointerDown?(path: HitNode[]): void; // fires on every pointerdown, incl. empty path
 }
 
+// Absolute top-left of path[0] (the target): each node's offset is relative to the
+// next node in the path (its parent), so summing the whole path yields the target's
+// surface-space position.
+function absOffset(path: HitNode[]): { x: number; y: number } {
+  let x = 0;
+  let y = 0;
+  for (const n of path) {
+    x += n.layout.offsetX;
+    y += n.layout.offsetY;
+  }
+  return { x, y };
+}
+
 // Translates raw pointer input into hit-tested bubble dispatch, synthesizing a
 // `click` on pointerup at the nearest common ancestor of the down and up paths.
 export function createPointerDispatcher(
@@ -58,10 +71,13 @@ export function createPointerDispatcher(
         return;
       }
 
+      const abs = absOffset(path);
       dispatch(path, {
         type: input.type,
         x: input.x,
         y: input.y,
+        localX: input.x - abs.x,
+        localY: input.y - abs.y,
         button: input.button,
         pointerType: input.pointerType,
       });
@@ -73,10 +89,13 @@ export function createPointerDispatcher(
           const nca = nearestCommonAncestor(downPath, path);
           if (nca) {
             const clickPath = path.slice(path.indexOf(nca));
+            const cabs = absOffset(clickPath);
             dispatch(clickPath, {
               type: 'click',
               x: input.x,
               y: input.y,
+              localX: input.x - cabs.x,
+              localY: input.y - cabs.y,
               button: input.button,
               pointerType: input.pointerType,
             });
