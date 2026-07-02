@@ -119,10 +119,16 @@ Expected: FAIL — cannot resolve `../src/index`.
 ```ts
 import type { EdgeInsets, Justify, Align } from '@cairn/layout';
 
-export type StateName = 'hover' | 'focus' | 'active' | 'pressed' | 'disabled';
+// Fixed precedence (disabled wins). Single source of truth: StateName is derived from it.
+export const STATE_ORDER = Object.freeze([
+  'hover',
+  'focus',
+  'active',
+  'pressed',
+  'disabled',
+] as const);
 
-// Fixed precedence: later states override earlier ones (disabled wins).
-export const STATE_ORDER: readonly StateName[] = ['hover', 'focus', 'active', 'pressed', 'disabled'];
+export type StateName = (typeof STATE_ORDER)[number];
 
 export interface BaseStyle {
   // layout
