@@ -17,6 +17,8 @@ export interface BoxNodeProps {
   minHeight?: number;
   maxHeight?: number;
   child?: LayoutNode;
+  alignX?: 'start' | 'center' | 'end';
+  alignY?: 'start' | 'center' | 'end';
 }
 
 export function toEdgeInsets(p?: number | Partial<EdgeInsets>): EdgeInsets {
@@ -33,6 +35,8 @@ export class BoxNode extends LayoutNode {
   maxWidth?: number;
   minHeight?: number;
   maxHeight?: number;
+  alignX: 'start' | 'center' | 'end';
+  alignY: 'start' | 'center' | 'end';
 
   constructor(props: BoxNodeProps = {}) {
     super();
@@ -43,6 +47,8 @@ export class BoxNode extends LayoutNode {
     this.maxWidth = props.maxWidth;
     this.minHeight = props.minHeight;
     this.maxHeight = props.maxHeight;
+    this.alignX = props.alignX ?? 'start';
+    this.alignY = props.alignY ?? 'start';
     if (props.child) this.children = [props.child];
   }
 
@@ -58,10 +64,12 @@ export class BoxNode extends LayoutNode {
       const childMaxW = Math.max(0, selfMaxW - p.left - p.right);
       const childMaxH = Math.max(0, selfMaxH - p.top - p.bottom);
       const cs = child.layout({ minW: 0, maxW: childMaxW, minH: 0, maxH: childMaxH }, ctx);
-      child.offsetX = p.left;
-      child.offsetY = p.top;
       w = clamp(cs.w + p.left + p.right, selfMinW, selfMaxW);
       h = clamp(cs.h + p.top + p.bottom, selfMinH, selfMaxH);
+      const extraX = Math.max(0, w - p.left - p.right - cs.w);
+      const extraY = Math.max(0, h - p.top - p.bottom - cs.h);
+      child.offsetX = p.left + (this.alignX === 'center' ? extraX / 2 : this.alignX === 'end' ? extraX : 0);
+      child.offsetY = p.top + (this.alignY === 'center' ? extraY / 2 : this.alignY === 'end' ? extraY : 0);
     } else {
       w = selfMinW;
       h = selfMinH;
