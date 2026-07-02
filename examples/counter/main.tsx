@@ -18,6 +18,7 @@ function App() {
           backgroundColor: '#3b82f6',
           borderRadius: 16,
           padding: 24,
+          height: 132,
           hover: { backgroundColor: '#2563eb' },
           pressed: { backgroundColor: '#1d4ed8' },
           focus: { backgroundColor: '#1e40af' },
