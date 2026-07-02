@@ -10,3 +10,5 @@ export { ThemeProvider } from './theme-provider';
 export type { ThemeProviderProps } from './theme-provider';
 export { collectHandlers } from './events';
 export type { EventProps } from './events';
+export { createInteractive } from './interactive';
+export type { InteractiveProps, Interactive } from './interactive';

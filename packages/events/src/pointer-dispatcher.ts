@@ -1,7 +1,7 @@
 import type { PointerInput, WheelInput } from '@cairn/host';
 import type { HitNode } from './event';
 import { hitTest } from './hit-test';
-import { dispatch, dispatchWheel } from './dispatch';
+import { dispatch, dispatchWheel, dispatchTo } from './dispatch';
 
 // Both paths are ordered [target ... root]. The first node of `a` also present in
 // `b` is therefore the deepest node they share.
@@ -22,10 +22,28 @@ export interface PointerDispatcher {
 // `click` on pointerup at the nearest common ancestor of the down and up paths.
 export function createPointerDispatcher(getRoot: () => HitNode): PointerDispatcher {
   let downPath: HitNode[] | null = null;
+  let hoverPath: HitNode[] = [];
+
+  // Diff the previous hover path against the new one and fire non-bubbling
+  // enter/leave. A node stays hovered while the pointer is over a descendant
+  // (CSS :hover semantics). Empty newPath fires leave for every hovered node.
+  const syncHover = (newPath: HitNode[], input: PointerInput): void => {
+    const newSet = new Set(newPath);
+    const oldSet = new Set(hoverPath);
+    const coords = { x: input.x, y: input.y, button: input.button, pointerType: input.pointerType };
+    for (const n of hoverPath) {
+      if (!newSet.has(n)) dispatchTo(n, { type: 'pointerleave', ...coords });
+    }
+    for (const n of newPath) {
+      if (!oldSet.has(n)) dispatchTo(n, { type: 'pointerenter', ...coords });
+    }
+    hoverPath = newPath;
+  };
 
   return {
     handlePointer(input: PointerInput): void {
       const path = hitTest(getRoot(), input.x, input.y);
+      syncHover(path, input);
       if (path.length === 0) {
         // Missing the surface on release drops any pending down.
         if (input.type === 'pointerup') downPath = null;

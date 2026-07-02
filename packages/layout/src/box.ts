@@ -19,7 +19,7 @@ export interface BoxNodeProps {
   child?: LayoutNode;
 }
 
-function toInsets(p?: number | Partial<EdgeInsets>): EdgeInsets {
+export function toEdgeInsets(p?: number | Partial<EdgeInsets>): EdgeInsets {
   if (p == null) return { top: 0, right: 0, bottom: 0, left: 0 };
   if (typeof p === 'number') return { top: p, right: p, bottom: p, left: p };
   return { top: p.top ?? 0, right: p.right ?? 0, bottom: p.bottom ?? 0, left: p.left ?? 0 };
@@ -36,7 +36,7 @@ export class BoxNode extends LayoutNode {
 
   constructor(props: BoxNodeProps = {}) {
     super();
-    this.padding = toInsets(props.padding);
+    this.padding = toEdgeInsets(props.padding);
     this.width = props.width;
     this.height = props.height;
     this.minWidth = props.minWidth;

@@ -1,9 +1,10 @@
 import type { Renderer } from '@cairn/host';
-import { BoxNode } from '@cairn/layout';
-import { type Instance } from '@cairn/runtime';
-import { useTheme } from '@cairn/style';
-import { resolveStyleInput, type StyleInput } from './resolve-input';
-import { collectHandlers, type EventProps } from './events';
+import { BoxNode, toEdgeInsets } from '@cairn/layout';
+import { type Instance, bind } from '@cairn/runtime';
+import { type BaseStyle } from '@cairn/style';
+import { type StyleInput } from './resolve-input';
+import { createInteractive } from './interactive';
+import type { EventProps } from './events';
 
 export interface BoxProps extends EventProps {
   style?: StyleInput;
@@ -11,24 +12,29 @@ export interface BoxProps extends EventProps {
 }
 
 export function Box(props: BoxProps = {}): Instance {
-  const s = resolveStyleInput(props.style, useTheme());
   const child = props.children;
-  const layout = new BoxNode({
-    width: s.width,
-    height: s.height,
-    padding: s.padding,
-    child: child?.layout,
+  const { resolved, handlers } = createInteractive(props);
+  const layout = new BoxNode({ child: child?.layout });
+  let current: BaseStyle = {};
+
+  // Reactive: re-applies (and schedules a frame) when hovered/pressed change.
+  bind(resolved, (s) => {
+    current = s;
+    layout.width = s.width;
+    layout.height = s.height;
+    layout.padding = toEdgeInsets(s.padding);
   });
+
   return {
     layout,
     children: child ? [child] : [],
-    handlers: collectHandlers(props),
+    handlers,
     paintSelf(r: Renderer) {
-      if (s.backgroundColor) {
+      if (current.backgroundColor) {
         r.fillRoundRect(
           { x: 0, y: 0, width: layout.size.w, height: layout.size.h },
-          s.borderRadius ?? 0,
-          { color: s.backgroundColor },
+          current.borderRadius ?? 0,
+          { color: current.backgroundColor },
         );
       }
     },

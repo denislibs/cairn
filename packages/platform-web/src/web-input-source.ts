@@ -17,6 +17,7 @@ export class WebInputSource implements InputSource {
     canvas.addEventListener('pointermove', this.move);
     canvas.addEventListener('pointerup', this.up);
     canvas.addEventListener('wheel', this.wheel);
+    canvas.addEventListener('pointerleave', this.leave);
   }
 
   onPointer(cb: (e: PointerInput) => void): () => void {
@@ -34,6 +35,7 @@ export class WebInputSource implements InputSource {
     this.canvas.removeEventListener('pointermove', this.move);
     this.canvas.removeEventListener('pointerup', this.up);
     this.canvas.removeEventListener('wheel', this.wheel);
+    this.canvas.removeEventListener('pointerleave', this.leave);
   }
 
   private emitPointer(type: PointerInputType, ev: PointerEvent): void {
@@ -51,6 +53,17 @@ export class WebInputSource implements InputSource {
   private down = (ev: PointerEvent) => this.emitPointer('pointerdown', ev);
   private move = (ev: PointerEvent) => this.emitPointer('pointermove', ev);
   private up = (ev: PointerEvent) => this.emitPointer('pointerup', ev);
+
+  private leave = (ev: PointerEvent) => {
+    const input: PointerInput = {
+      type: 'pointermove',
+      x: -1,
+      y: -1,
+      button: 0,
+      pointerType: (ev.pointerType as PointerInput['pointerType']) || 'mouse',
+    };
+    for (const cb of this.pointerCbs) cb(input);
+  };
 
   private wheel = (ev: WheelEvent) => {
     const rect = this.canvas.getBoundingClientRect();

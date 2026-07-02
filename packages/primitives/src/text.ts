@@ -1,9 +1,10 @@
 import type { Renderer } from '@cairn/host';
 import { TextNode } from '@cairn/layout';
 import { type Instance, bind, type MaybeReactive } from '@cairn/runtime';
-import { useTheme } from '@cairn/style';
-import { resolveStyleInput, type StyleInput } from './resolve-input';
-import { collectHandlers, type EventProps } from './events';
+import { type BaseStyle } from '@cairn/style';
+import { type StyleInput } from './resolve-input';
+import { createInteractive } from './interactive';
+import type { EventProps } from './events';
 
 export interface TextProps extends EventProps {
   children?: MaybeReactive<string | number>;
@@ -12,20 +13,31 @@ export interface TextProps extends EventProps {
 }
 
 export function Text(props: TextProps = {}): Instance {
-  const s = resolveStyleInput(props.style, useTheme());
-  const font = s.font ?? '16px sans-serif';
-  const color = s.color ?? '#000';
-  const layout = new TextNode({ text: '', style: { font } });
+  const { resolved, handlers } = createInteractive(props);
+  const layout = new TextNode({ text: '', style: { font: '16px sans-serif' } });
+  let current: BaseStyle = {};
+
+  // Reactive style: font drives both layout (measure) and paint; color is paint-only.
+  bind(resolved, (s) => {
+    current = s;
+    layout.style = { ...layout.style, font: s.font ?? '16px sans-serif' };
+  });
+
   const content = props.value ?? props.children ?? '';
   bind(content, (v) => {
     layout.text = String(v);
   });
+
   return {
     layout,
     children: [],
-    handlers: collectHandlers(props),
+    handlers,
     paintSelf(r: Renderer) {
-      r.drawText(layout.text, { x: 0, y: 0 }, { font, color, baseline: 'top' });
+      r.drawText(
+        layout.text,
+        { x: 0, y: 0 },
+        { font: current.font ?? '16px sans-serif', color: current.color ?? '#000', baseline: 'top' },
+      );
     },
   };
 }

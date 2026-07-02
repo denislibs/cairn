@@ -66,3 +66,12 @@ test('unsubscribe stops delivery', () => {
   listeners.pointerdown({ clientX: 130, clientY: 70, button: 0, pointerType: 'mouse' });
   expect(seen).toEqual([]);
 });
+
+test('canvas pointerleave emits an out-of-bounds pointermove to clear hover', () => {
+  const { canvas, listeners } = fakeCanvas();
+  const src = new WebInputSource(canvas);
+  const seen: PointerInput[] = [];
+  src.onPointer((e) => seen.push(e));
+  listeners.pointerleave({ clientX: 100, clientY: 50, button: 0, pointerType: 'mouse' });
+  expect(seen).toEqual([{ type: 'pointermove', x: -1, y: -1, button: 0, pointerType: 'mouse' }]);
+});

@@ -4,6 +4,8 @@ const POINTER_HANDLERS: Record<CairnPointerEvent['type'], keyof EventHandlers> =
   pointerdown: 'onPointerDown',
   pointermove: 'onPointerMove',
   pointerup: 'onPointerUp',
+  pointerenter: 'onPointerEnter',
+  pointerleave: 'onPointerLeave',
   click: 'onClick',
 };
 
@@ -47,4 +49,21 @@ export function dispatchWheel(
     if (stopped) break;
     node.handlers?.onWheel?.(event);
   }
+}
+
+/** Non-bubbling dispatch to a single node (used for enter/leave). */
+export function dispatchTo(
+  node: HitNode,
+  init: Omit<CairnPointerEvent, 'target' | 'stopPropagation'>,
+): void {
+  const event: CairnPointerEvent = {
+    ...init,
+    target: node,
+    stopPropagation() {
+      // single-node dispatch: nothing to stop
+    },
+  };
+  const key = POINTER_HANDLERS[init.type];
+  const fn = node.handlers?.[key] as ((e: CairnPointerEvent) => void) | undefined;
+  fn?.(event);
 }
