@@ -8,3 +8,5 @@ export { mount } from './mount';
 export { Provider } from './provider';
 export { hostContext, useHost } from './host-context';
 export type { ProviderProps } from './provider';
+export { Show } from './show';
+export type { ShowProps } from './show';
