@@ -13,7 +13,8 @@
     "@cairn/runtime": "workspace:*",
     "@cairn/layout": "workspace:*",
     "@cairn/host": "workspace:*",
-    "@cairn/style": "workspace:*"
+    "@cairn/style": "workspace:*",
+    "@cairn/events": "workspace:*"
   },
   "devDependencies": {
     "@cairn/reactivity": "workspace:*"

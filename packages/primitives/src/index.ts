@@ -8,3 +8,5 @@ export { resolveStyleInput } from './resolve-input';
 export type { StyleInput } from './resolve-input';
 export { ThemeProvider } from './theme-provider';
 export type { ThemeProviderProps } from './theme-provider';
+export { collectHandlers } from './events';
+export type { EventProps } from './events';

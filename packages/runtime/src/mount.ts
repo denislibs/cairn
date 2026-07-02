@@ -1,4 +1,5 @@
 import { createRoot } from '@cairn/reactivity';
+import { createPointerDispatcher } from '@cairn/events';
 import type { Host } from '@cairn/host';
 import type { LayoutContext } from '@cairn/layout';
 import { type Instance, paint } from './instance';
@@ -40,7 +41,13 @@ export function mount(component: () => Instance, host: Host): () => void {
 
     const unsubscribeResize = host.metrics.onResize(() => renderFrame());
 
+    const dispatcher = createPointerDispatcher(() => root);
+    const unsubscribePointer = host.input.onPointer((e) => dispatcher.handlePointer(e));
+    const unsubscribeWheel = host.input.onWheel((e) => dispatcher.handleWheel(e));
+
     return () => {
+      unsubscribePointer();
+      unsubscribeWheel();
       unsubscribeResize(); // avoid re-render on a disposed tree
       setFrameRequester(null);
       dispose();

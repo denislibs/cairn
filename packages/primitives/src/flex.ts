@@ -2,8 +2,9 @@ import { FlexNode, type FlexDirection } from '@cairn/layout';
 import { type Instance } from '@cairn/runtime';
 import { useTheme } from '@cairn/style';
 import { resolveStyleInput, type StyleInput } from './resolve-input';
+import { collectHandlers, type EventProps } from './events';
 
-export interface FlexProps {
+export interface FlexProps extends EventProps {
   style?: StyleInput;
   children?: Instance | Instance[];
 }
@@ -22,6 +23,7 @@ function flex(direction: FlexDirection, props: FlexProps): Instance {
   return {
     layout,
     children,
+    handlers: collectHandlers(props),
     paintSelf() {
       // containers have no own visuals
     },

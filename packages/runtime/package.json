@@ -13,6 +13,7 @@
   "dependencies": {
     "@cairn/reactivity": "workspace:*",
     "@cairn/layout": "workspace:*",
-    "@cairn/host": "workspace:*"
+    "@cairn/host": "workspace:*",
+    "@cairn/events": "workspace:*"
   }
 }

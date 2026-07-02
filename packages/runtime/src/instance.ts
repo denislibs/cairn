@@ -1,10 +1,12 @@
 import type { Renderer } from '@cairn/host';
 import type { LayoutNode } from '@cairn/layout';
+import type { EventHandlers } from '@cairn/events';
 
 export interface Instance {
   layout: LayoutNode;
   paintSelf(r: Renderer): void;
   children: Instance[];
+  handlers?: EventHandlers;
 }
 
 // Walk the instance tree, translating into each node's local coordinate space.
