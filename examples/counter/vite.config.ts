@@ -22,6 +22,7 @@ export default defineConfig({
       '@cairn/style': pkg('style/src/index.ts'),
       '@cairn/events': pkg('events/src/index.ts'),
       '@cairn/platform-web': pkg('platform-web/src/index.ts'),
+      '@cairn/widgets': pkg('widgets/src/index.ts'),
     },
   },
 });

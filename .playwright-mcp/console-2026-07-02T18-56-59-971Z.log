@@ -1,0 +1,2 @@
+[ 5085995ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5182/@vite/client:559
+[ 5086003ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5182/:0

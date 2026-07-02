@@ -19,51 +19,50 @@
 
 ## 1. Размеры и box-model
 - ✅ `width`, `height`
-- 🟡 `minWidth` / `maxWidth` / `minHeight` / `maxHeight` (есть у `BoxNode`, нет в `BaseStyle`)
+- ✅ `minWidth` / `maxWidth` / `minHeight` / `maxHeight`
 - ✅ `padding` (+ по сторонам через `EdgeInsets`)
-- ❌ `margin` (+ по сторонам) — сейчас только `gap` / `padding`
-- ❌ `aspectRatio`
+- ✅ `margin` (+ по сторонам через `EdgeInsets`)
+- ✅ `aspectRatio`
 - ❌ `boxSizing` (сейчас поведение border-box-подобное)
-- ✅ `gap`; ❌ раздельные `rowGap` / `columnGap`
+- ✅ `gap`; ✅ раздельные `rowGap` / `columnGap`
 - ❌ `overflow: visible | hidden | scroll | clip` (в рендерере `clipRect` есть; scroll — отдельная инфраструктура)
 
 ## 2. Флекс и позиционирование
 - ✅ `flexDirection` (`Row` / `Column`)
 - ✅ `justify` (главная ось), `align` (поперечная ось)
-- ❌ `alignSelf` (переопределение cross на ребёнке)
-- ✅ `flex` (grow); ❌ `flexShrink`, `flexBasis`
-- ❌ `flexWrap` (перенос на новую линию)
+- ✅ `alignSelf` (переопределение cross на ребёнке)
+- ✅ `flex` (grow); ✅ `flexShrink`, `flexBasis`
+- ✅ `flexWrap` (перенос на новую линию)
 - ✅ `mainAxisSize: 'min' | 'max'` (shrink-wrap vs fill)
-- 🟡 `position` (`Stack` + `left`/`top`); ❌ `right`/`bottom`, `inset`
-- ❌ `zIndex` (сейчас порядок отрисовки = порядок детей)
+- ✅ `position` (`Stack` + `left`/`top`/`right`/`bottom`/`inset`)
+- ✅ `zIndex`
 - ❌ `Grid` (columns / rows / areas)
 
 ## 3. Фон и заливки
 - ✅ `backgroundColor`
-- 🟡 `backgroundGradient` (linear / radial — рендерер умеет `Gradient`)
+- ✅ `backgroundGradient` (linear / radial)
 - ❌ `backgroundImage` / `objectFit`
-- ❌ `opacity` (альфа всего элемента — нужен `globalAlpha` в рендерере)
+- ✅ `opacity` (альфа всего элемента)
 - ❌ `backdropFilter` (блюр под элементом)
 
 ## 4. Границы
 - ✅ `border { width, color }` (все стороны одинаково)
-- ❌ per-side (`borderTop` / `borderRight` / …)
-- ❌ `borderStyle` (solid / dashed / dotted — нужен `lineDash`)
-- ✅ `borderRadius` (единый); 🟡 per-corner (тип `Radii` уже поддерживает `{tl,tr,br,bl}`)
+- ✅ per-side (`borderTop` / `borderRight` / `borderBottom` / `borderLeft`)
+- ✅ `borderStyle` (solid / dashed / dotted)
+- ✅ `borderRadius` (единый); ✅ per-corner (`{ tl, tr, br, bl }`)
 - ❌ `outline` / focus-ring как отдельный слой
 
 ## 5. Тени и эффекты
-- 🟡 `boxShadow` (color / blur / offsetX / offsetY) — **рендерер уже имеет `setShadow`/`Shadow`**;
-  нужно добавить поле в `BaseStyle` и оборачивать заливку. Spread / inset / несколько теней — доработка.
-- 🟡 `textShadow` (тем же `setShadow` вокруг `drawText`)
+- ✅ `boxShadow` (color / blur / offsetX / offsetY)
+- ✅ `textShadow`
 - ❌ `elevation` (пресеты material-теней)
 - ❌ `filter`: blur / brightness / contrast / …
 
 ## 6. Типографика
 - ✅ `font` (CSS-шорткат строкой), `color`
 - ❌ раздельные `fontFamily` / `fontSize` / `fontWeight` / `fontStyle`
-- 🟡 `lineHeight` (есть у `TextNode`, нет в стиле)
-- 🟡 `textAlign` (есть `TextStyle.align` в рендерере)
+- ✅ `lineHeight`
+- ✅ `textAlign` (left / center / right)
 - ❌ `letterSpacing`, `wordSpacing`
 - ❌ `textDecoration` (underline / strikethrough)
 - ❌ `textTransform` (upper / lower / capitalize)
@@ -90,10 +89,10 @@
 - ❌ `userSelect`
 
 ## 10. Изображения и векторы (SVG)
-- 🟡 `Image`-примитив (`drawImage` есть, примитива нет → Фаза 10b); ❌ `objectFit`
-- **Векторы / SVG:** рендерер имеет `Path` + `fillPath`/`strokePath` 🟡 — иконки по path-данным рисуются уже сейчас. Нужно:
-  - 🟡 `Icon`-примитив (path-данные, как в Lucide) → реалистично, Фаза 10b
-  - 🟡 `Svg` / `Path`-примитив (произвольные пути, заливка / обводка / градиент)
+- ✅ `Image`-примитив (+ `objectFit`: `fill` / `contain` / `cover` / `none` / `scale-down`)
+- **Векторы / SVG:**
+  - ✅ `Icon`-примитив (path-данные, как в Lucide)
+  - ✅ `Svg` / `Path`-примитив (произвольные пути, заливка / обводка / градиент)
   - ❌ **полный SVG-документ** (парсинг `<svg>`: groups, transforms, gradients, clipPath, filters, `<use>`) — большая отдельная фича
 
 ## 11. Тема, токены, тёмная тема
@@ -128,15 +127,15 @@
 ---
 
 ## Приоритет: «дёшево и полезно» (рендерер уже готов)
-Самые выгодные добавления — почти без работы в движке, только вывод в `BaseStyle`/примитив:
-1. `boxShadow` (есть `setShadow`)
-2. градиенты в `backgroundColor` / `border` (есть `Gradient`)
-3. per-corner `borderRadius` (есть `Radii {tl,tr,br,bl}`)
-4. `textAlign` (есть `TextStyle.align`)
-5. `lineHeight` (есть у `TextNode`)
-6. `opacity` (нужен небольшой `globalAlpha` в рендерере)
-7. `Image` / `Icon` / `Svg`-path примитивы (есть `drawImage` / `fillPath`)
-8. `min` / `max` размеры (есть у `BoxNode`)
+Все пункты этого списка реализованы в Phase 10b (✅):
+1. ✅ `boxShadow` (есть `setShadow`)
+2. ✅ градиенты в `backgroundGradient` (есть `Gradient`)
+3. ✅ per-corner `borderRadius` (есть `Radii {tl,tr,br,bl}`)
+4. ✅ `textAlign` (есть `TextStyle.align`)
+5. ✅ `lineHeight` (есть у `TextNode`)
+6. ✅ `opacity` (`globalAlpha` в рендерере)
+7. ✅ `Image` / `Icon` / `Svg`-path примитивы (есть `drawImage` / `fillPath`)
+8. ✅ `min` / `max` размеры (есть у `BoxNode`)
 
 ## «Дорого» (нужен и движок, и большая фича)
 Перенос строк / многострочный текст, `flexWrap`, `Grid`, `ScrollView`, `Portal` / оверлеи,
@@ -146,8 +145,20 @@ a11y (Фаза 14), роутинг (Фаза 15/16).
 ---
 
 ## Текущий набор (для ориентира)
-- **Примитивы:** `Box`, `Text`, `Row`, `Column`, `Stack`, `Input` (+ control-flow `Show`/`For`/`Index`/`Switch`, `ThemeProvider`, сырой `Instance` как escape-hatch).
-- **`BaseStyle` сейчас:** `width`, `height`, `padding`, `gap`, `justify`, `align`, `alignX`, `alignY`,
-  `backgroundColor`, `borderRadius`, `border {width,color}`, `color`, `font`.
+- **Примитивы:** `Box`, `Text`, `Row`, `Column`, `Stack`, `Input`, `Image`, `Icon`, `Path`, `Svg`
+  (+ control-flow `Show`/`For`/`Index`/`Switch`, `ThemeProvider`, сырой `Instance` как escape-hatch).
+- **Виджеты (`@cairn/widgets`):** `Button` (primary / secondary / ghost), `Slider`, `Checkbox`, `Switch`, `Divider`.
+- **`BaseStyle` сейчас:** `width`, `height`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`,
+  `left`, `top`, `right`, `bottom`, `inset`,
+  `padding`, `margin` (+ `EdgeInsets`), `gap`, `rowGap`, `columnGap`,
+  `justify`, `align`, `alignSelf`, `alignX`, `alignY`,
+  `flex`, `flexShrink`, `flexBasis`, `flexWrap`,
+  `zIndex`, `aspectRatio`,
+  `backgroundColor`, `backgroundGradient` (linear/radial),
+  `borderRadius` (единый или `{tl,tr,br,bl}`),
+  `border`, `borderTop`, `borderRight`, `borderBottom`, `borderLeft` (`{width,color,style?}`),
+  `boxShadow`, `textShadow` (`{color,blur,offsetX,offsetY}`),
+  `opacity`, `textAlign`, `lineHeight`,
+  `color`, `font`.
 - **Состояния:** `hover`, `focus`, `active`, `pressed`, `disabled` (вложенные варианты, live).
 - **Стилизация:** инлайн `Style`, массив `Style[]` (каскад), функция `(theme) => Style`, `StyleSheet.create`.
