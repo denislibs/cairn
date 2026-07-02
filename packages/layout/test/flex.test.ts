@@ -90,3 +90,38 @@ test('align: stretch makes children fill the cross axis', () => {
   row.layout({ minW: 0, maxW: 100, minH: 0, maxH: 60 }, ctx);
   expect(a.size.h).toBe(60); // stretched to container cross (bounded maxH)
 });
+
+test('justify: space-around distributes symmetric spacing (exact fill)', () => {
+  const a = box(10, 10);
+  const b = box(10, 10);
+  const c = box(10, 10);
+  const row = new FlexNode({ direction: 'row', justify: 'space-around', children: [a, b, c] });
+  const size = row.layout({ minW: 0, maxW: 100, minH: 0, maxH: 100 }, ctx);
+  // content 30, free 70, around = 70/3; lead margin = around/2
+  expect(a.offsetX).toBeCloseTo(70 / 6, 5); // ~11.667
+  expect(b.offsetX).toBeCloseTo(45, 5);
+  expect(c.offsetX).toBeCloseTo(100 - 70 / 6 - 10, 5); // trailing margin mirrors lead
+  expect(size.w).toBe(100);
+});
+
+test('flex under unbounded main collapses to zero; container sizes to content', () => {
+  const fixed = box(20, 10);
+  const grow = box(0, 10, 1);
+  const row = new FlexNode({ direction: 'row', children: [fixed, grow] });
+  const size = row.layout({ minW: 0, maxW: Infinity, minH: 0, maxH: 100 }, ctx);
+  expect(grow.size.w).toBe(0); // no bounded free space to grow into
+  expect(size.w).toBe(20); // sizes to content
+});
+
+test('overflow: non-flex children exceeding the container spill (v1 silent overflow)', () => {
+  const a = box(40, 10);
+  const b = box(40, 10);
+  const c = box(40, 10);
+  const row = new FlexNode({ direction: 'row', children: [a, b, c] });
+  const size = row.layout({ minW: 0, maxW: 100, minH: 0, maxH: 100 }, ctx);
+  // children keep intrinsic sizes and spill past the container; no clamping in v1
+  expect(a.offsetX).toBe(0);
+  expect(b.offsetX).toBe(40);
+  expect(c.offsetX).toBe(80); // 80 + 40 = 120 > 100 (overflow)
+  expect(size.w).toBe(100); // container still reports its bounded main size
+});
