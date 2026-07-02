@@ -15,6 +15,14 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9
 
+  packages/host: {}
+
+  packages/platform-web:
+    dependencies:
+      '@cairn/host':
+        specifier: workspace:*
+        version: link:../host
+
   packages/reactivity: {}
 
 packages:
