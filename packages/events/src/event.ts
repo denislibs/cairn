@@ -1,5 +1,5 @@
 export interface HitNode {
-  layout: { offsetX: number; offsetY: number; size: { w: number; h: number } };
+  layout: { offsetX: number; offsetY: number; size: { w: number; h: number }; zIndex?: number };
   children: HitNode[];
   handlers?: EventHandlers;
   focusable?: boolean;

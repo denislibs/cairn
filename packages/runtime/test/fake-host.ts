@@ -39,6 +39,7 @@ export function createFakeRenderer(): Renderer & { calls: unknown[][] } {
       return { width: text.length * 7 };
     },
     drawImage: rec('drawImage'),
+    setGlobalAlpha: rec('setGlobalAlpha'),
   };
   return r as unknown as Renderer & { calls: unknown[][] };
 }

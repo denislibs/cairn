@@ -29,6 +29,10 @@ export interface Renderer {
   // save()/restore() to scope a clip to a subtree.
   clipRect(rect: Rect): void;
   setShadow(shadow: Shadow | null): void;
+  // Multiplies the alpha of subsequent drawing (1 = opaque). Saved/restored by save()/restore().
+  setGlobalAlpha(alpha: number): void;
+  // Dash pattern for subsequent strokes; [] = solid. Saved/restored by save()/restore().
+  setLineDash(segments: number[]): void;
 
   fillRect(rect: Rect, style: FillStyle): void;
   strokeRect(rect: Rect, style: StrokeStyle): void;

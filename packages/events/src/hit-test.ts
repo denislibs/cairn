@@ -15,10 +15,18 @@ function hitAt(node: HitNode, x: number, y: number, ax: number, ay: number): Hit
   const { w, h } = node.layout.size;
   if (x < nx || x >= nx + w || y < ny || y >= ny + h) return null;
 
-  for (let i = node.children.length - 1; i >= 0; i--) {
-    const child = node.children[i];
-    const hit = hitAt(child, x, y, nx, ny);
+  const ordered = orderByZ(node.children);
+  for (let i = ordered.length - 1; i >= 0; i--) {
+    const hit = hitAt(ordered[i], x, y, nx, ny);
     if (hit) return [...hit, node];
   }
   return [node];
+}
+
+function orderByZ(children: HitNode[]): HitNode[] {
+  if (!children.some((c) => c.layout.zIndex)) return children;
+  return children
+    .map((c, i) => ({ c, i }))
+    .sort((a, b) => (a.c.layout.zIndex ?? 0) - (b.c.layout.zIndex ?? 0) || a.i - b.i)
+    .map((x) => x.c);
 }

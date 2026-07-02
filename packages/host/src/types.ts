@@ -21,6 +21,8 @@ export interface GradientStop {
   color: Color;
 }
 
+// Coordinates (`from`/`to`/`center`, `radius`) are in the local pixel space of the
+// element being painted (origin at its top-left) — NOT normalized 0..1.
 export type Gradient =
   | { kind: 'linear'; from: Point; to: Point; stops: GradientStop[] }
   | { kind: 'radial'; center: Point; radius: number; stops: GradientStop[] };

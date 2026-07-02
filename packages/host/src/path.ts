@@ -3,6 +3,7 @@ export type PathCommand =
   | { type: 'lineTo'; x: number; y: number }
   | { type: 'arc'; cx: number; cy: number; r: number; start: number; end: number }
   | { type: 'quadTo'; cx: number; cy: number; x: number; y: number }
+  | { type: 'cubicTo'; c1x: number; c1y: number; c2x: number; c2y: number; x: number; y: number }
   | { type: 'close' };
 
 export interface Path {
@@ -14,6 +15,7 @@ export interface PathBuilder {
   lineTo(x: number, y: number): PathBuilder;
   arc(cx: number, cy: number, r: number, start: number, end: number): PathBuilder;
   quadTo(cx: number, cy: number, x: number, y: number): PathBuilder;
+  cubicTo(c1x: number, c1y: number, c2x: number, c2y: number, x: number, y: number): PathBuilder;
   close(): PathBuilder;
   build(): Path;
 }
@@ -35,6 +37,10 @@ export function createPath(): PathBuilder {
     },
     quadTo(cx, cy, x, y) {
       commands.push({ type: 'quadTo', cx, cy, x, y });
+      return builder;
+    },
+    cubicTo(c1x, c1y, c2x, c2y, x, y) {
+      commands.push({ type: 'cubicTo', c1x, c1y, c2x, c2y, x, y });
       return builder;
     },
     close() {

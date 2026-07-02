@@ -4,7 +4,7 @@ import { type BaseStyle } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
 import type { EventProps } from './events';
-import { applyLayoutChildProps, type LayoutChildProps } from './layout-child';
+import { applyLayoutChildProps, applyLayoutStyle, type LayoutChildProps } from './layout-child';
 
 export interface FlexProps extends EventProps, LayoutChildProps {
   style?: StyleInput;
@@ -26,10 +26,14 @@ function flex(direction: FlexDirection, props: FlexProps): Instance {
 
   bind(resolved, (s: BaseStyle) => {
     layout.gap = s.gap ?? 0;
+    layout.rowGap = s.rowGap;
+    layout.columnGap = s.columnGap;
     layout.justify = s.justify ?? 'start';
     layout.align = s.align ?? 'start';
     layout.width = s.width;
     layout.height = s.height;
+    layout.wrap = s.flexWrap ?? 'nowrap';
+    applyLayoutStyle(layout, s);
   });
 
   const instance: Instance = {

@@ -81,6 +81,13 @@ export class Canvas2DRenderer implements Renderer {
     }
   }
 
+  setGlobalAlpha(alpha: number): void {
+    this.ctx.globalAlpha = alpha;
+  }
+  setLineDash(segments: number[]): void {
+    this.ctx.setLineDash(segments);
+  }
+
   fillRect(rect: Rect, style: FillStyle): void {
     this.ctx.fillStyle = this.resolveFill(style);
     this.ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
@@ -194,6 +201,9 @@ export class Canvas2DRenderer implements Renderer {
           break;
         case 'quadTo':
           this.ctx.quadraticCurveTo(cmd.cx, cmd.cy, cmd.x, cmd.y);
+          break;
+        case 'cubicTo':
+          this.ctx.bezierCurveTo(cmd.c1x, cmd.c1y, cmd.c2x, cmd.c2y, cmd.x, cmd.y);
           break;
         case 'close':
           this.ctx.closePath();

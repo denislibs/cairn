@@ -230,3 +230,17 @@ test('drawImage draws with src and dest rects', () => {
   r.drawImage(img, { x: 0, y: 0, width: 10, height: 5 }, { x: 2, y: 3, width: 4, height: 6 });
   expect(ctx.calls).toContainEqual(['drawImage', img, 2, 3, 4, 6, 0, 0, 10, 5]);
 });
+
+test('setGlobalAlpha sets ctx.globalAlpha', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  r.setGlobalAlpha(0.5);
+  expect(ctx.calls).toContainEqual(['set:globalAlpha', 0.5]);
+});
+
+test('setLineDash forwards segments to ctx.setLineDash', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  r.setLineDash([6, 4]);
+  expect(ctx.calls).toContainEqual(['setLineDash', [6, 4]]);
+});
