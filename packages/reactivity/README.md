@@ -38,3 +38,12 @@ createRoot((dispose) => {
 - **Glitch-free:** a diamond dependency triggers each effect once per update.
 - **Lazy memos:** a memo is only computed when read, and cached until a dep changes.
 - **Automatic batching:** all writes triggered by one signal update are coalesced.
+
+## Context
+
+- `createContext(defaultValue)` → a context token.
+- `useContext(ctx)` → the current owner's provided value, else the default.
+- `runWithContext(ctx, value, fn)` → run `fn` in a scope where `useContext(ctx)` yields `value`.
+
+Context lookup is not reactive; put a signal/store in the context for reactive values. The
+provided scope is disposed with its parent owner.

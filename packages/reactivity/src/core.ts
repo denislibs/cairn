@@ -4,6 +4,12 @@
 export type EqualsFn<T> = (prev: T, next: T) => boolean;
 export const defaultEquals = <T>(a: T, b: T): boolean => a === b;
 
+// ---- context ----
+export interface Context<T> {
+  readonly id: symbol;
+  readonly defaultValue: T;
+}
+
 // ---- node states ----
 const CLEAN = 0;
 const CHECK = 1;
@@ -23,6 +29,7 @@ export interface Owner {
   owned: Computation<any>[] | null;
   cleanups: (() => void)[] | null;
   owner: Owner | null;
+  context?: Record<symbol, unknown>;
 }
 
 export interface Computation<T> extends Owner, SignalState<T> {
@@ -220,6 +227,7 @@ export function createComputation<T>(
     owned: null,
     cleanups: null,
     owner: currentOwner,
+    context: currentOwner ? currentOwner.context : undefined,
     isMemo,
     isEffect,
     equals,
@@ -230,7 +238,12 @@ export function createComputation<T>(
 
 // ---- ownership ----
 export function createRoot<T>(fn: (dispose: () => void) => T): T {
-  const root: Owner = { owned: null, cleanups: null, owner: currentOwner };
+  const root: Owner = {
+    owned: null,
+    cleanups: null,
+    owner: currentOwner,
+    context: currentOwner ? currentOwner.context : undefined,
+  };
   const prevOwner = currentOwner;
   const prevListener = currentListener;
   currentOwner = root;
@@ -259,4 +272,42 @@ function disposeOwner(owner: Owner): void {
     for (let i = 0; i < owner.cleanups.length; i++) owner.cleanups[i]();
     owner.cleanups = null;
   }
+}
+
+// Run `fn` in a child owner scope where useContext(ctx) yields `value`. The scope is
+// disposed together with its parent (via the parent's cleanups) — including when the
+// parent is a computation that re-runs (cleanNode runs+clears cleanups each re-run) — so
+// effects created inside it do not leak. Called outside any owner (no parent), the scope
+// is standalone and not auto-disposed (same as a top-level createEffect).
+export function runWithContext<T, R>(ctx: Context<T>, value: T, fn: () => R): R {
+  const parent = currentOwner;
+  const scope: Owner = {
+    owned: null,
+    cleanups: null,
+    owner: parent,
+    context: { ...(parent ? parent.context : undefined), [ctx.id]: value },
+  };
+  currentOwner = scope;
+  try {
+    return fn();
+  } finally {
+    currentOwner = parent;
+    if (parent) {
+      (parent.cleanups || (parent.cleanups = [])).push(() => disposeOwner(scope));
+    }
+  }
+}
+
+// Create a context token carrying a default value.
+export function createContext<T>(defaultValue: T): Context<T> {
+  return { id: Symbol('cairn-context'), defaultValue };
+}
+
+// Read the current owner's context value for `ctx`, or the default.
+// Note: `undefined` cannot be used as a provided context value — it is treated as
+// "not provided" and falls back to the default (consistent with SolidJS).
+export function useContext<T>(ctx: Context<T>): T {
+  const map = currentOwner ? currentOwner.context : undefined;
+  const value = map ? map[ctx.id] : undefined;
+  return value !== undefined ? (value as T) : ctx.defaultValue;
 }
