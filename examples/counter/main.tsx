@@ -12,7 +12,13 @@ function App() {
   return (
     <Column style={{ justify: 'center', align: 'center', gap: 12 }}>
       <Box
-        style={{ backgroundColor: '#3b82f6', borderRadius: 16, padding: 24 }}
+        style={{
+          backgroundColor: '#3b82f6',
+          borderRadius: 16,
+          padding: 24,
+          hover: { backgroundColor: '#2563eb' },
+          pressed: { backgroundColor: '#1d4ed8' },
+        }}
         onClick={() => setCount(count() + 1)}
       >
         <Column style={{ gap: 8, align: 'center' }}>
