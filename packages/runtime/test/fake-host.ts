@@ -7,6 +7,7 @@ import type {
   PointerInput,
   WheelInput,
   KeyboardInput,
+  TextInputService,
 } from '@cairn/host';
 
 export function createFakeRenderer(): Renderer & { calls: unknown[][] } {
@@ -120,11 +121,13 @@ export function createFakeHost() {
   const scheduler = createFakeScheduler();
   const metrics = createFakeMetrics();
   const input = createFakeInput();
+  const textInput: TextInputService = { start: () => ({ setValue() {}, close() {} }) };
   const host: Host = {
     renderer,
     scheduler: scheduler.scheduler,
     metrics: metrics.metrics,
     input: input.input,
+    textInput,
   };
   return { host, renderer, scheduler, metrics, input };
 }

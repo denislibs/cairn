@@ -16,5 +16,8 @@ export function createWebHost(canvas: HTMLCanvasElement): Host {
 
   const input = new WebInputSource(canvas);
 
-  return { renderer, scheduler, metrics, input };
+  // Placeholder; replaced by WebTextInputService in a later task.
+  const textInput = { start: () => ({ setValue() {}, close() {} }) };
+
+  return { renderer, scheduler, metrics, input, textInput };
 }
