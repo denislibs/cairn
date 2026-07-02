@@ -1,9 +1,10 @@
-import { createRoot } from '@cairn/reactivity';
+import { createRoot, runWithContext } from '@cairn/reactivity';
 import { createPointerDispatcher, createFocusManager } from '@cairn/events';
 import type { Host } from '@cairn/host';
 import type { LayoutContext } from '@cairn/layout';
 import { type Instance, paint } from './instance';
 import { setFrameRequester } from './scheduler';
+import { hostContext } from './host-context';
 
 // Mount a component tree into a Host. Full-frame model: any change schedules one
 // coalesced frame that re-lays-out from the root and repaints the whole surface.
@@ -26,7 +27,7 @@ export function mount(component: () => Instance, host: Host): () => void {
 
     // Build the tree first. Effects run now; scheduleFrame() no-ops because the
     // requester is not installed yet (avoids a redundant initial frame).
-    root = component();
+    root = runWithContext(hostContext, host, () => component());
     renderFrame(); // initial paint
 
     let frameScheduled = false;
