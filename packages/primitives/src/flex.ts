@@ -28,6 +28,8 @@ function flex(direction: FlexDirection, props: FlexProps): Instance {
     layout.gap = s.gap ?? 0;
     layout.justify = s.justify ?? 'start';
     layout.align = s.align ?? 'start';
+    layout.width = s.width;
+    layout.height = s.height;
   });
 
   const instance: Instance = {
