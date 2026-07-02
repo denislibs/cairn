@@ -11,6 +11,8 @@ export interface FlexNodeProps {
   justify?: Justify;
   align?: Align;
   mainAxisSize?: 'min' | 'max';
+  width?: number;
+  height?: number;
   children?: LayoutNode[];
 }
 
@@ -20,6 +22,8 @@ export class FlexNode extends LayoutNode {
   justify: Justify;
   align: Align;
   mainAxisSize: 'min' | 'max';
+  width?: number;
+  height?: number;
 
   constructor(props: FlexNodeProps = {}) {
     super();
@@ -28,6 +32,8 @@ export class FlexNode extends LayoutNode {
     this.justify = props.justify ?? 'start';
     this.align = props.align ?? 'start';
     this.mainAxisSize = props.mainAxisSize ?? 'max';
+    this.width = props.width;
+    this.height = props.height;
     this.children = props.children ?? [];
   }
 
@@ -65,7 +71,9 @@ export class FlexNode extends LayoutNode {
     }
 
     // Phase 2: flex children split the remaining main-axis space (tight main extent).
-    const free = Math.max(0, (isFinite(mainMax) ? mainMax : usedMain) - usedMain);
+    const explicitMain = isRow ? this.width : this.height;
+    const availMain = explicitMain != null ? explicitMain : isFinite(mainMax) ? mainMax : usedMain;
+    const free = Math.max(0, availMain - usedMain);
     for (const ch of flexChildren) {
       const share = totalFlex > 0 ? (free * ch.flex) / totalFlex : 0;
       const [clo, chi] = crossRange();
@@ -77,15 +85,21 @@ export class FlexNode extends LayoutNode {
     const contentMain = this.children.reduce((sum, ch) => sum + mainSize(ch.size), 0) + gapTotal;
     const minMain = isRow ? c.minW : c.minH;
     const ownMain =
-      this.mainAxisSize === 'min'
-        ? clamp(contentMain, minMain, isFinite(mainMax) ? mainMax : contentMain)
-        : isFinite(mainMax)
-          ? mainMax
-          : contentMain;
+      explicitMain != null
+        ? clamp(explicitMain, minMain, isFinite(mainMax) ? mainMax : explicitMain)
+        : this.mainAxisSize === 'min'
+          ? clamp(contentMain, minMain, isFinite(mainMax) ? mainMax : contentMain)
+          : isFinite(mainMax)
+            ? mainMax
+            : contentMain;
+    const explicitCross = isRow ? this.height : this.width;
+    const minCross = isRow ? c.minH : c.minW;
     const ownCross =
-      this.align === 'stretch' && isFinite(crossMax)
-        ? crossMax
-        : clamp(maxCross, isRow ? c.minH : c.minW, crossMax);
+      explicitCross != null
+        ? clamp(explicitCross, minCross, crossMax)
+        : this.align === 'stretch' && isFinite(crossMax)
+          ? crossMax
+          : clamp(maxCross, minCross, crossMax);
 
     // Position along the main axis per justify.
     const freeMain = Math.max(0, ownMain - contentMain);
