@@ -14,6 +14,7 @@ export interface BoxNodeProps {
   child?: LayoutNode;
   alignX?: 'start' | 'center' | 'end';
   alignY?: 'start' | 'center' | 'end';
+  aspectRatio?: number;
 }
 
 export function toEdgeInsets(p?: number | Partial<EdgeInsets>): EdgeInsets {
@@ -32,6 +33,7 @@ export class BoxNode extends LayoutNode {
   maxHeight?: number;
   alignX: 'start' | 'center' | 'end';
   alignY: 'start' | 'center' | 'end';
+  aspectRatio?: number;
 
   constructor(props: BoxNodeProps = {}) {
     super();
@@ -44,6 +46,7 @@ export class BoxNode extends LayoutNode {
     this.maxHeight = props.maxHeight;
     this.alignX = props.alignX ?? 'start';
     this.alignY = props.alignY ?? 'start';
+    this.aspectRatio = props.aspectRatio;
     if (props.child) this.children = [props.child];
   }
 
@@ -71,6 +74,13 @@ export class BoxNode extends LayoutNode {
     } else {
       w = selfMinW;
       h = selfMinH;
+    }
+    if (this.aspectRatio && this.aspectRatio > 0) {
+      const widthKnown = this.width != null;
+      const heightKnown = this.height != null;
+      if (widthKnown && !heightKnown) h = clamp(w / this.aspectRatio, selfMinH, selfMaxH);
+      else if (heightKnown && !widthKnown) w = clamp(h * this.aspectRatio, selfMinW, selfMaxW);
+      else if (!widthKnown && !heightKnown) h = clamp(w / this.aspectRatio, selfMinH, selfMaxH);
     }
     this.size = { w, h };
     return this.size;

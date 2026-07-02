@@ -63,6 +63,7 @@ export interface BaseStyle {
   lineHeight?: number;
   alignX?: 'start' | 'center' | 'end';
   alignY?: 'start' | 'center' | 'end';
+  aspectRatio?: number;
   color?: string;
   font?: string;
 }

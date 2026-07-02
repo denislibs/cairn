@@ -115,6 +115,7 @@ export function Box(props: BoxProps = {}): Instance {
     layout.margin = toEdgeInsets(s.margin);
     layout.alignX = s.alignX ?? 'start';
     layout.alignY = s.alignY ?? 'start';
+    layout.aspectRatio = s.aspectRatio;
     instance.paintOpacity = s.opacity;
   });
 
