@@ -33,6 +33,7 @@ function flex(direction: FlexDirection, props: FlexProps): Instance {
     layout.width = s.width;
     layout.height = s.height;
     layout.margin = toEdgeInsets(s.margin);
+    layout.wrap = s.flexWrap ?? 'nowrap';
   });
 
   const instance: Instance = {

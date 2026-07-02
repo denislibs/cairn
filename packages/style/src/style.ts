@@ -40,6 +40,7 @@ export interface BaseStyle {
   alignSelf?: 'start' | 'center' | 'end' | 'stretch';
   flexBasis?: number;
   flexShrink?: number;
+  flexWrap?: 'nowrap' | 'wrap';
   // paint
   backgroundColor?: string;
   borderRadius?: CornerRadius;

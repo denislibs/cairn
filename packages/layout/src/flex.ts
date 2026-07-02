@@ -15,6 +15,7 @@ export interface FlexNodeProps {
   mainAxisSize?: 'min' | 'max';
   width?: number;
   height?: number;
+  wrap?: 'nowrap' | 'wrap';
   children?: LayoutNode[];
 }
 
@@ -28,6 +29,10 @@ export class FlexNode extends LayoutNode {
   mainAxisSize: 'min' | 'max';
   width?: number;
   height?: number;
+  /** Controls multi-line wrapping. 'wrap' is only active when the main constraint is finite.
+   *  Note: grow/shrink inside wrapped lines is deferred to v2 — in wrap mode children are
+   *  positioned at their natural/basis size without flex grow or shrink adjustments. */
+  wrap: 'nowrap' | 'wrap';
 
   constructor(props: FlexNodeProps = {}) {
     super();
@@ -40,6 +45,7 @@ export class FlexNode extends LayoutNode {
     this.mainAxisSize = props.mainAxisSize ?? 'max';
     this.width = props.width;
     this.height = props.height;
+    this.wrap = props.wrap ?? 'nowrap';
     this.children = props.children ?? [];
   }
 
@@ -47,6 +53,10 @@ export class FlexNode extends LayoutNode {
     const isRow = this.direction === 'row';
     const gap = (isRow ? this.columnGap : this.rowGap) ?? this.gap;
     const mainMax = isRow ? c.maxW : c.maxH;
+
+    if (this.wrap === 'wrap' && isFinite(mainMax)) {
+      return this.layoutWrapped(c, ctx);
+    }
     const crossMax = isRow ? c.maxH : c.maxW;
     const n = this.children.length;
     const gapTotal = gap * Math.max(0, n - 1);
@@ -190,6 +200,108 @@ export class FlexNode extends LayoutNode {
     }
 
     this.size = isRow ? { w: ownMain, h: ownCross } : { w: ownCross, h: ownMain };
+    return this.size;
+  }
+
+  /** Multi-line layout. Only called when wrap==='wrap' and the main constraint is finite.
+   *  Grow/shrink inside wrapped lines is deferred to v2 — children lay out at natural size. */
+  private layoutWrapped(c: Constraints, ctx: LayoutContext): Size {
+    const isRow = this.direction === 'row';
+    const gap = (isRow ? this.columnGap : this.rowGap) ?? this.gap;
+    const mainMax = isRow ? c.maxW : c.maxH;
+    const crossMax = isRow ? c.maxH : c.maxW;
+
+    const mainSize = (s: Size): number => (isRow ? s.w : s.h);
+    const crossSize = (s: Size): number => (isRow ? s.h : s.w);
+    const marginMain = (ch: LayoutNode): number =>
+      isRow ? ch.margin.left + ch.margin.right : ch.margin.top + ch.margin.bottom;
+    const marginCross = (ch: LayoutNode): number =>
+      isRow ? ch.margin.top + ch.margin.bottom : ch.margin.left + ch.margin.right;
+    const leadMain = (ch: LayoutNode): number => (isRow ? ch.margin.left : ch.margin.top);
+    const leadCross = (ch: LayoutNode): number => (isRow ? ch.margin.top : ch.margin.left);
+    const crossRange = (): [number, number] =>
+      this.align === 'stretch' && isFinite(crossMax) ? [crossMax, crossMax] : [0, crossMax];
+    const make = (mainLo: number, mainHi: number, crossLo: number, crossHi: number): Constraints =>
+      isRow
+        ? { minW: mainLo, maxW: mainHi, minH: crossLo, maxH: crossHi }
+        : { minW: crossLo, maxW: crossHi, minH: mainLo, maxH: mainHi };
+
+    // Phase 1: lay out every child loosely at natural size (no grow/shrink in wrap mode).
+    const [clo, chi] = crossRange();
+    for (const ch of this.children) {
+      if (ch.flexBasis != null) {
+        ch.layout(make(ch.flexBasis, ch.flexBasis, clo, chi), ctx);
+      } else {
+        ch.layout(make(0, mainMax, clo, chi), ctx);
+      }
+    }
+
+    // Phase 2: pack children into lines.
+    interface Line {
+      children: LayoutNode[];
+      usedMain: number; // sum of child mainSize + margins + gaps between
+      crossExtent: number; // max child (crossSize + marginCross)
+    }
+    const lines: Line[] = [];
+    let currentLine: Line = { children: [], usedMain: 0, crossExtent: 0 };
+
+    for (const ch of this.children) {
+      const childMain = mainSize(ch.size) + marginMain(ch);
+      const childCross = crossSize(ch.size) + marginCross(ch);
+
+      // Cost of adding this child to the current line (gap only if line is non-empty).
+      const addedMain = currentLine.children.length > 0 ? gap + childMain : childMain;
+
+      if (currentLine.children.length > 0 && currentLine.usedMain + addedMain > mainMax) {
+        // Overflow: start a new line.
+        lines.push(currentLine);
+        currentLine = { children: [ch], usedMain: childMain, crossExtent: childCross };
+      } else {
+        currentLine.children.push(ch);
+        currentLine.usedMain += addedMain;
+        currentLine.crossExtent = Math.max(currentLine.crossExtent, childCross);
+      }
+    }
+    if (currentLine.children.length > 0) lines.push(currentLine);
+
+    // Phase 3: position children.
+    let crossCursor = 0;
+    for (const line of lines) {
+      let mainCursor = 0;
+      for (const ch of line.children) {
+        const mainStart = mainCursor + leadMain(ch);
+        const childCross = crossSize(ch.size) + marginCross(ch);
+        const self = ch.alignSelf ?? this.align;
+        let crossOffsetInLine = 0;
+        if (self === 'center') crossOffsetInLine = (line.crossExtent - childCross) / 2;
+        else if (self === 'end') crossOffsetInLine = line.crossExtent - childCross;
+        const crossStart = crossCursor + crossOffsetInLine + leadCross(ch);
+
+        if (isRow) {
+          ch.offsetX = mainStart;
+          ch.offsetY = crossStart;
+        } else {
+          ch.offsetX = crossStart;
+          ch.offsetY = mainStart;
+        }
+        mainCursor += mainSize(ch.size) + marginMain(ch) + gap;
+      }
+      crossCursor += line.crossExtent + gap;
+    }
+
+    // Phase 4: compute own size.
+    const ownMain = lines.reduce((m, l) => Math.max(m, l.usedMain), 0);
+    // crossCursor has an extra trailing gap; remove it.
+    const ownCross = lines.length > 0 ? crossCursor - gap : 0;
+
+    const minMain = isRow ? c.minW : c.minH;
+    const minCross = isRow ? c.minH : c.minW;
+    const clampedMain = clamp(ownMain, minMain, isFinite(mainMax) ? mainMax : ownMain);
+    const clampedCross = clamp(ownCross, minCross, crossMax);
+
+    this.size = isRow
+      ? { w: clampedMain, h: clampedCross }
+      : { w: clampedCross, h: clampedMain };
     return this.size;
   }
 }
