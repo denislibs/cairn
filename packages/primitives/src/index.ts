@@ -1,6 +1,10 @@
 export { Box } from './box';
-export type { BoxProps, BoxStyle } from './box';
+export type { BoxProps } from './box';
 export { Text } from './text';
-export type { TextProps, TextStyle } from './text';
+export type { TextProps } from './text';
 export { Row, Column } from './flex';
-export type { FlexProps, FlexStyle } from './flex';
+export type { FlexProps } from './flex';
+export { resolveStyleInput } from './resolve-input';
+export type { StyleInput } from './resolve-input';
+export { ThemeProvider } from './theme-provider';
+export type { ThemeProviderProps } from './theme-provider';

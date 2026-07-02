@@ -40,6 +40,9 @@ importers:
       '@cairn/runtime':
         specifier: workspace:*
         version: link:../runtime
+      '@cairn/style':
+        specifier: workspace:*
+        version: link:../style
     devDependencies:
       '@cairn/reactivity':
         specifier: workspace:*
@@ -52,6 +55,15 @@ importers:
       '@cairn/host':
         specifier: workspace:*
         version: link:../host
+      '@cairn/layout':
+        specifier: workspace:*
+        version: link:../layout
+      '@cairn/reactivity':
+        specifier: workspace:*
+        version: link:../reactivity
+
+  packages/style:
+    dependencies:
       '@cairn/layout':
         specifier: workspace:*
         version: link:../layout

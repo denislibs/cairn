@@ -1,5 +1,5 @@
 {
-  "name": "@cairn/primitives",
+  "name": "@cairn/style",
   "version": "0.0.0",
   "type": "module",
   "main": "./src/index.ts",
@@ -10,12 +10,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@cairn/runtime": "workspace:*",
     "@cairn/layout": "workspace:*",
-    "@cairn/host": "workspace:*",
-    "@cairn/style": "workspace:*"
-  },
-  "devDependencies": {
     "@cairn/reactivity": "workspace:*"
   }
 }
