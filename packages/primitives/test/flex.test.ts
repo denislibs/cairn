@@ -38,3 +38,8 @@ test('Row containers paint nothing themselves', () => {
   row.paintSelf({ fillRect: () => calls.push(['fillRect']) } as never);
   expect(calls).toEqual([]);
 });
+
+test('Column forwards mainAxisSize to the FlexNode (default max)', () => {
+  expect((Column({}).layout as FlexNode).mainAxisSize).toBe('max');
+  expect((Column({ mainAxisSize: 'min' }).layout as FlexNode).mainAxisSize).toBe('min');
+});

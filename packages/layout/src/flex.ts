@@ -10,6 +10,7 @@ export interface FlexNodeProps {
   gap?: number;
   justify?: Justify;
   align?: Align;
+  mainAxisSize?: 'min' | 'max';
   children?: LayoutNode[];
 }
 
@@ -18,6 +19,7 @@ export class FlexNode extends LayoutNode {
   gap: number;
   justify: Justify;
   align: Align;
+  mainAxisSize: 'min' | 'max';
 
   constructor(props: FlexNodeProps = {}) {
     super();
@@ -25,6 +27,7 @@ export class FlexNode extends LayoutNode {
     this.gap = props.gap ?? 0;
     this.justify = props.justify ?? 'start';
     this.align = props.align ?? 'start';
+    this.mainAxisSize = props.mainAxisSize ?? 'max';
     this.children = props.children ?? [];
   }
 
@@ -72,7 +75,13 @@ export class FlexNode extends LayoutNode {
 
     // Own size.
     const contentMain = this.children.reduce((sum, ch) => sum + mainSize(ch.size), 0) + gapTotal;
-    const ownMain = isFinite(mainMax) ? mainMax : contentMain;
+    const minMain = isRow ? c.minW : c.minH;
+    const ownMain =
+      this.mainAxisSize === 'min'
+        ? clamp(contentMain, minMain, isFinite(mainMax) ? mainMax : contentMain)
+        : isFinite(mainMax)
+          ? mainMax
+          : contentMain;
     const ownCross =
       this.align === 'stretch' && isFinite(crossMax)
         ? crossMax
