@@ -70,6 +70,15 @@ test('Tab calls preventDefault', () => {
   expect(prevented).toBe(true);
 });
 
+test('Ctrl/Meta+Tab is left to the browser (no focus move, no preventDefault)', () => {
+  const { root, A } = tree();
+  const fm = createFocusManager(() => root);
+  let prevented = false;
+  fm.handleKey(key({ ctrl: true, preventDefault: () => { prevented = true; } }));
+  expect(fm.focused()).toBe(null);
+  expect(prevented).toBe(false);
+});
+
 test('non-Tab keys bubble to the focused node', () => {
   const { root, A, log } = tree();
   const fm = createFocusManager(() => root);

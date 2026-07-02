@@ -60,7 +60,8 @@ export function createFocusManager(getRoot: () => HitNode): FocusManager {
       focus(path.slice(idx));
     },
     handleKey(input: KeyboardInput): void {
-      if (input.type === 'keydown' && input.key === 'Tab') {
+      // Plain / Shift+Tab moves focus; Ctrl/Alt/Meta+Tab is left to the browser.
+      if (input.type === 'keydown' && input.key === 'Tab' && !input.ctrl && !input.alt && !input.meta) {
         input.preventDefault();
         const list = collectFocusables(getRoot());
         if (list.length === 0) return;
