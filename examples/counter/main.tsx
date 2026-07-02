@@ -11,35 +11,37 @@ const host = createWebHost(canvas);
 const [count, setCount] = createSignal(0);
 const [step, setStep] = createSignal(1);
 
-// Local button helper (no Button primitive yet — Phase 10). Size lives on the Box
-// (Row/Column can't be sized); the label is centered via Column(justify)>Row(justify),
-// which fill the box's height/width because a Flex fills its main axis.
+// Local button helper (no Button primitive yet — Phase 10b). The label is centered
+// with the Box's own alignX/alignY (no wrapper nesting); width can be fixed or the
+// button can flex-grow inside its row; optional border.
 function Button(props: {
   label: string;
-  width: number;
+  width?: number;
   height: number;
+  flex?: number;
   bg: string;
   color: string;
   hoverBg?: string;
+  border?: { width: number; color: string };
   font?: string;
   onClick: () => void;
 }): Instance {
   return (
     <Box
+      flex={props.flex}
       style={{
         width: props.width,
         height: props.height,
         backgroundColor: props.bg,
         borderRadius: 16,
+        alignX: 'center',
+        alignY: 'center',
+        border: props.border,
         hover: props.hoverBg ? { backgroundColor: props.hoverBg } : {},
       }}
       onClick={props.onClick}
     >
-      <Column style={{ justify: 'center', align: 'center' }}>
-        <Row style={{ justify: 'center', align: 'center' }}>
-          <Text style={{ font: props.font ?? '26px sans-serif', color: props.color }}>{props.label}</Text>
-        </Row>
-      </Column>
+      <Text style={{ font: props.font ?? '26px sans-serif', color: props.color }}>{props.label}</Text>
     </Box>
   ) as unknown as Instance;
 }
@@ -102,7 +104,7 @@ function App() {
           <Text style={{ font: 'bold 84px sans-serif', color: '#ffffff' }}>{() => String(count())}</Text>
           <Text style={{ font: '15px sans-serif', color: '#6b7280' }}>начни считать</Text>
 
-          <Row style={{ gap: 12 }}>
+          <Row style={{ gap: 12, width: 384 }}>
             <Button
               label="−"
               width={120}
@@ -110,11 +112,12 @@ function App() {
               bg="#2a2a2c"
               color="#e5e7eb"
               hoverBg="#333336"
+              border={{ width: 1, color: '#3a3a3e' }}
               onClick={() => setCount(Math.max(0, count() - step()))}
             />
             <Button
               label="+"
-              width={252}
+              flex={1}
               height={68}
               bg="#4577e6"
               color="#ffffff"
@@ -136,6 +139,7 @@ function App() {
             bg="#161618"
             color="#d1d5db"
             hoverBg="#202023"
+            border={{ width: 1, color: '#2a2a2e' }}
             font="16px sans-serif"
             onClick={() => setCount(0)}
           />
