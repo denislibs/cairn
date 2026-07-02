@@ -1,6 +1,10 @@
-import { test, expect, vi } from 'vitest';
+import { test, expect, vi, afterEach } from 'vitest';
 import { createRoot, createSignal } from '@cairn/reactivity';
 import { bind, setFrameRequester } from '../src/index';
+
+afterEach(() => {
+  setFrameRequester(null); // reset the module global between tests
+});
 
 test('bind applies a static value once', () => {
   const apply = vi.fn();
