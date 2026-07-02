@@ -37,3 +37,11 @@ test('resolveAxis: exact size pins both ends (clamped to incoming)', () => {
 test('resolveAxis: min/max props tighten within incoming', () => {
   expect(resolveAxis(0, 100, undefined, 20, 80)).toEqual([20, 80]);
 });
+
+test('resolveAxis: only min tightens the lower bound', () => {
+  expect(resolveAxis(0, 100, undefined, 50)).toEqual([50, 100]);
+});
+
+test('resolveAxis: only max tightens the upper bound', () => {
+  expect(resolveAxis(0, 100, undefined, undefined, 80)).toEqual([0, 80]);
+});
