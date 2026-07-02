@@ -4,6 +4,12 @@
 export type EqualsFn<T> = (prev: T, next: T) => boolean;
 export const defaultEquals = <T>(a: T, b: T): boolean => a === b;
 
+// ---- context ----
+export interface Context<T> {
+  readonly id: symbol;
+  readonly defaultValue: T;
+}
+
 // ---- node states ----
 const CLEAN = 0;
 const CHECK = 1;
@@ -23,6 +29,7 @@ export interface Owner {
   owned: Computation<any>[] | null;
   cleanups: (() => void)[] | null;
   owner: Owner | null;
+  context?: Record<symbol, unknown>;
 }
 
 export interface Computation<T> extends Owner, SignalState<T> {
@@ -220,6 +227,7 @@ export function createComputation<T>(
     owned: null,
     cleanups: null,
     owner: currentOwner,
+    context: currentOwner ? currentOwner.context : undefined,
     isMemo,
     isEffect,
     equals,
@@ -230,7 +238,12 @@ export function createComputation<T>(
 
 // ---- ownership ----
 export function createRoot<T>(fn: (dispose: () => void) => T): T {
-  const root: Owner = { owned: null, cleanups: null, owner: currentOwner };
+  const root: Owner = {
+    owned: null,
+    cleanups: null,
+    owner: currentOwner,
+    context: currentOwner ? currentOwner.context : undefined,
+  };
   const prevOwner = currentOwner;
   const prevListener = currentListener;
   currentOwner = root;
@@ -259,4 +272,16 @@ function disposeOwner(owner: Owner): void {
     for (let i = 0; i < owner.cleanups.length; i++) owner.cleanups[i]();
     owner.cleanups = null;
   }
+}
+
+// Create a context token carrying a default value.
+export function createContext<T>(defaultValue: T): Context<T> {
+  return { id: Symbol('cairn-context'), defaultValue };
+}
+
+// Read the current owner's context value for `ctx`, or the default.
+export function useContext<T>(ctx: Context<T>): T {
+  const map = currentOwner ? currentOwner.context : undefined;
+  const value = map ? map[ctx.id] : undefined;
+  return value !== undefined ? (value as T) : ctx.defaultValue;
 }
