@@ -10,3 +10,5 @@ export { hostContext, useHost } from './host-context';
 export type { ProviderProps } from './provider';
 export { Show } from './show';
 export type { ShowProps } from './show';
+export { For } from './for';
+export type { ForProps } from './for';
