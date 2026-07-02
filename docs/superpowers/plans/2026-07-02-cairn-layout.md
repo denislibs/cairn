@@ -907,27 +907,42 @@ git commit -m "feat(layout): StackNode (absolute positioning via left/top)"
 - Create: `packages/layout/README.md`
 - Test: `packages/layout/test/box.test.ts` (append a nested integration test)
 
-- [ ] **Step 1: Append a nested integration test**
+- [ ] **Step 1: Add a nested integration test**
 
-Append to `packages/layout/test/box.test.ts`:
+Create `packages/layout/test/integration.test.ts`. NOTE: a `FlexNode` FILLS its bounded
+main axis (Flutter `mainAxisSize.max` default), so a Row inside a padded Box does NOT
+shrink-wrap its width — it expands to the available width. The test documents this:
 ```ts
-import { FlexNode } from '../src/index';
+import { test, expect } from 'vitest';
+import { BoxNode, FlexNode, TextNode } from '../src/index';
+import { fakeMeasure } from './fake-measure';
 
-test('nested tree: Box(padding) > Row(gap) > two fixed boxes resolves offsets', () => {
+const ctx = fakeMeasure();
+
+test('nested tree: Box(padding) > Row(gap) > two fixed boxes', () => {
   const a = new BoxNode({ width: 10, height: 20 });
   const b = new BoxNode({ width: 30, height: 40 });
   const row = new FlexNode({ direction: 'row', gap: 5, children: [a, b] });
   const outer = new BoxNode({ padding: 8, child: row });
 
-  const size = outer.layout({ minW: 0, maxW: 500, minH: 0, maxH: 500 }, fakeMeasure());
+  const size = outer.layout({ minW: 0, maxW: 500, minH: 0, maxH: 500 }, ctx);
 
-  // row content: 10 + 5 + 30 = 45 wide, 40 tall; outer adds 8 padding each side
-  expect(size).toEqual({ w: 45 + 16, h: 40 + 16 });
+  expect(row.size.w).toBe(484); // fills 500 - 16 padding
+  expect(row.size.h).toBe(40); // cross wraps tallest child
+  expect(size).toEqual({ w: 500, h: 40 + 16 });
   expect(row.offsetX).toBe(8);
   expect(row.offsetY).toBe(8);
-  // children offsets are relative to the row
   expect(a.offsetX).toBe(0);
-  expect(b.offsetX).toBe(15);
+  expect(b.offsetX).toBe(15); // 10 + gap 5
+});
+
+test('nested tree: Column of Text rows wraps to content height', () => {
+  const t1 = new TextNode({ text: 'hello', style: { font: '10px sans-serif' } });
+  const t2 = new TextNode({ text: 'world!', style: { font: '10px sans-serif' } });
+  const col = new FlexNode({ direction: 'column', gap: 4, children: [t1, t2] });
+  const size = col.layout({ minW: 0, maxW: 200, minH: 0, maxH: Infinity }, ctx);
+  expect(size.h).toBe(24); // 10 + 4 + 10 (unbounded main wraps content)
+  expect(t2.offsetY).toBe(14);
 });
 ```
 
