@@ -3,6 +3,8 @@ import type {
   PointerInput,
   PointerInputType,
   WheelInput,
+  KeyboardInput,
+  KeyInputType,
 } from '@cairn/host';
 
 // Attaches DOM pointer/wheel listeners to a canvas and normalizes them into the
@@ -11,6 +13,7 @@ import type {
 export class WebInputSource implements InputSource {
   private pointerCbs = new Set<(e: PointerInput) => void>();
   private wheelCbs = new Set<(e: WheelInput) => void>();
+  private keyCbs = new Set<(e: KeyboardInput) => void>();
 
   constructor(private canvas: HTMLCanvasElement) {
     canvas.addEventListener('pointerdown', this.down);
@@ -18,6 +21,9 @@ export class WebInputSource implements InputSource {
     canvas.addEventListener('pointerup', this.up);
     canvas.addEventListener('wheel', this.wheel);
     canvas.addEventListener('pointerleave', this.leave);
+    if (canvas.tabIndex < 0) canvas.tabIndex = 0; // make the surface keyboard-focusable
+    canvas.addEventListener('keydown', this.keydown);
+    canvas.addEventListener('keyup', this.keyup);
   }
 
   onPointer(cb: (e: PointerInput) => void): () => void {
@@ -30,9 +36,9 @@ export class WebInputSource implements InputSource {
     return () => this.wheelCbs.delete(cb);
   }
 
-  // Placeholder; real keyboard wiring added in a later task.
-  onKey(): () => void {
-    return () => {};
+  onKey(cb: (e: KeyboardInput) => void): () => void {
+    this.keyCbs.add(cb);
+    return () => this.keyCbs.delete(cb);
   }
 
   dispose(): void {
@@ -41,6 +47,8 @@ export class WebInputSource implements InputSource {
     this.canvas.removeEventListener('pointerup', this.up);
     this.canvas.removeEventListener('wheel', this.wheel);
     this.canvas.removeEventListener('pointerleave', this.leave);
+    this.canvas.removeEventListener('keydown', this.keydown);
+    this.canvas.removeEventListener('keyup', this.keyup);
   }
 
   private emitPointer(type: PointerInputType, ev: PointerEvent): void {
@@ -80,4 +88,21 @@ export class WebInputSource implements InputSource {
     };
     for (const cb of this.wheelCbs) cb(input);
   };
+
+  private emitKey(type: KeyInputType, ev: KeyboardEvent): void {
+    const input: KeyboardInput = {
+      type,
+      key: ev.key,
+      code: ev.code,
+      shift: ev.shiftKey,
+      ctrl: ev.ctrlKey,
+      alt: ev.altKey,
+      meta: ev.metaKey,
+      preventDefault: () => ev.preventDefault(),
+    };
+    for (const cb of this.keyCbs) cb(input);
+  }
+
+  private keydown = (ev: KeyboardEvent) => this.emitKey('keydown', ev);
+  private keyup = (ev: KeyboardEvent) => this.emitKey('keyup', ev);
 }

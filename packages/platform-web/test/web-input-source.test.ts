@@ -7,6 +7,7 @@ import type { PointerInput, WheelInput } from '@cairn/host';
 function fakeCanvas() {
   const listeners: Record<string, (ev: unknown) => void> = {};
   const canvas = {
+    tabIndex: -1,
     addEventListener(type: string, cb: (ev: unknown) => void) {
       listeners[type] = cb;
     },
@@ -74,4 +75,39 @@ test('canvas pointerleave emits an out-of-bounds pointermove to clear hover', ()
   src.onPointer((e) => seen.push(e));
   listeners.pointerleave({ clientX: 100, clientY: 50, button: 0, pointerType: 'mouse' });
   expect(seen).toEqual([{ type: 'pointermove', x: -1, y: -1, button: 0, pointerType: 'mouse' }]);
+});
+
+test('sets tabIndex so the canvas can receive keyboard focus', () => {
+  const { canvas } = fakeCanvas();
+  const c = canvas as unknown as { tabIndex: number };
+  new WebInputSource(canvas);
+  expect(c.tabIndex).toBe(0);
+});
+
+test('normalizes a keydown into KeyboardInput', () => {
+  const { canvas, listeners } = fakeCanvas();
+  const src = new WebInputSource(canvas);
+  const seen: Array<Record<string, unknown>> = [];
+  src.onKey((e) => seen.push({ type: e.type, key: e.key, code: e.code, shift: e.shift, ctrl: e.ctrl, alt: e.alt, meta: e.meta }));
+  listeners.keydown({ key: 'Enter', code: 'Enter', shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, preventDefault: () => {} });
+  expect(seen).toEqual([{ type: 'keydown', key: 'Enter', code: 'Enter', shift: false, ctrl: false, alt: false, meta: false }]);
+});
+
+test('KeyboardInput.preventDefault forwards to the DOM event', () => {
+  const { canvas, listeners } = fakeCanvas();
+  const src = new WebInputSource(canvas);
+  let prevented = false;
+  src.onKey((e) => e.preventDefault());
+  listeners.keydown({ key: 'Tab', code: 'Tab', shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, preventDefault: () => { prevented = true; } });
+  expect(prevented).toBe(true);
+});
+
+test('onKey unsubscribe stops delivery', () => {
+  const { canvas, listeners } = fakeCanvas();
+  const src = new WebInputSource(canvas);
+  const seen: unknown[] = [];
+  const off = src.onKey((e) => seen.push(e));
+  off();
+  listeners.keydown({ key: 'a', code: 'KeyA', shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, preventDefault: () => {} });
+  expect(seen).toEqual([]);
 });
