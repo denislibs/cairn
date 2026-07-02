@@ -54,3 +54,22 @@ test('state variants cascade across an array in precedence order', () => {
   );
   expect(out.color).toBe('green'); // later array entry's hover wins
 });
+
+test('explicit undefined in a later style does not overwrite an earlier value', () => {
+  const out = resolveStyle([{ width: 10 }, { width: undefined }]);
+  expect(out.width).toBe(10);
+});
+
+test('activeStates accepts any iterable (e.g. a Set)', () => {
+  const out = resolveStyle(
+    { backgroundColor: 'blue', hover: { backgroundColor: 'navy' } },
+    new Set(['hover'] as const),
+  );
+  expect(out.backgroundColor).toBe('navy');
+});
+
+test('state keys never leak even when the state is active', () => {
+  const out = resolveStyle({ width: 1, hover: { width: 2 } }, ['hover']);
+  expect('hover' in out).toBe(false);
+  expect(out.width).toBe(2);
+});
