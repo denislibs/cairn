@@ -58,7 +58,8 @@ function App() {
             <Button
               label="+"
               variant="primary"
-              style={{ flex: 1, height: 68, borderRadius: 16 }}
+              flex={1}
+              style={{ height: 68, borderRadius: 16 }}
               onClick={() => setCount(count() + step())}
             />
           </Row>

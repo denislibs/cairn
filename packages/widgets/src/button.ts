@@ -1,8 +1,8 @@
 import type { Instance } from '@cairn/runtime';
-import { Box, Text, type StyleInput } from '@cairn/primitives';
+import { Box, Text, applyLayoutChildProps, type StyleInput, type LayoutChildProps } from '@cairn/primitives';
 import type { Style } from '@cairn/style';
 
-export interface ButtonProps {
+export interface ButtonProps extends LayoutChildProps {
   label?: string;
   children?: Instance;
   variant?: 'primary' | 'secondary' | 'ghost';
@@ -52,11 +52,14 @@ export function Button(props: ButtonProps): Instance {
     if (!props.disabled) props.onClick?.();
   };
 
-  return Box({
+  const instance = Box({
     style: styles,
     focusable: true,
     onClick: () => activate(),
     onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') activate(); },
     children: props.children ?? Text({ style: { color: variant.color }, children: props.label ?? '' }),
   });
+  // Forward layout child-props (flex/margin/alignSelf/…) so a Button composes in Flex/Stack.
+  applyLayoutChildProps(instance, props);
+  return instance;
 }
