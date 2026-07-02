@@ -125,3 +125,15 @@ test('overflow: non-flex children exceeding the container spill (v1 silent overf
   expect(c.offsetX).toBe(80); // 80 + 40 = 120 > 100 (overflow)
   expect(size.w).toBe(100); // container still reports its bounded main size
 });
+
+test('overflow with justify:center packs from 0 (no negative offsets)', () => {
+  const a = box(40, 10);
+  const b = box(40, 10);
+  const c = box(40, 10);
+  const row = new FlexNode({ direction: 'row', justify: 'center', children: [a, b, c] });
+  row.layout({ minW: 0, maxW: 100, minH: 0, maxH: 100 }, ctx);
+  // content 120 > 100 -> freeMain clamps to 0 -> centering degrades to start packing
+  expect(a.offsetX).toBe(0);
+  expect(b.offsetX).toBe(40);
+  expect(c.offsetX).toBe(80);
+});
