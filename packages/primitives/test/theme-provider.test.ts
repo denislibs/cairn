@@ -6,7 +6,7 @@ import { createFakeRenderer } from './fake';
 test('ThemeProvider provides the theme to primitives in its children thunk', () => {
   const theme = { colors: { surface: '#0a0a0a' } };
   let color = '';
-  ThemeProvider({
+  const inst = ThemeProvider({
     theme,
     children: () => {
       const box = Box({
@@ -20,6 +20,7 @@ test('ThemeProvider provides the theme to primitives in its children thunk', () 
     },
   });
   expect(color).toBe('#0a0a0a');
+  expect(inst.layout).toBeDefined(); // ThemeProvider returns the children's Instance
 });
 
 test('useTheme outside a ThemeProvider returns the empty default', () => {
