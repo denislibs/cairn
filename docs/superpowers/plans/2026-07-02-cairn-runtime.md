@@ -91,8 +91,8 @@ export function createFakeRenderer(): Renderer & { calls: unknown[][] } {
     fillPath: rec('fillPath'),
     strokePath: rec('strokePath'),
     drawText: rec('drawText'),
-    measureText: (text: string) => {
-      calls.push(['measureText', text]);
+    measureText: (text: string, style: unknown) => {
+      calls.push(['measureText', text, style]);
       return { width: text.length * 7 };
     },
     drawImage: rec('drawImage'),
@@ -668,8 +668,8 @@ export function createFakeRenderer(): Renderer & { calls: unknown[][] } {
     fillPath: rec('fillPath'),
     strokePath: rec('strokePath'),
     drawText: rec('drawText'),
-    measureText: (text: string) => {
-      calls.push(['measureText', text]);
+    measureText: (text: string, style: unknown) => {
+      calls.push(['measureText', text, style]);
       return { width: text.length * 7 };
     },
     drawImage: rec('drawImage'),
