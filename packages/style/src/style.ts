@@ -46,6 +46,7 @@ export interface BaseStyle {
   flexBasis?: number;
   flexShrink?: number;
   flexWrap?: 'nowrap' | 'wrap';
+  zIndex?: number;
   // paint
   backgroundColor?: string;
   borderRadius?: CornerRadius;

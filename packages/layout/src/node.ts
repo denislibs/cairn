@@ -5,6 +5,7 @@ export abstract class LayoutNode {
   size: Size = { w: 0, h: 0 };
   offsetX = 0; // relative to parent; set by the parent during its layout()
   offsetY = 0;
+  zIndex = 0; // parent-data: paint/hit order (higher paints on top); does not affect layout
   flex = 0; // parent-data: FlexNode distributes free main-axis space by this
   flexBasis?: number; // parent-data: child's main-axis starting size before grow/shrink
   flexShrink = 0; // parent-data: shrink factor when children overflow main axis (v1: simple weight split)

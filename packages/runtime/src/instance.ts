@@ -19,6 +19,15 @@ export function paint(inst: Instance, r: Renderer, parentAlpha = 1): void {
   const alpha = o !== undefined && o < 1 ? parentAlpha * o : parentAlpha;
   if (alpha !== parentAlpha) r.setGlobalAlpha(alpha);
   inst.paintSelf(r);
-  for (const child of inst.children) paint(child, r, alpha);
+  const ordered = orderByZ(inst.children);
+  for (const child of ordered) paint(child, r, alpha);
   r.restore();
+}
+
+function orderByZ(children: Instance[]): Instance[] {
+  if (!children.some((c) => c.layout.zIndex)) return children; // fast path: all zero
+  return children
+    .map((c, i) => ({ c, i }))
+    .sort((a, b) => a.c.layout.zIndex - b.c.layout.zIndex || a.i - b.i)
+    .map((x) => x.c);
 }
