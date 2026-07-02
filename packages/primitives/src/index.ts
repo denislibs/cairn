@@ -18,3 +18,5 @@ export { createInteractive } from './interactive';
 export type { InteractiveProps, Interactive } from './interactive';
 export { applyLayoutChildProps } from './layout-child';
 export type { LayoutChildProps } from './layout-child';
+export { Path, Svg } from './svg';
+export type { PathProps } from './svg';
