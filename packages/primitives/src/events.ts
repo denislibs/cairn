@@ -1,4 +1,4 @@
-import type { EventHandlers, CairnPointerEvent, CairnWheelEvent } from '@cairn/events';
+import type { EventHandlers, CairnPointerEvent, CairnWheelEvent, CairnKeyboardEvent, CairnFocusEvent } from '@cairn/events';
 
 // Event props shared by all primitives. Kept separate so each primitive's props
 // interface can extend it.
@@ -10,6 +10,10 @@ export interface EventProps {
   onPointerEnter?: (e: CairnPointerEvent) => void;
   onPointerLeave?: (e: CairnPointerEvent) => void;
   onWheel?: (e: CairnWheelEvent) => void;
+  onKeyDown?: (e: CairnKeyboardEvent) => void;
+  onKeyUp?: (e: CairnKeyboardEvent) => void;
+  onFocus?: (e: CairnFocusEvent) => void;
+  onBlur?: (e: CairnFocusEvent) => void;
 }
 
 // Build an EventHandlers object from the provided props, or undefined if none

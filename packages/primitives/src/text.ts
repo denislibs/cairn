@@ -10,6 +10,7 @@ export interface TextProps extends EventProps {
   children?: MaybeReactive<string | number>;
   value?: MaybeReactive<string | number>;
   style?: StyleInput;
+  focusable?: boolean;
 }
 
 export function Text(props: TextProps = {}): Instance {
@@ -32,6 +33,7 @@ export function Text(props: TextProps = {}): Instance {
     layout,
     children: [],
     handlers,
+    focusable: props.focusable,
     paintSelf(r: Renderer) {
       r.drawText(
         layout.text,

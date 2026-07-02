@@ -20,11 +20,13 @@ export function createInteractive(props: InteractiveProps): Interactive {
   const theme = useTheme();
   const [hovered, setHovered] = createSignal(false);
   const [pressed, setPressed] = createSignal(false);
+  const [focused, setFocused] = createSignal(false);
 
   const resolved = (): BaseStyle => {
     const states: StateName[] = [];
     if (hovered()) states.push('hover');
     if (pressed()) states.push('pressed');
+    if (focused()) states.push('focus');
     return resolveStyleInput(props.style, theme, states);
   };
 
@@ -46,10 +48,20 @@ export function createInteractive(props: InteractiveProps): Interactive {
       setPressed(false);
       props.onPointerUp?.(e);
     },
+    onFocus(e) {
+      setFocused(true);
+      props.onFocus?.(e);
+    },
+    onBlur(e) {
+      setFocused(false);
+      props.onBlur?.(e);
+    },
   };
   if (props.onClick) handlers.onClick = props.onClick;
   if (props.onPointerMove) handlers.onPointerMove = props.onPointerMove;
   if (props.onWheel) handlers.onWheel = props.onWheel;
+  if (props.onKeyDown) handlers.onKeyDown = props.onKeyDown;
+  if (props.onKeyUp) handlers.onKeyUp = props.onKeyUp;
 
   return { resolved, handlers };
 }
