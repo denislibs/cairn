@@ -5,7 +5,7 @@ export interface HitNode {
 }
 
 export interface CairnPointerEvent {
-  type: 'pointerdown' | 'pointermove' | 'pointerup' | 'click';
+  type: 'pointerdown' | 'pointermove' | 'pointerup' | 'click' | 'pointerenter' | 'pointerleave';
   x: number;
   y: number;
   button: number;
@@ -27,6 +27,8 @@ export interface EventHandlers {
   onPointerDown?(e: CairnPointerEvent): void;
   onPointerMove?(e: CairnPointerEvent): void;
   onPointerUp?(e: CairnPointerEvent): void;
+  onPointerEnter?(e: CairnPointerEvent): void;
+  onPointerLeave?(e: CairnPointerEvent): void;
   onClick?(e: CairnPointerEvent): void;
   onWheel?(e: CairnWheelEvent): void;
 }
