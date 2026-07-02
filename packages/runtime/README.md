@@ -23,3 +23,10 @@ for `{count()}` sugar is a separate future lib.
 
 Phase 4 uses a full-frame model (any change re-lays-out + repaints the whole surface) and a
 single active root. Dirty-region rendering and multi-root come later.
+
+## Provider
+
+`Provider({ context, value, children })` provides a context value to a subtree. Because JSX
+children are evaluated eagerly, `children` is a thunk run inside the context scope:
+
+    <Provider context={ThemeCtx} value={dark}>{() => <App />}</Provider>
