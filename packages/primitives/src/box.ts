@@ -25,6 +25,8 @@ export function Box(props: BoxProps = {}): Instance {
     layout.width = s.width;
     layout.height = s.height;
     layout.padding = toEdgeInsets(s.padding);
+    layout.alignX = s.alignX ?? 'start';
+    layout.alignY = s.alignY ?? 'start';
   });
 
   const instance: Instance = {
@@ -33,11 +35,18 @@ export function Box(props: BoxProps = {}): Instance {
     handlers,
     focusable: props.focusable,
     paintSelf(r: Renderer) {
-      if (current.backgroundColor) {
-        r.fillRoundRect(
-          { x: 0, y: 0, width: layout.size.w, height: layout.size.h },
-          current.borderRadius ?? 0,
-          { color: current.backgroundColor },
+      const s = current;
+      const w = layout.size.w;
+      const h = layout.size.h;
+      if (s.backgroundColor) {
+        r.fillRoundRect({ x: 0, y: 0, width: w, height: h }, s.borderRadius ?? 0, { color: s.backgroundColor });
+      }
+      if (s.border) {
+        const bw = s.border.width;
+        r.strokeRoundRect(
+          { x: bw / 2, y: bw / 2, width: Math.max(0, w - bw), height: Math.max(0, h - bw) },
+          Math.max(0, (s.borderRadius ?? 0) - bw / 2),
+          { color: s.border.color, width: bw },
         );
       }
     },
