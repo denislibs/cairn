@@ -16,7 +16,7 @@ test('Text renders static content and paints drawText with style', () => {
     'drawText',
     'hi',
     { x: 0, y: 0 },
-    { font: '20px sans-serif', color: '#111', baseline: 'top' },
+    { font: '20px sans-serif', color: '#111', align: 'left', baseline: 'top' },
   ]);
 });
 

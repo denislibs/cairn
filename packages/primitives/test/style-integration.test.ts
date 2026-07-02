@@ -57,6 +57,6 @@ test('Text style function receives the theme', () => {
     'drawText',
     'hi',
     { x: 0, y: 0 },
-    { font: '10px sans-serif', color: '#333', baseline: 'top' },
+    { font: '10px sans-serif', color: '#333', align: 'left', baseline: 'top' },
   ]);
 });
