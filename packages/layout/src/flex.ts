@@ -46,6 +46,10 @@ export class FlexNode extends LayoutNode {
 
     const mainSize = (s: Size): number => (isRow ? s.w : s.h);
     const crossSize = (s: Size): number => (isRow ? s.h : s.w);
+    const marginMain = (ch: LayoutNode): number => (isRow ? ch.margin.left + ch.margin.right : ch.margin.top + ch.margin.bottom);
+    const marginCross = (ch: LayoutNode): number => (isRow ? ch.margin.top + ch.margin.bottom : ch.margin.left + ch.margin.right);
+    const leadMain = (ch: LayoutNode): number => (isRow ? ch.margin.left : ch.margin.top);
+    const leadCross = (ch: LayoutNode): number => (isRow ? ch.margin.top : ch.margin.left);
     const crossRange = (): [number, number] =>
       this.align === 'stretch' && isFinite(crossMax) ? [crossMax, crossMax] : [0, crossMax];
     const make = (mainLo: number, mainHi: number, crossLo: number, crossHi: number): Constraints =>
@@ -66,23 +70,25 @@ export class FlexNode extends LayoutNode {
       }
       const [clo, chi] = crossRange();
       const s = ch.layout(make(0, mainMax, clo, chi), ctx);
-      usedMain += mainSize(s);
-      maxCross = Math.max(maxCross, crossSize(s));
+      usedMain += mainSize(s) + marginMain(ch);
+      maxCross = Math.max(maxCross, crossSize(s) + marginCross(ch));
     }
 
     // Phase 2: flex children split the remaining main-axis space (tight main extent).
     const explicitMain = isRow ? this.width : this.height;
+    // Reserve flex children's margins before computing free space.
+    for (const ch of flexChildren) usedMain += marginMain(ch);
     const availMain = explicitMain != null ? explicitMain : isFinite(mainMax) ? mainMax : usedMain;
     const free = Math.max(0, availMain - usedMain);
     for (const ch of flexChildren) {
       const share = totalFlex > 0 ? (free * ch.flex) / totalFlex : 0;
       const [clo, chi] = crossRange();
       const s = ch.layout(make(share, share, clo, chi), ctx);
-      maxCross = Math.max(maxCross, crossSize(s));
+      maxCross = Math.max(maxCross, crossSize(s) + marginCross(ch));
     }
 
     // Own size.
-    const contentMain = this.children.reduce((sum, ch) => sum + mainSize(ch.size), 0) + gapTotal;
+    const contentMain = this.children.reduce((sum, ch) => sum + mainSize(ch.size) + marginMain(ch), 0) + gapTotal;
     const minMain = isRow ? c.minW : c.minH;
     const ownMain =
       explicitMain != null
@@ -129,20 +135,22 @@ export class FlexNode extends LayoutNode {
 
     // Place each child: main via cursor, cross via align.
     for (const ch of this.children) {
-      const cs = crossSize(ch.size);
+      const cs = crossSize(ch.size) + marginCross(ch);
       let crossOffset = 0;
       if (this.align === 'center') crossOffset = (ownCross - cs) / 2;
       else if (this.align === 'end') crossOffset = ownCross - cs;
       // 'start' and 'stretch' -> 0
 
+      const mainStart = cursor + leadMain(ch);
+      const crossStart = crossOffset + leadCross(ch);
       if (isRow) {
-        ch.offsetX = cursor;
-        ch.offsetY = crossOffset;
+        ch.offsetX = mainStart;
+        ch.offsetY = crossStart;
       } else {
-        ch.offsetX = crossOffset;
-        ch.offsetY = cursor;
+        ch.offsetX = crossStart;
+        ch.offsetY = mainStart;
       }
-      cursor += mainSize(ch.size) + between;
+      cursor += mainSize(ch.size) + marginMain(ch) + between;
     }
 
     this.size = isRow ? { w: ownMain, h: ownCross } : { w: ownCross, h: ownMain };

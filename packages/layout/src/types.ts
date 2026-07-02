@@ -1,5 +1,12 @@
 import type { TextStyle, TextMeasurement } from '@cairn/host';
 
+export interface EdgeInsets {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
 export interface Constraints {
   minW: number;
   maxW: number;

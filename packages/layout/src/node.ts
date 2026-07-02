@@ -1,4 +1,4 @@
-import type { Constraints, Size, LayoutContext } from './types';
+import type { Constraints, Size, LayoutContext, EdgeInsets } from './types';
 
 export abstract class LayoutNode {
   children: LayoutNode[] = [];
@@ -8,6 +8,7 @@ export abstract class LayoutNode {
   flex = 0; // parent-data: FlexNode distributes free main-axis space by this
   left?: number; // parent-data: StackNode positions by these
   top?: number;
+  margin: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 }; // parent-data: margin around this node
 
   // constraints down / size up: returns own size, sets children's offsets.
   abstract layout(c: Constraints, ctx: LayoutContext): Size;

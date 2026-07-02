@@ -1,4 +1,4 @@
-import { FlexNode, type FlexDirection } from '@cairn/layout';
+import { FlexNode, toEdgeInsets, type FlexDirection } from '@cairn/layout';
 import { type Instance, bind } from '@cairn/runtime';
 import { type BaseStyle } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
@@ -30,6 +30,7 @@ function flex(direction: FlexDirection, props: FlexProps): Instance {
     layout.align = s.align ?? 'start';
     layout.width = s.width;
     layout.height = s.height;
+    layout.margin = toEdgeInsets(s.margin);
   });
 
   const instance: Instance = {

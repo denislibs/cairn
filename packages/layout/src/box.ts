@@ -1,12 +1,7 @@
 import { LayoutNode } from './node';
-import { type Constraints, type Size, type LayoutContext, clamp, resolveAxis } from './types';
+import { type Constraints, type Size, type LayoutContext, type EdgeInsets, clamp, resolveAxis } from './types';
 
-export interface EdgeInsets {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-}
+export type { EdgeInsets };
 
 export interface BoxNodeProps {
   padding?: number | Partial<EdgeInsets>;
@@ -61,15 +56,18 @@ export class BoxNode extends LayoutNode {
     let w: number;
     let h: number;
     if (child) {
-      const childMaxW = Math.max(0, selfMaxW - p.left - p.right);
-      const childMaxH = Math.max(0, selfMaxH - p.top - p.bottom);
+      const m = child.margin;
+      const childMaxW = Math.max(0, selfMaxW - p.left - p.right - m.left - m.right);
+      const childMaxH = Math.max(0, selfMaxH - p.top - p.bottom - m.top - m.bottom);
       const cs = child.layout({ minW: 0, maxW: childMaxW, minH: 0, maxH: childMaxH }, ctx);
-      w = clamp(cs.w + p.left + p.right, selfMinW, selfMaxW);
-      h = clamp(cs.h + p.top + p.bottom, selfMinH, selfMaxH);
-      const extraX = Math.max(0, w - p.left - p.right - cs.w);
-      const extraY = Math.max(0, h - p.top - p.bottom - cs.h);
-      child.offsetX = p.left + (this.alignX === 'center' ? extraX / 2 : this.alignX === 'end' ? extraX : 0);
-      child.offsetY = p.top + (this.alignY === 'center' ? extraY / 2 : this.alignY === 'end' ? extraY : 0);
+      const outerW = cs.w + m.left + m.right;
+      const outerH = cs.h + m.top + m.bottom;
+      w = clamp(outerW + p.left + p.right, selfMinW, selfMaxW);
+      h = clamp(outerH + p.top + p.bottom, selfMinH, selfMaxH);
+      const extraX = Math.max(0, w - p.left - p.right - outerW);
+      const extraY = Math.max(0, h - p.top - p.bottom - outerH);
+      child.offsetX = p.left + m.left + (this.alignX === 'center' ? extraX / 2 : this.alignX === 'end' ? extraX : 0);
+      child.offsetY = p.top + m.top + (this.alignY === 'center' ? extraY / 2 : this.alignY === 'end' ? extraY : 0);
     } else {
       w = selfMinW;
       h = selfMinH;

@@ -112,6 +112,7 @@ export function Box(props: BoxProps = {}): Instance {
     layout.minHeight = s.minHeight;
     layout.maxHeight = s.maxHeight;
     layout.padding = toEdgeInsets(s.padding);
+    layout.margin = toEdgeInsets(s.margin);
     layout.alignX = s.alignX ?? 'start';
     layout.alignY = s.alignY ?? 'start';
     instance.paintOpacity = s.opacity;
