@@ -59,7 +59,7 @@ test('FrameScheduler / SurfaceMetrics / Host are implementable', () => {
     },
     dispose() {},
   };
-  const input = { onPointer: () => () => {}, onWheel: () => () => {} };
+  const input = { onPointer: () => () => {}, onWheel: () => () => {}, onKey: () => () => {} };
   const host: Host = { renderer: makeNoopRenderer(), scheduler, metrics, input };
   const img: ImageHandle = { width: 4, height: 4 };
   host.renderer.drawImage(img, { x: 0, y: 0, width: 4, height: 4 });

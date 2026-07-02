@@ -6,6 +6,7 @@ import type {
   InputSource,
   PointerInput,
   WheelInput,
+  KeyboardInput,
 } from '@cairn/host';
 
 export function createFakeRenderer(): Renderer & { calls: unknown[][] } {
@@ -85,6 +86,7 @@ export function createFakeMetrics(width = 200, height = 100) {
 export function createFakeInput() {
   const pointerCbs = new Set<(e: PointerInput) => void>();
   const wheelCbs = new Set<(e: WheelInput) => void>();
+  const keyCbs = new Set<(e: KeyboardInput) => void>();
   const input: InputSource = {
     onPointer(cb) {
       pointerCbs.add(cb);
@@ -94,6 +96,10 @@ export function createFakeInput() {
       wheelCbs.add(cb);
       return () => wheelCbs.delete(cb);
     },
+    onKey(cb) {
+      keyCbs.add(cb);
+      return () => keyCbs.delete(cb);
+    },
   };
   return {
     input,
@@ -102,6 +108,9 @@ export function createFakeInput() {
     },
     emitWheel(e: WheelInput) {
       for (const cb of wheelCbs) cb(e);
+    },
+    emitKey(e: KeyboardInput) {
+      for (const cb of keyCbs) cb(e);
     },
   };
 }

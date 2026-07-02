@@ -15,6 +15,7 @@ function makeStub(): InputSource {
       wheel.add(cb);
       return () => wheel.delete(cb);
     },
+    onKey: () => () => {},
   } as InputSource;
 }
 

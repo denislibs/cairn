@@ -30,6 +30,11 @@ export class WebInputSource implements InputSource {
     return () => this.wheelCbs.delete(cb);
   }
 
+  // Placeholder; real keyboard wiring added in a later task.
+  onKey(): () => void {
+    return () => {};
+  }
+
   dispose(): void {
     this.canvas.removeEventListener('pointerdown', this.down);
     this.canvas.removeEventListener('pointermove', this.move);
