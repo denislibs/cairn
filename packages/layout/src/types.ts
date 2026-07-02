@@ -21,7 +21,9 @@ export function clamp(value: number, min: number, max: number): number {
 }
 
 // Resolve one axis (min,max) given incoming constraints and optional sizing props.
-// exact pins both ends; min/max tighten. Everything is clamped to the incoming range.
+// Precedence: `exact` (an explicit width/height) wins and pins both ends, IGNORING
+// `min`/`max`. When there is no `exact`, `min`/`max` tighten the range. Everything is
+// finally clamped to the incoming [cMin, cMax].
 export function resolveAxis(
   cMin: number,
   cMax: number,

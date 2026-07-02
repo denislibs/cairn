@@ -42,3 +42,13 @@ test('BoxNode with no child sizes to the constraint minimum', () => {
   const size = box.layout({ minW: 7, maxW: 100, minH: 3, maxH: 100 }, fakeMeasure());
   expect(size).toEqual({ w: 7, h: 3 });
 });
+
+test('BoxNode minWidth grows an under-sized box; maxWidth caps an over-sized one', () => {
+  const small = new TextNode({ text: 'x', style: { font: '10px sans-serif' } }); // 6 wide
+  const grown = new BoxNode({ minWidth: 40, child: small });
+  expect(grown.layout(LOOSE, fakeMeasure()).w).toBe(40); // content 6 raised to minWidth
+
+  const wide = new TextNode({ text: 'a long piece of text', style: { font: '10px sans-serif' } });
+  const capped = new BoxNode({ maxWidth: 30, child: wide });
+  expect(capped.layout(LOOSE, fakeMeasure()).w).toBe(30); // capped by maxWidth
+});
