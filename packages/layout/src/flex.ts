@@ -140,13 +140,16 @@ export class FlexNode extends LayoutNode {
       }
     }
 
-    // Place each child: main via cursor, cross via align.
+    // Place each child: main via cursor, cross via align / alignSelf.
     for (const ch of this.children) {
       const cs = crossSize(ch.size) + marginCross(ch);
+      // Per-child cross alignment: ch.alignSelf overrides the container's align.
+      // 'stretch' on an individual child is deferred in v1 — it falls through to 'start'.
+      const self = ch.alignSelf ?? this.align;
       let crossOffset = 0;
-      if (this.align === 'center') crossOffset = (ownCross - cs) / 2;
-      else if (this.align === 'end') crossOffset = ownCross - cs;
-      // 'start' and 'stretch' -> 0
+      if (self === 'center') crossOffset = (ownCross - cs) / 2;
+      else if (self === 'end') crossOffset = ownCross - cs;
+      // 'start', 'stretch', and undefined -> 0
 
       const mainStart = cursor + leadMain(ch);
       const crossStart = crossOffset + leadCross(ch);

@@ -37,6 +37,7 @@ export interface BaseStyle {
   columnGap?: number;
   justify?: Justify;
   align?: Align;
+  alignSelf?: 'start' | 'center' | 'end' | 'stretch';
   // paint
   backgroundColor?: string;
   borderRadius?: CornerRadius;

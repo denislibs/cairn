@@ -7,6 +7,7 @@ export interface LayoutChildProps {
   left?: number;
   top?: number;
   margin?: number | Partial<EdgeInsets>;
+  alignSelf?: 'start' | 'center' | 'end' | 'stretch';
 }
 
 export function applyLayoutChildProps(inst: Instance, props: LayoutChildProps): void {
@@ -14,4 +15,5 @@ export function applyLayoutChildProps(inst: Instance, props: LayoutChildProps): 
   if (props.left !== undefined) inst.layout.left = props.left;
   if (props.top !== undefined) inst.layout.top = props.top;
   if (props.margin !== undefined) inst.layout.margin = toEdgeInsets(props.margin);
+  if (props.alignSelf !== undefined) inst.layout.alignSelf = props.alignSelf;
 }

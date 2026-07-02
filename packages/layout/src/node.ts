@@ -9,6 +9,7 @@ export abstract class LayoutNode {
   left?: number; // parent-data: StackNode positions by these
   top?: number;
   margin: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 }; // parent-data: margin around this node
+  alignSelf?: 'start' | 'center' | 'end' | 'stretch'; // parent-data: per-child cross-axis alignment override
 
   // constraints down / size up: returns own size, sets children's offsets.
   abstract layout(c: Constraints, ctx: LayoutContext): Size;
