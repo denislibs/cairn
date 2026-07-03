@@ -119,6 +119,8 @@ export function Box(props: BoxProps = {}): Instance {
     instance.paintOpacity = s.opacity;
     instance.clipChildren =
       s.overflow === 'hidden' || s.overflow === 'clip' ? s.borderRadius ?? 0 : undefined;
+    instance.transform = s.transform;
+    instance.transformOrigin = s.transformOrigin;
   });
 
   applyLayoutChildProps(instance, props);

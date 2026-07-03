@@ -16,6 +16,12 @@ export type StateName = (typeof STATE_ORDER)[number];
 export interface Shadow {
   color: string; blur: number; offsetX: number; offsetY: number;
 }
+export interface Transform {
+  translateX?: number; translateY?: number;
+  scale?: number; scaleX?: number; scaleY?: number;
+  rotate?: number;   // degrees
+  skewX?: number; skewY?: number; // degrees
+}
 export type CornerRadius = number | { tl: number; tr: number; br: number; bl: number };
 export interface BorderSide { width: number; color: string; style?: 'solid' | 'dashed' | 'dotted' }
 export interface LinearGradient { kind: 'linear'; from: { x: number; y: number }; to: { x: number; y: number }; stops: { offset: number; color: string }[] }
@@ -76,6 +82,8 @@ export interface BaseStyle {
   maxLines?: number;
   ellipsis?: string;
   textDecoration?: 'none' | 'underline' | 'line-through';
+  transform?: Transform;
+  transformOrigin?: { x: number; y: number };
 }
 
 export type Style = BaseStyle & Partial<Record<StateName, BaseStyle>>;

@@ -2,6 +2,12 @@ import type { Renderer, Radii } from '@cairn/host';
 import type { LayoutNode } from '@cairn/layout';
 import type { EventHandlers } from '@cairn/events';
 
+export interface TransformSpec {
+  translateX?: number; translateY?: number;
+  scale?: number; scaleX?: number; scaleY?: number;
+  rotate?: number; skewX?: number; skewY?: number;
+}
+
 export interface Instance {
   layout: LayoutNode;
   paintSelf(r: Renderer): void;
@@ -10,6 +16,8 @@ export interface Instance {
   focusable?: boolean;
   paintOpacity?: number;
   clipChildren?: Radii | null;
+  transform?: TransformSpec | null;
+  transformOrigin?: { x: number; y: number } | null;
 }
 
 // Walk the instance tree, translating into each node's local coordinate space.
@@ -19,6 +27,19 @@ export function paint(inst: Instance, r: Renderer, parentAlpha = 1): void {
   const o = inst.paintOpacity;
   const alpha = o !== undefined && o < 1 ? parentAlpha * o : parentAlpha;
   if (alpha !== parentAlpha) r.setGlobalAlpha(alpha);
+  const t = inst.transform;
+  if (t) {
+    const ox = inst.transformOrigin?.x ?? inst.layout.size.w / 2;
+    const oy = inst.transformOrigin?.y ?? inst.layout.size.h / 2;
+    r.translate(ox, oy);
+    if (t.translateX || t.translateY) r.translate(t.translateX ?? 0, t.translateY ?? 0);
+    if (t.rotate) r.rotate((t.rotate * Math.PI) / 180);
+    const sx = t.scaleX ?? t.scale ?? 1;
+    const sy = t.scaleY ?? t.scale ?? 1;
+    if (sx !== 1 || sy !== 1) r.scale(sx, sy);
+    if (t.skewX || t.skewY) r.transform(1, Math.tan(((t.skewY ?? 0) * Math.PI) / 180), Math.tan(((t.skewX ?? 0) * Math.PI) / 180), 1, 0, 0);
+    r.translate(-ox, -oy);
+  }
   inst.paintSelf(r);
   if (inst.clipChildren !== undefined && inst.clipChildren !== null) {
     r.clipRoundRect({ x: 0, y: 0, width: inst.layout.size.w, height: inst.layout.size.h }, inst.clipChildren);
