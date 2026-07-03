@@ -27,3 +27,5 @@ export type { IconProps } from './icon';
 export { Image, computeObjectFit } from './image';
 export type { ImageProps, ObjectFit } from './image';
 export { pickBreakpoint, responsive, useViewport, useBreakpoint } from './responsive';
+export { ScrollView } from './scroll-view';
+export type { ScrollViewProps } from './scroll-view';
