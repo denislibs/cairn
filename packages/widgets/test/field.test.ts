@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createRoot, createSignal, runWithContext } from '@cairn/reactivity';
+import { hostContext } from '@cairn/runtime';
 import { Field, useField, useFieldOptional, fieldContext } from '../src/field';
 import type { Instance } from '@cairn/runtime';
 
@@ -166,6 +167,109 @@ describe('useFieldOptional — inside Field returns value', () => {
       });
       expect(ctxValue).not.toBeNull();
       expect(ctxValue!.invalid()).toBe(true);
+    });
+  });
+});
+
+describe('Field — label text in context', () => {
+  it('Field context exposes labelText after Field.Label renders', () => {
+    createRoot(() => {
+      let ctxValue: ReturnType<typeof useFieldOptional> = null;
+      Field({
+        children: () => {
+          Field.Label({ children: 'My Field' });
+          ctxValue = useFieldOptional();
+          return fakeInstance();
+        },
+      });
+      expect(ctxValue).not.toBeNull();
+      expect((ctxValue as any)!.labelText).toBe('My Field');
+    });
+  });
+
+  it('Field context labelText is empty string when no Field.Label rendered', () => {
+    createRoot(() => {
+      let ctxValue: ReturnType<typeof useFieldOptional> = null;
+      Field({
+        children: () => {
+          ctxValue = useFieldOptional();
+          return fakeInstance();
+        },
+      });
+      expect((ctxValue as any)!.labelText).toBe('');
+    });
+  });
+});
+
+describe('Field.Error — announce on invalid', () => {
+  it('calls announce when invalid flips from false to true', () => {
+    createRoot(() => {
+      const [invalid, setInvalid] = createSignal(false);
+      const announced: string[] = [];
+      const fakeHost = {
+        a11y: { announce: (msg: string) => announced.push(msg) },
+      };
+      runWithContext(hostContext, fakeHost as any, () => {
+        Field({
+          invalid,
+          children: () => {
+            Field.Error({ children: 'This field is required' });
+            return fakeInstance();
+          },
+        });
+      });
+      expect(announced).toHaveLength(0);
+      // Flip invalid to true → should announce
+      setInvalid(true);
+      expect(announced).toHaveLength(1);
+      expect(announced[0]).toBe('This field is required');
+    });
+  });
+
+  it('does not announce again when already invalid (no re-announce on every frame)', () => {
+    createRoot(() => {
+      const [invalid, setInvalid] = createSignal(true);
+      const announced: string[] = [];
+      const fakeHost = {
+        a11y: { announce: (msg: string) => announced.push(msg) },
+      };
+      runWithContext(hostContext, fakeHost as any, () => {
+        Field({
+          invalid,
+          children: () => {
+            Field.Error({ children: 'Error!' });
+            return fakeInstance();
+          },
+        });
+      });
+      // Already true on mount: announces once on initial flip
+      const countAfterMount = announced.length;
+      // Setting same value again should NOT re-announce
+      setInvalid(true);
+      expect(announced.length).toBe(countAfterMount);
+    });
+  });
+
+  it('does not call announce when invalid flips from true to false', () => {
+    createRoot(() => {
+      const [invalid, setInvalid] = createSignal(true);
+      const announced: string[] = [];
+      const fakeHost = {
+        a11y: { announce: (msg: string) => announced.push(msg) },
+      };
+      runWithContext(hostContext, fakeHost as any, () => {
+        Field({
+          invalid,
+          children: () => {
+            Field.Error({ children: 'Error!' });
+            return fakeInstance();
+          },
+        });
+      });
+      const countAfterMount = announced.length;
+      setInvalid(false);
+      // Going false→false or true→false should not add a new announcement
+      expect(announced.length).toBe(countAfterMount);
     });
   });
 });

@@ -1,6 +1,6 @@
 import type { Instance } from '@cairn/runtime';
-import { Provider, Show } from '@cairn/runtime';
-import { useContext, type Accessor } from '@cairn/reactivity';
+import { Provider, Show, hostContext } from '@cairn/runtime';
+import { useContext, createEffect, type Accessor } from '@cairn/reactivity';
 import { Box, Column, Text, mergeStyles, type StyleInput } from '@cairn/primitives';
 import { createCompoundContext } from './context';
 import { useWidgetTheme } from './theme';
@@ -11,6 +11,8 @@ export interface FieldContextValue {
   invalid: Accessor<boolean>;
   disabled: boolean;
   id: symbol;
+  /** Label text registered by Field.Label — empty string if no label rendered. */
+  labelText: string;
 }
 
 export const fieldContext = createCompoundContext<FieldContextValue>('Field');
@@ -34,6 +36,11 @@ export interface FieldLabelProps {
 
 function FieldLabel(props: FieldLabelProps): Instance {
   const t = useWidgetTheme();
+  // Register label text into field context (if inside a Field)
+  const field = useFieldOptional();
+  if (field && props.children) {
+    field.labelText = props.children;
+  }
   return Text({
     style: mergeStyles(
       () => ({
@@ -87,6 +94,19 @@ function FieldError(props: FieldErrorProps): Instance {
   // useFieldOptional() so this can also be rendered standalone in tests
   const field = useFieldOptional();
   const isInvalid: Accessor<boolean> = field ? field.invalid : () => false;
+
+  // Announce error when invalid flips true (guard: on change only)
+  // Use non-throwing host context access so FieldError works in unit tests without a host.
+  const host = useContext(hostContext);
+  let prevInvalid = isInvalid();
+  createEffect(() => {
+    const now = isInvalid();
+    if (now && !prevInvalid) {
+      host?.a11y?.announce(props.children ?? '');
+    }
+    prevInvalid = now;
+  });
+
   return Show({
     when: isInvalid,
     children: () =>
@@ -128,6 +148,7 @@ function FieldRoot(props: FieldProps): Instance {
     invalid: props.invalid ?? (() => false),
     disabled: !!props.disabled,
     id: Symbol('Field'),
+    labelText: '',
   };
 
   if (props.children) {
