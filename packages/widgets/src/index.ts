@@ -14,6 +14,8 @@ export { Checkbox } from './checkbox';
 export type { CheckboxProps } from './checkbox';
 export { Switch } from './switch';
 export type { SwitchProps } from './switch';
+export { RadioGroup, Radio, radioGroupContext } from './radio';
+export type { RadioGroupProps, RadioGroupContextValue, RadioProps } from './radio';
 export { Slider } from './slider';
 export type { SliderProps } from './slider';
 export { Modal } from './modal';
