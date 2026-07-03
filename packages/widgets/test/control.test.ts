@@ -70,11 +70,13 @@ it('Enter key calls onClick', () => {
   });
 });
 
-it('Space key calls onClick', () => {
+it('Space key calls onClick on keyup, not keydown', () => {
   createRoot(() => {
     let clicked = 0;
     const { handlers } = createControl({ onClick: () => clicked++ });
-    handlers.onKeyDown!(ke(' '));
+    handlers.onKeyDown!(ke(' ')); // should NOT activate on keydown
+    expect(clicked).toBe(0);
+    handlers.onKeyUp!(ke(' ')); // SHOULD activate on keyup
     expect(clicked).toBe(1);
   });
 });
@@ -111,5 +113,45 @@ it('state.disabled reflects the disabled prop', () => {
   createRoot(() => {
     const { state } = createControl({ disabled: true });
     expect(state.disabled).toBe(true);
+  });
+});
+
+it('Enter key activates on keydown (explicit)', () => {
+  createRoot(() => {
+    let clicked = 0;
+    const { handlers } = createControl({ onClick: () => clicked++ });
+    handlers.onKeyDown!(ke('Enter'));
+    expect(clicked).toBe(1);
+  });
+});
+
+it('Space keydown calls preventDefault', () => {
+  createRoot(() => {
+    let prevented = false;
+    const { handlers } = createControl({});
+    const event = { key: ' ', preventDefault: () => { prevented = true; } } as any;
+    handlers.onKeyDown!(event);
+    expect(prevented).toBe(true);
+  });
+});
+
+it('disabled: Space keyup does NOT call onClick', () => {
+  createRoot(() => {
+    let clicked = 0;
+    const { handlers } = createControl({ disabled: true, onClick: () => clicked++ });
+    handlers.onKeyUp!(ke(' '));
+    expect(clicked).toBe(0);
+  });
+});
+
+it('re-entering while pointer button held restores pressed state', () => {
+  createRoot(() => {
+    const { state, handlers } = createControl({});
+    handlers.onPointerDown!(pe);
+    expect(state.pressed()).toBe(true);
+    handlers.onPointerLeave!(pe);
+    expect(state.pressed()).toBe(false); // visual cleared on leave
+    handlers.onPointerEnter!(pe); // re-enter while still holding button
+    expect(state.pressed()).toBe(true); // restored
   });
 });

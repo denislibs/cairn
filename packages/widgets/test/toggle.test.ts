@@ -40,11 +40,11 @@ describe('Toggle — uncontrolled', () => {
     });
   });
 
-  it('Space key also toggles', () => {
+  it('Space key also toggles (on keyup)', () => {
     createRoot(() => {
       const seen: boolean[] = [];
       const inst = Toggle({ defaultPressed: false, onChange: (v) => seen.push(v) });
-      inst.handlers!.onKeyDown!({ key: ' ' } as any);
+      inst.handlers!.onKeyUp!({ key: ' ' } as any);
       expect(seen).toEqual([true]);
     });
   });
