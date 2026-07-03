@@ -6,6 +6,7 @@ import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
 import type { EventProps } from './events';
 import { applyLayoutChildProps, applyLayoutStyle, type LayoutChildProps } from './layout-child';
+import { createStyleTransitions } from './transitions';
 
 export interface ScrollViewProps extends EventProps, LayoutChildProps {
   style?: StyleInput;
@@ -45,6 +46,7 @@ export function scrollThumb(
 
 export function ScrollView(props: ScrollViewProps = {}): Instance {
   const { resolved, handlers } = createInteractive(props);
+  const styleSource = createStyleTransitions(resolved);
   const controlledY = props.scrollTop !== undefined;
   const controlledX = props.scrollLeft !== undefined;
   const [internalY, setInternalY] = createSignal(0);
@@ -79,7 +81,7 @@ export function ScrollView(props: ScrollViewProps = {}): Instance {
   };
 
   // Reactive style → viewport size, clip, transform/opacity
-  bind(resolved, (s: BaseStyle) => {
+  bind(styleSource, (s: BaseStyle) => {
     node.width = s.width;
     node.height = s.height;
     viewportInst.clipChildren = s.borderRadius ?? 0;

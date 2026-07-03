@@ -5,6 +5,7 @@ import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
 import type { EventProps } from './events';
 import { applyLayoutChildProps, applyLayoutStyle, type LayoutChildProps } from './layout-child';
+import { createStyleTransitions } from './transitions';
 
 export interface FlexProps extends EventProps, LayoutChildProps {
   style?: StyleInput;
@@ -16,6 +17,7 @@ export interface FlexProps extends EventProps, LayoutChildProps {
 
 function flex(direction: FlexDirection, props: FlexProps): Instance {
   const { resolved, handlers } = createInteractive(props);
+  const styleSource = createStyleTransitions(resolved);
   const children =
     props.children == null ? [] : Array.isArray(props.children) ? props.children : [props.children];
   const layout = new FlexNode({
@@ -34,7 +36,7 @@ function flex(direction: FlexDirection, props: FlexProps): Instance {
     },
   };
 
-  bind(resolved, (s: BaseStyle) => {
+  bind(styleSource, (s: BaseStyle) => {
     layout.gap = s.gap ?? 0;
     layout.rowGap = s.rowGap;
     layout.columnGap = s.columnGap;
