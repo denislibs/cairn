@@ -84,6 +84,7 @@ export function RadioGroup(props: RadioGroupProps): RadioGroupInstance {
     });
   } else {
     content = Column({
+      mainAxisSize: 'min',
       style: mergeStyles({ gap: t.spacing.sm }, props.style),
     });
   }

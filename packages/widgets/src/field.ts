@@ -137,6 +137,7 @@ function FieldRoot(props: FieldProps): Instance {
       children: () => {
         const child = props.children!();
         return Column({
+          mainAxisSize: 'min',
           style: mergeStyles(() => ({ gap: t.spacing.xs }), props.style),
           children: child,
         });
@@ -149,6 +150,7 @@ function FieldRoot(props: FieldProps): Instance {
     value: ctxValue,
     children: () =>
       Column({
+        mainAxisSize: 'min',
         style: mergeStyles(() => ({ gap: t.spacing.xs }), props.style),
       }),
   });
