@@ -229,14 +229,118 @@ test('dispose removes the overlay container', () => {
   expect(canvas.parentElement!.querySelectorAll('[data-cairn-a11y]').length).toBe(0);
 });
 
-test('textbox role is skipped', () => {
+// ── NF3b Task 2: textbox bridge ───────────────────────────────────────────────
+
+test('textbox role creates an <input type=text> with aria-label and tabindex 0', () => {
   const canvas = makeCanvas();
   const bridge = new WebAccessibilityBridge(canvas);
 
-  bridge.sync([{ id: 1, role: 'textbox', label: 'Name', rect: makeRect() }]);
+  bridge.sync([{ id: 1, role: 'textbox', label: 'Name', value: 'Alice', rect: makeRect() }]);
 
-  const container = canvas.parentElement!.querySelector('[data-cairn-a11y]')!;
-  expect(container.children.length).toBe(0);
+  const input = canvas.parentElement!.querySelector('input[type=text]') as HTMLInputElement | null;
+  expect(input).not.toBeNull();
+  expect(input!.getAttribute('aria-label')).toBe('Name');
+  expect(input!.getAttribute('tabindex')).toBe('0');
+  expect(input!.value).toBe('Alice');
+
+  bridge.dispose();
+});
+
+test('textbox dispatching input event calls onInput with the value', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  const received: string[] = [];
+
+  bridge.sync([{ id: 1, role: 'textbox', label: 'Name', rect: makeRect(), onInput: (v) => received.push(v) }]);
+
+  const input = canvas.parentElement!.querySelector('input[type=text]') as HTMLInputElement;
+  input.value = 'hello';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+
+  expect(received).toEqual(['hello']);
+
+  bridge.dispose();
+});
+
+test('multiline:true creates a <textarea>', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+
+  bridge.sync([{ id: 1, role: 'textbox', label: 'Bio', multiline: true, rect: makeRect() }]);
+
+  const ta = canvas.parentElement!.querySelector('textarea');
+  expect(ta).not.toBeNull();
+
+  bridge.dispose();
+});
+
+test('re-sync with new value updates .value when input is not focused', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+
+  bridge.sync([{ id: 1, role: 'textbox', label: 'Name', value: 'Alice', rect: makeRect() }]);
+  bridge.sync([{ id: 1, role: 'textbox', label: 'Name', value: 'Bob', rect: makeRect() }]);
+
+  const input = canvas.parentElement!.querySelector('input[type=text]') as HTMLInputElement;
+  expect(input.value).toBe('Bob');
+
+  bridge.dispose();
+});
+
+test('textbox placeholder is set on the native element', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+
+  bridge.sync([{ id: 1, role: 'textbox', label: 'Search', placeholder: 'Type here…', rect: makeRect() }]);
+
+  const input = canvas.parentElement!.querySelector('input[type=text]') as HTMLInputElement;
+  expect(input.placeholder).toBe('Type here…');
+
+  bridge.dispose();
+});
+
+test('textbox readonly:true sets readOnly on the native input', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+
+  bridge.sync([{ id: 1, role: 'textbox', label: 'Name', readonly: true, rect: makeRect() }]);
+
+  const input = canvas.parentElement!.querySelector('input[type=text]') as HTMLInputElement;
+  expect(input.readOnly).toBe(true);
+
+  bridge.dispose();
+});
+
+test('textbox disabled:true sets disabled on the native input', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+
+  bridge.sync([{ id: 1, role: 'textbox', label: 'Name', disabled: true, rect: makeRect() }]);
+
+  const input = canvas.parentElement!.querySelector('input[type=text]') as HTMLInputElement;
+  expect(input.disabled).toBe(true);
+
+  bridge.dispose();
+});
+
+test('onInput callback updates when re-synced without recreating the element', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  let count = 0;
+
+  bridge.sync([{ id: 1, role: 'textbox', label: 'Name', rect: makeRect(), onInput: () => { count += 1; } }]);
+  const input1 = canvas.parentElement!.querySelector('input[type=text]') as HTMLInputElement;
+
+  // Re-sync with new onInput
+  bridge.sync([{ id: 1, role: 'textbox', label: 'Name', rect: makeRect(), onInput: () => { count += 10; } }]);
+  const input2 = canvas.parentElement!.querySelector('input[type=text]') as HTMLInputElement;
+
+  // Same DOM element (not recreated)
+  expect(input1).toBe(input2);
+
+  input2.value = 'x';
+  input2.dispatchEvent(new Event('input', { bubbles: true }));
+  expect(count).toBe(10); // new callback
 
   bridge.dispose();
 });
