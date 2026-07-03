@@ -87,6 +87,8 @@ export interface BaseStyle {
   textDecoration?: 'none' | 'underline' | 'line-through';
   transform?: Transform;
   transformOrigin?: { x: number; y: number };
+  filter?: string;
+  backdropFilter?: string;
 }
 
 export type Style = BaseStyle & Partial<Record<StateName, BaseStyle>>;

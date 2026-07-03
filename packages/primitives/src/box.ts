@@ -79,6 +79,10 @@ function paintSide(
 }
 
 function paintBox(r: Renderer, s: BaseStyle, w: number, h: number): void {
+  // backdropFilter: deferred — needs backdrop re-sampling (documented v1 limitation)
+  const hasFilter = !!s.filter;
+  if (hasFilter) { r.save(); r.setFilter(s.filter!); }
+
   const shadows = normalizeShadows(s);
   const hasFill = !!(s.backgroundColor || s.backgroundGradient);
 
@@ -133,6 +137,8 @@ function paintBox(r: Renderer, s: BaseStyle, w: number, h: number): void {
   paintSide(r, s.borderRight, [w, 0], [w, h]);
   paintSide(r, s.borderBottom, [0, h], [w, h]);
   paintSide(r, s.borderLeft, [0, 0], [0, h]);
+
+  if (hasFilter) { r.setFilter(null); r.restore(); }
 }
 
 export function Box(props: BoxProps = {}): Instance {
