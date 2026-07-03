@@ -26,7 +26,7 @@ test('Box accepts an array of styles (later wins)', () => {
 test('Box style function receives the provided theme', () => {
   const theme = { colors: { surface: '#abcdef' } };
   let box!: ReturnType<typeof Box>;
-  runWithContext(themeContext, theme, () => {
+  runWithContext(themeContext, () => theme, () => {
     box = Box({
       style: (t) => ({ width: 5, height: 5, backgroundColor: (t as typeof theme).colors.surface }),
     });
@@ -45,7 +45,7 @@ test('Box style function receives the provided theme', () => {
 test('Text style function receives the theme', () => {
   const theme = { text: '#333' };
   let t!: ReturnType<typeof Text>;
-  runWithContext(themeContext, theme, () => {
+  runWithContext(themeContext, () => theme, () => {
     t = Text({
       children: 'hi',
       style: (th) => ({ color: (th as typeof theme).text, font: '10px sans-serif' }),

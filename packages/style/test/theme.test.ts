@@ -14,7 +14,7 @@ test('useTheme returns the empty default when no theme is provided', () => {
 test('useTheme returns the provided theme inside a themeContext scope', () => {
   const theme = createTheme({ colors: { primary: '#3b82f6' } });
   let seen: unknown;
-  runWithContext(themeContext, theme, () => {
+  runWithContext(themeContext, () => theme, () => {
     seen = useTheme();
   });
   expect(seen).toBe(theme);
