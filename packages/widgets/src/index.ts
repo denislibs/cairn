@@ -2,6 +2,8 @@ export { defaultTheme, useWidgetTheme } from './theme';
 export type { WidgetTheme } from './theme';
 export { createCompoundContext } from './context';
 export type { CompoundContext } from './context';
+export { createControl } from './control';
+export type { ControlState, ControlProps } from './control';
 export { Divider } from './divider';
 export type { DividerProps } from './divider';
 export { Button } from './button';
