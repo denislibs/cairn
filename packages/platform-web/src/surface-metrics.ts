@@ -1,5 +1,9 @@
 import type { SurfaceMetrics } from '@cairn/host';
 
+// How long after the last visualViewport event we treat a pinch gesture as
+// settled and re-sync the backing store to the new scale.
+const VV_SETTLE_MS = 150;
+
 export class WebSurfaceMetrics implements SurfaceMetrics {
   // Declared mutable (the interface exposes them readonly to consumers); update()
   // rewrites them in place when the surface changes.
@@ -12,7 +16,7 @@ export class WebSurfaceMetrics implements SurfaceMetrics {
   private disposed = false;
   private currentMql?: MediaQueryList;
   private currentHandler?: () => void;
-  private vvScheduled = false;
+  private vvTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private element: HTMLElement) {
     this.width = element.clientWidth;
@@ -25,18 +29,20 @@ export class WebSurfaceMetrics implements SurfaceMetrics {
     this.watchVisualViewport();
   }
 
-  // Pinch-zoom changes visualViewport.scale without touching clientWidth/DPR, so
-  // update()'s guard would swallow it. Notify subscribers directly (rAF-coalesced)
-  // so the host re-syncs the backing to the pinch scale and repaints — crisp text
-  // while pinched instead of a magnified (blurry) raster.
+  // Pinch-zoom fires a burst of visualViewport events; its scale changes without
+  // touching clientWidth/DPR, so update()'s guard would swallow it. Reacting to
+  // every event would reallocate the (large) backing store per frame → jank.
+  // Instead we DEBOUNCE: hold the current resolution during the gesture (the
+  // compositor magnifies it — briefly soft), then notify once it settles so the
+  // host re-syncs the backing to the final scale and repaints crisp.
   private onVisualViewport = (): void => {
-    if (this.vvScheduled || this.disposed) return;
-    this.vvScheduled = true;
-    requestAnimationFrame(() => {
-      this.vvScheduled = false;
+    if (this.disposed) return;
+    if (this.vvTimer !== undefined) clearTimeout(this.vvTimer);
+    this.vvTimer = setTimeout(() => {
+      this.vvTimer = undefined;
       if (this.disposed) return;
       for (const cb of this.subscribers) cb(this);
-    });
+    }, VV_SETTLE_MS);
   };
 
   private watchVisualViewport(): void {
@@ -65,6 +71,7 @@ export class WebSurfaceMetrics implements SurfaceMetrics {
       vv.removeEventListener('resize', this.onVisualViewport);
       vv.removeEventListener('scroll', this.onVisualViewport);
     }
+    if (this.vvTimer !== undefined) clearTimeout(this.vvTimer);
     this.subscribers.clear();
   }
 

@@ -3,7 +3,7 @@ import { createPointerDispatcher, createFocusManager } from '@cairn/events';
 import type { Host } from '@cairn/host';
 import type { LayoutContext } from '@cairn/layout';
 import { type Instance, paint } from './instance';
-import { setFrameRequester, flushAfterLayout } from './scheduler';
+import { setFrameRequester, flushAfterLayout, scheduleFrame } from './scheduler';
 import { hostContext } from './host-context';
 import { createOverlayRegistry, overlayContext } from './overlays';
 
@@ -69,7 +69,10 @@ export function mount(component: () => Instance, host: Host): () => void {
       });
     });
 
-    const unsubscribeResize = host.metrics.onResize(() => renderFrame());
+    // Coalesce surface changes (resize / DPR / settled pinch) into one scheduled
+    // frame instead of a synchronous re-layout+repaint per event — avoids jank
+    // during rapid changes. The host syncs the backing store before the frame.
+    const unsubscribeResize = host.metrics.onResize(() => scheduleFrame());
 
     const focus = createFocusManager(layered);
     const dispatcher = createPointerDispatcher(layered, {
