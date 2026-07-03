@@ -3,7 +3,7 @@ import { createPointerDispatcher, createFocusManager } from '@cairn/events';
 import type { Host } from '@cairn/host';
 import type { LayoutContext } from '@cairn/layout';
 import { type Instance, paint } from './instance';
-import { setFrameRequester } from './scheduler';
+import { setFrameRequester, flushAfterLayout } from './scheduler';
 import { hostContext } from './host-context';
 import { createOverlayRegistry, overlayContext } from './overlays';
 
@@ -43,6 +43,7 @@ export function mount(component: () => Instance, host: Host): () => void {
       root.layout.layout({ minW: w, maxW: w, minH: h, maxH: h }, ctx); // tight = surface
       const list = overlays.list();
       for (const o of list) o.layout.layout({ minW: 0, maxW: w, minH: 0, maxH: h }, ctx);
+      flushAfterLayout();
       host.renderer.beginFrame();
       host.renderer.clear();
       paint(root, host.renderer);

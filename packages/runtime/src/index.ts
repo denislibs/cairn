@@ -1,6 +1,6 @@
 export type { Instance } from './instance';
 export { paint } from './instance';
-export { setFrameRequester, scheduleFrame } from './scheduler';
+export { setFrameRequester, scheduleFrame, onNextLayout } from './scheduler';
 export { bind } from './reactive-props';
 export type { MaybeReactive } from './reactive-props';
 export { jsx, jsxs, Fragment } from './jsx-runtime';

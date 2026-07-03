@@ -14,3 +14,14 @@ export function setFrameRequester(fn: (() => void) | null): void {
 export function scheduleFrame(): void {
   if (requester) requester();
 }
+
+let afterLayout: Array<() => void> = [];
+export function onNextLayout(cb: () => void): void {
+  afterLayout.push(cb);
+  scheduleFrame();
+}
+export function flushAfterLayout(): void {
+  const cbs = afterLayout;
+  afterLayout = [];
+  for (const cb of cbs) cb();
+}

@@ -98,7 +98,7 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
 - ✅ keyframes-анимации — императивно через `animateKeyframes`; полный CSS `@keyframes`-синтаксис отложен
 - ✅ spring-easing — аппроксимация через `spring()` (временно́й easing для time-based переходов; отличается от `animateSpring` — остаётся доступным)
 - ✅ появление/удаление элементов (enter/exit) — через `Presence` (`@cairn/primitives`): монтирует/размонтирует с анимацией из `from`-стиля; поддерживает `duration`, `easing`, `spring` (AN3).
-- ❌ FLIP-переупорядочивание списков — отложено (нужен захват layout до/после в control-flow) (AN4, отдельно).
+- ✅ `For` `flip` — плавное переупорядочивание keyed-списков (AN4): `flip?: boolean | { duration?, easing? }`; invert/play через `onNextLayout` + `transform`; отменяется при перекрывающихся перестановках.
 
 ## 9. Интерактивность, состояния, курсор
 - ✅ состояния `hover` / `focus` / `active` / `pressed` / `disabled` (live + реактивно)
@@ -157,7 +157,7 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
 8. ✅ `min` / `max` размеры (есть у `BoxNode`)
 
 ## «Дорого» — осталось (нужен и движок, и большая фича)
-Виртуализация длинных списков, жесты + pointer-capture, FLIP-анимация списков,
+Виртуализация длинных списков, жесты + pointer-capture,
 полный SVG-парсер, формы/валидация, dirty-region (Фаза 12), a11y (Фаза 14),
 роутинг (Фаза 15/16), i18n / RTL, выделение текста.
 (Реализовано ранее и убрано из списка: `flexWrap`, анимации/переходы, Grid, ScrollView, единицы/адаптив, Portal/оверлеи.)
@@ -205,4 +205,5 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
   AN1 — структурная интерполяция: `lerpLength` (px/% / rem / vw / vh / auto / calc), `lerpTransform` (translateX/Y, scale/X/Y, rotate, skewX/Y), `lerpShadow` (blur / offset / color), `lerpRadii` (per-corner), `lerpInsets` (padding/margin по сторонам).
   AN2 — реальная spring-физика: `animateSpring` (semi-implicit Euler; `stiffness`/`damping`/`mass`; overshoot; прерываемо с переносом скорости); `TransitionConfig.spring` активирует её декларативно — `duration`/`easing` при этом игнорируются.
   AN3 — `Presence` (enter/exit, `@cairn/primitives`): монтирует/размонтирует дочерний элемент с анимацией из `from`-стиля; `when` — accessor, `children` — thunk `() => Instance`; поддерживает `duration`, `easing`, `spring`.
+  AN4 — `For` `flip` (FLIP-переупорядочивание, `@cairn/runtime`): `flip?: boolean | { duration?, easing? }`; захватывает offsetX/Y до reconcile, вычисляет дельты через `onNextLayout`, анимирует transform-сдвиг к нулю; перекрывающиеся перестановки отменяются и запускаются заново.
   Переходы охватывают все структурные пропсы: `opacity`, `color`, `backgroundColor`, `width`/`height`/`min*`/`max*`, `padding`, `margin`, `gap`, `borderRadius`, `border`, `boxShadow`, `transform`, `letterSpacing`, `lineHeight` — на Box / Text / Flex / Grid.
