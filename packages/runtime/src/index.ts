@@ -1,5 +1,7 @@
 export type { Instance } from './instance';
 export { paint } from './instance';
+export type { SemanticsNode } from './semantics';
+export { collectSemantics } from './semantics';
 export { setFrameRequester, scheduleFrame, onNextLayout } from './scheduler';
 export { bind } from './reactive-props';
 export type { MaybeReactive } from './reactive-props';

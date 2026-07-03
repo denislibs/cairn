@@ -1,6 +1,7 @@
 import type { Renderer, Radii } from '@cairn/host';
 import type { LayoutNode } from '@cairn/layout';
 import type { EventHandlers } from '@cairn/events';
+import type { SemanticsNode } from './semantics';
 
 export interface TransformSpec {
   translateX?: number; translateY?: number;
@@ -18,6 +19,7 @@ export interface Instance {
   pointerEvents?: 'auto' | 'none';
   userSelect?: 'auto' | 'none' | 'text';
   paintOpacity?: number;
+  semantics?: SemanticsNode;
   clipChildren?: Radii | null;
   transform?: TransformSpec | null;
   transformOrigin?: { x: number; y: number } | null;

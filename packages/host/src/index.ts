@@ -22,3 +22,4 @@ export type { SurfaceMetrics } from './metrics';
 export type { Host } from './host';
 export type { InputSource, PointerInput, WheelInput, PointerInputType, KeyboardInput, KeyInputType } from './input';
 export type { TextInputService, TextInputClient, TextInputConnection, TextEditingValue } from './text-input';
+export type { SemanticsRole, SemanticsNodeData, AccessibilityBridge } from './accessibility';

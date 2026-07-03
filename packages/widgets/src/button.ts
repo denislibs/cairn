@@ -1,4 +1,4 @@
-import type { Instance } from '@cairn/runtime';
+import type { Instance, SemanticsNode } from '@cairn/runtime';
 import { Box, Text, applyLayoutChildProps, mergeStyles, type StyleInput, type LayoutChildProps, type EventProps } from '@cairn/primitives';
 import { StyleSheet, type Style } from '@cairn/style';
 import { useWidgetTheme } from './theme';
@@ -50,7 +50,15 @@ const STYLES = StyleSheet.create({
 
 export function Button(props: ButtonProps): Instance {
   const t = useWidgetTheme();
-  const { state, handlers } = createControl({
+
+  const disabled = !!props.disabled;
+
+  // The activate action is the canonical way to fire onClick — guards against disabled.
+  const activate = () => {
+    if (!disabled) props.onClick?.();
+  };
+
+  const { state, handlers, setFocusVisible } = createControl({
     disabled: props.disabled,
     onClick: props.onClick,
     onPointerEnter: props.onPointerEnter,
@@ -63,10 +71,18 @@ export function Button(props: ButtonProps): Instance {
     onKeyUp: props.onKeyUp,
   });
 
+  const semantics: SemanticsNode = {
+    role: 'button',
+    label: props.label ?? '',
+    disabled,
+    onActivate: activate,
+    onFocus: (keyboard: boolean) => setFocusVisible(keyboard),
+    onBlur: () => setFocusVisible(false),
+  };
+
   const size = props.size ?? 'md';
   const colorKey = props.color ?? 'primary';
   const variant = props.variant ?? 'solid';
-  const disabled = !!props.disabled;
 
   // Resolve color tokens from theme. Fall back to primary if the key doesn't exist.
   const baseColor = t.colors[colorKey] ?? t.colors.primary;
@@ -140,15 +156,23 @@ export function Button(props: ButtonProps): Instance {
       ...handlers,
       children: child,
     });
+    instance.semantics = semantics;
     applyLayoutChildProps(instance, props);
     return instance;
   }
 
-  // Default visual path
-  const defaultVariantStyle: StyleInput = (th) => [
+  // Default visual path — the focus ring is only painted on keyboard focus.
+  // A real outline (stroked OUTSIDE the box with a gap) — the native focus-ring
+  // look; renders cleanly on any variant/colour (unlike a same-colour boxShadow).
+  const focusRingStyle: Style = {
+    outline: { width: 2, color: t.colors.focusRing, offset: 2 },
+  };
+
+  const defaultVariantStyle: StyleInput = (_th) => [
     baseStyle,
     variantStyle,
     props.fullWidth ? ({ width: '100%' as any } as Style) : {},
+    state.focusVisible() ? focusRingStyle : {},
   ];
 
   const composedStyle = mergeStyles(defaultVariantStyle, props.style);
@@ -156,7 +180,7 @@ export function Button(props: ButtonProps): Instance {
   const child: Instance = props.children
     ? props.children
     : Text({
-        style: (th) => ({
+        style: (_th) => ({
           color: labelColor,
           fontWeight: t.fontWeights.medium,
           fontSize: size === 'sm' ? t.fontSizes.sm : t.fontSizes.md,
@@ -171,6 +195,7 @@ export function Button(props: ButtonProps): Instance {
     children: child,
   });
 
+  instance.semantics = semantics;
   applyLayoutChildProps(instance, props);
   return instance;
 }

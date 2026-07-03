@@ -33,3 +33,25 @@ test('Box paints a border stroke when style.border is set', () => {
   dispose();
   setFrameRequester(null);
 });
+
+test('Box paints an outline OUTSIDE the box (focus-ring primitive)', () => {
+  setFrameRequester(() => {});
+  let b!: ReturnType<typeof Box>;
+  const dispose = createRoot((d) => {
+    b = Box({ style: { width: 40, height: 30, outline: { width: 2, color: '#00f', offset: 2 } } });
+    return d;
+  });
+  b.layout.layout(LOOSE, fakeCtx);
+  const r = createFakeRenderer();
+  b.paintSelf(r);
+  const stroke = r.calls.find(
+    (c) => c[0] === 'strokeRoundRect' && (c[3] as { color: string }).color === '#00f',
+  );
+  expect(stroke).toBeTruthy();
+  // ring sits offset+width/2 = 3px outside the top-left corner
+  expect((stroke![1] as { x: number; y: number }).x).toBe(-3);
+  expect((stroke![1] as { x: number; y: number }).y).toBe(-3);
+  expect((stroke![3] as { width: number }).width).toBe(2);
+  dispose();
+  setFrameRequester(null);
+});

@@ -5,6 +5,7 @@ export interface ControlState {
   hovered: Accessor<boolean>;
   pressed: Accessor<boolean>;
   focused: Accessor<boolean>;
+  focusVisible: Accessor<boolean>;
   disabled: boolean;
 }
 
@@ -18,12 +19,14 @@ export interface ControlProps extends Omit<EventProps, 'onClick'> {
 export interface ControlResult {
   state: ControlState;
   handlers: EventProps;
+  setFocusVisible: (v: boolean) => void;
 }
 
 export function createControl(props: ControlProps): ControlResult {
   const [hovered, setHovered] = createSignal(false);
   const [pressed, setPressed] = createSignal(false);
   const [focused, setFocused] = createSignal(false);
+  const [focusVisible, setFocusVisible] = createSignal(false);
   const disabled = !!props.disabled;
 
   const handlers: EventProps = {
@@ -52,10 +55,13 @@ export function createControl(props: ControlProps): ControlResult {
       setFocused(false);
       props.onBlur?.(e);
     },
-    onClick(_e) {
+    onClick(e) {
+      // Guard: non-primary button clicks (e.g. right-click) must not activate.
+      if ((e as any)?.button !== undefined && (e as any).button !== 0) return;
       if (!disabled) props.onClick?.();
     },
     onKeyDown(e) {
+      // Canvas keyboard fallback: used when no AccessibilityBridge is present.
       if (!disabled && (e.key === ' ' || e.key === 'Enter')) {
         props.onClick?.();
       }
@@ -72,7 +78,7 @@ export function createControl(props: ControlProps): ControlResult {
     },
   };
 
-  const state: ControlState = { hovered, pressed, focused, disabled };
+  const state: ControlState = { hovered, pressed, focused, focusVisible, disabled };
 
-  return { state, handlers };
+  return { state, handlers, setFocusVisible };
 }
