@@ -84,8 +84,10 @@ describe('Select — selecting an option', () => {
           value: () => null,
           setValue: (v: any) => { setValue = v; onChange(v); },
           close: closeFn,
-          register: vi.fn(),
+          register: vi.fn().mockReturnValue(0),
           selectedLabel: () => '',
+          activeIndex: () => -1,
+          handleRovingKey: () => false,
         };
 
         let optInst: any;
@@ -110,8 +112,10 @@ describe('Select — selecting an option', () => {
           value: () => null,
           setValue: onChange,
           close: closeFn,
-          register: vi.fn(),
+          register: vi.fn().mockReturnValue(0),
           selectedLabel: () => '',
+          activeIndex: () => -1,
+          handleRovingKey: () => false,
         };
 
         let optInst: any;
@@ -239,8 +243,10 @@ describe('Select — keyboard', () => {
           value: () => null,
           setValue: onSelect,
           close: closeFn,
-          register: vi.fn(),
+          register: vi.fn().mockReturnValue(0),
           selectedLabel: () => '',
+          activeIndex: () => -1,
+          handleRovingKey: () => false,
         };
 
         let optInst: any;
@@ -266,8 +272,10 @@ describe('Select — selected highlight', () => {
           value: () => 'apple',
           setValue: vi.fn(),
           close: vi.fn(),
-          register: vi.fn(),
+          register: vi.fn().mockReturnValue(0),
           selectedLabel: () => 'Apple',
+          activeIndex: () => -1,
+          handleRovingKey: () => false,
         };
 
         let optA: any, optB: any;
@@ -295,5 +303,176 @@ describe('useSelect — throws outside Select', () => {
         });
       });
     }).toThrow(/Select/);
+  });
+});
+
+// ─── NF3: Native semantics ────────────────────────────────────────────────────
+
+describe('Select — native semantics (NF3)', () => {
+  it('trigger has role combobox', () => {
+    withReg((reg) => {
+      const inst = Select({
+        placeholder: 'Pick one',
+        children: () => Box({ style: { width: 10, height: 10 } }),
+      });
+      expect((inst as any).semantics?.role).toBe('combobox');
+    });
+  });
+
+  it('trigger expanded reflects open state', () => {
+    withReg((reg) => {
+      const inst = Select({
+        placeholder: 'Pick one',
+        children: () => Box({ style: { width: 10, height: 10 } }),
+      });
+      reg.setAppRoot(inst);
+      expect((inst as any).semantics?.expanded).toBe(false);
+      inst.handlers!.onClick?.({} as any);
+      expect((inst as any).semantics?.expanded).toBe(true);
+    });
+  });
+
+  it('trigger semantics has onActivate that toggles open', () => {
+    withReg((reg) => {
+      const inst = Select({
+        placeholder: 'Pick one',
+        children: () => Box({ style: { width: 10, height: 10 } }),
+      });
+      reg.setAppRoot(inst);
+      expect(typeof (inst as any).semantics?.onActivate).toBe('function');
+      (inst as any).semantics.onActivate();
+      expect((inst as any).semantics?.expanded).toBe(true);
+    });
+  });
+
+  it('trigger semantics.label reflects selectedLabel or placeholder', () => {
+    withReg((reg) => {
+      const inst = Select({
+        placeholder: 'Choose...',
+        children: () => Box({ style: { width: 10, height: 10 } }),
+      });
+      expect((inst as any).semantics?.label).toBe('Choose...');
+    });
+  });
+
+  it('trigger onKeyDown (via semantics) opens on ArrowDown', () => {
+    withReg((reg) => {
+      const inst = Select({
+        placeholder: 'Pick one',
+        children: () => Box({ style: { width: 10, height: 10 } }),
+      });
+      reg.setAppRoot(inst);
+      const sem = (inst as any).semantics;
+      const noMods = { shift: false, ctrl: false, alt: false, meta: false };
+      sem.onKeyDown('ArrowDown', noMods);
+      expect(sem.expanded).toBe(true);
+    });
+  });
+
+  it('trigger onKeyDown Escape closes when open', () => {
+    withReg((reg) => {
+      const inst = Select({
+        placeholder: 'Pick one',
+        children: () => Box({ style: { width: 10, height: 10 } }),
+      });
+      reg.setAppRoot(inst);
+      inst.handlers!.onClick?.({} as any); // open
+      expect((inst as any).semantics?.expanded).toBe(true);
+      const noMods = { shift: false, ctrl: false, alt: false, meta: false };
+      (inst as any).semantics.onKeyDown('Escape', noMods);
+      expect((inst as any).semantics?.expanded).toBe(false);
+    });
+  });
+});
+
+describe('Option — native semantics (NF3)', () => {
+  it('option has role option', () => {
+    withReg(() => {
+      runWithContext(themeContext, () => defaultTheme, () => {
+        const ctx = {
+          value: () => null,
+          setValue: vi.fn(),
+          close: vi.fn(),
+          register: vi.fn().mockReturnValue(0),
+          selectedLabel: () => '',
+          activeIndex: () => -1,
+          handleRovingKey: () => false,
+        };
+        let optInst: any;
+        runWithContext(selectContext.context, ctx, () => {
+          optInst = Option({ value: 'apple', label: 'Apple' });
+        });
+        expect(optInst.semantics?.role).toBe('option');
+      });
+    });
+  });
+
+  it('option selected reflects whether value matches', () => {
+    withReg(() => {
+      runWithContext(themeContext, () => defaultTheme, () => {
+        const ctx = {
+          value: () => 'apple',
+          setValue: vi.fn(),
+          close: vi.fn(),
+          register: vi.fn().mockReturnValue(0),
+          selectedLabel: () => 'Apple',
+          activeIndex: () => -1,
+          handleRovingKey: () => false,
+        };
+        let optApple: any, optBanana: any;
+        runWithContext(selectContext.context, ctx, () => {
+          optApple = Option({ value: 'apple', label: 'Apple' });
+          optBanana = Option({ value: 'banana', label: 'Banana' });
+        });
+        expect(optApple.semantics?.selected).toBe(true);
+        expect(optBanana.semantics?.selected).toBe(false);
+      });
+    });
+  });
+
+  it('option label is set from props.label', () => {
+    withReg(() => {
+      runWithContext(themeContext, () => defaultTheme, () => {
+        const ctx = {
+          value: () => null,
+          setValue: vi.fn(),
+          close: vi.fn(),
+          register: vi.fn().mockReturnValue(0),
+          selectedLabel: () => '',
+          activeIndex: () => -1,
+          handleRovingKey: () => false,
+        };
+        let optInst: any;
+        runWithContext(selectContext.context, ctx, () => {
+          optInst = Option({ value: 'banana', label: 'Banana' });
+        });
+        expect(optInst.semantics?.label).toBe('Banana');
+      });
+    });
+  });
+
+  it('option onActivate selects the value', () => {
+    withReg(() => {
+      runWithContext(themeContext, () => defaultTheme, () => {
+        const setValue = vi.fn();
+        const close = vi.fn();
+        const ctx = {
+          value: () => null,
+          setValue,
+          close,
+          register: vi.fn().mockReturnValue(0),
+          selectedLabel: () => '',
+          activeIndex: () => -1,
+          handleRovingKey: () => false,
+        };
+        let optInst: any;
+        runWithContext(selectContext.context, ctx, () => {
+          optInst = Option({ value: 'cherry', label: 'Cherry' });
+        });
+        optInst.semantics?.onActivate?.();
+        expect(setValue).toHaveBeenCalledWith('cherry');
+        expect(close).toHaveBeenCalledTimes(1);
+      });
+    });
   });
 });

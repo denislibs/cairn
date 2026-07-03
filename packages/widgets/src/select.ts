@@ -1,9 +1,12 @@
-import type { Instance } from '@cairn/runtime';
+import type { Instance, SemanticsNode } from '@cairn/runtime';
 import { useOverlays, hostContext, Provider } from '@cairn/runtime';
 import { createSignal, createEffect, useContext, type Accessor } from '@cairn/reactivity';
 import { Box, Stack, Column, Row, Text, Icon, Portal, computePlacement, getAbsRect, mergeStyles, type StyleInput, type Side } from '@cairn/primitives';
 import { createCompoundContext } from './context';
 import { useWidgetTheme } from './theme';
+import { createRoving } from './native/roving';
+import { createTypeahead } from './native/typeahead';
+import { ARROW_DOWN, ARROW_UP, ENTER, SPACE, ESCAPE, HOME, END } from './native/keys';
 
 // Chevron-down path (24x24 viewBox)
 const CHEVRON_DOWN = 'M6 9l6 6 6-6';
@@ -17,8 +20,12 @@ export interface SelectContextValue {
   value: Accessor<any>;
   setValue: (v: any) => void;
   close: () => void;
-  register: (opt: { value: any; label: string }) => void;
+  register: (opt: { value: any; label: string }) => number;
   selectedLabel: Accessor<string>;
+  /** Active (focused) roving index in the open listbox. */
+  activeIndex: Accessor<number>;
+  /** Handle roving arrow key — returns true if consumed. */
+  handleRovingKey: (key: string) => boolean;
 }
 
 export const selectContext = createCompoundContext<SelectContextValue>('Select');
@@ -88,6 +95,16 @@ export function Select(props: SelectProps): Instance {
     props.onChange?.(v);
   };
 
+  // Roving for option navigation
+  const [optionCount, setOptionCount] = createSignal(0);
+  const roving = createRoving({ count: optionCount, orientation: 'vertical', loop: false });
+
+  // Typeahead for option jump
+  const typeahead = createTypeahead({
+    getLabels: () => optionRegistry.map((o) => o.label),
+    onMatch: (idx) => { roving.setActive(idx); },
+  });
+
   const ctx: SelectContextValue = {
     value,
     setValue,
@@ -95,9 +112,16 @@ export function Select(props: SelectProps): Instance {
     register(opt) {
       if (!optionRegistry.find((o) => o.value === opt.value)) {
         optionRegistry.push(opt);
+        setOptionCount(optionRegistry.length);
+        // Sync active to selected option index on registration
+        const idx = optionRegistry.length - 1;
+        if (value() === opt.value) roving.setActive(idx);
       }
+      return optionRegistry.findIndex((o) => o.value === opt.value);
     },
     selectedLabel,
+    activeIndex: roving.active,
+    handleRovingKey: roving.handleKey,
   };
 
   // ── Trigger ──
@@ -156,6 +180,47 @@ export function Select(props: SelectProps): Instance {
         if (!open()) setOpen(true);
       }
     },
+  });
+
+  // ── Semantics on the trigger ──
+  const triggerSemantics: SemanticsNode = {
+    role: 'combobox',
+    label: props.placeholder ?? '',
+    expanded: false,
+    disabled: props.disabled,
+    focusable: !props.disabled,
+    onActivate: toggle,
+    onKeyDown: (key, _mods) => {
+      if (!open()) {
+        if (key === ENTER || key === SPACE || key === ARROW_DOWN) {
+          setOpen(true);
+          return true;
+        }
+        return false;
+      }
+      // When open: arrows move active, Enter selects active, Escape closes, printable → typeahead
+      if (key === ESCAPE) { close(); return true; }
+      if (roving.handleKey(key)) return true;
+      if (key === ENTER) {
+        const idx = roving.active();
+        if (idx >= 0 && idx < optionRegistry.length) {
+          setValue(optionRegistry[idx].value);
+          close();
+        }
+        return true;
+      }
+      if (key.length === 1) return typeahead.handleChar(key);
+      return false;
+    },
+  };
+
+  trigger.semantics = triggerSemantics;
+
+  // Keep expanded/label reactive
+  createEffect(() => {
+    triggerSemantics.expanded = open();
+    const lbl = selectedLabel();
+    triggerSemantics.label = lbl !== '' ? lbl : (props.placeholder ?? '');
   });
 
   // ── Listbox portal ──
@@ -237,11 +302,12 @@ export function Option(props: OptionProps): Instance {
   const theme = useWidgetTheme();
   const ctx = selectContext.use();
 
-  // Register this option so Select can look up labels
-  ctx.register({ value: props.value, label: props.label ?? String(props.value) });
+  // Register this option so Select can look up labels — returns stable index
+  const myIndex = ctx.register({ value: props.value, label: props.label ?? String(props.value) });
 
   const isDisabled = !!props.disabled;
   const isSelected = (): boolean => ctx.value() === props.value;
+  const isActive = (): boolean => ctx.activeIndex() === myIndex;
 
   const select = (): void => {
     if (isDisabled) return;
@@ -291,6 +357,26 @@ export function Option(props: OptionProps): Instance {
     },
     onKeyDown: handleKeyDown,
     children: [labelContent, checkIcon],
+  });
+
+  // ── Semantics ──
+  const optionSemantics: SemanticsNode = {
+    role: 'option',
+    label: props.label ?? String(props.value),
+    selected: isSelected(),
+    disabled: isDisabled,
+    focusable: isActive(),
+    autoFocus: isActive(),
+    onActivate: select,
+  };
+
+  instance.semantics = optionSemantics;
+
+  // Keep selected/focusable/autoFocus reactive
+  createEffect(() => {
+    optionSemantics.selected = isSelected();
+    optionSemantics.focusable = isActive();
+    optionSemantics.autoFocus = isActive();
   });
 
   return instance;
