@@ -15,6 +15,8 @@ export type StateName = (typeof STATE_ORDER)[number];
 
 export interface Shadow {
   color: string; blur: number; offsetX: number; offsetY: number;
+  spread?: number;
+  inset?: boolean;
 }
 export interface Transform {
   translateX?: number; translateY?: number;
@@ -62,7 +64,8 @@ export interface BaseStyle {
   borderBottom?: BorderSide;
   borderLeft?: BorderSide;
   backgroundGradient?: StyleGradient;
-  boxShadow?: Shadow;
+  boxShadow?: Shadow | Shadow[];
+  elevation?: number;
   opacity?: number;
   textShadow?: Shadow;
   textAlign?: 'left' | 'center' | 'right';

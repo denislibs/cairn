@@ -1,7 +1,7 @@
 import { type Renderer, type Radii, type FillStyle, type Gradient, createPath } from '@cairn/host';
 import { BoxNode, toEdgeInsets } from '@cairn/layout';
 import { type Instance, bind } from '@cairn/runtime';
-import { type BaseStyle, type CornerRadius, type BorderSide, type StyleGradient } from '@cairn/style';
+import { type BaseStyle, type CornerRadius, type BorderSide, type StyleGradient, type Shadow } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
 import type { EventProps } from './events';
@@ -34,6 +34,31 @@ function shrinkRadii(r: CornerRadius | undefined, by: number): Radii {
   };
 }
 
+function inflateRadii(r: CornerRadius | undefined, by: number): Radii {
+  if (r == null) return by > 0 ? by : 0;
+  if (typeof r === 'number') return r + by;
+  return {
+    tl: r.tl + by,
+    tr: r.tr + by,
+    br: r.br + by,
+    bl: r.bl + by,
+  };
+}
+
+function elevationShadow(n: number): Shadow {
+  return { color: 'rgba(0,0,0,0.28)', blur: Math.max(1, n), offsetX: 0, offsetY: Math.max(1, Math.round(n / 2)) };
+}
+
+function normalizeShadows(s: BaseStyle): Shadow[] {
+  const list: Shadow[] = [];
+  if (s.boxShadow) {
+    list.push(...(Array.isArray(s.boxShadow) ? s.boxShadow : [s.boxShadow]));
+  } else if (s.elevation != null && s.elevation > 0) {
+    list.push(elevationShadow(s.elevation));
+  }
+  return list;
+}
+
 function toHostGradient(g: StyleGradient): Gradient {
   return g as unknown as Gradient; // structurally identical shapes
 }
@@ -54,19 +79,43 @@ function paintSide(
 }
 
 function paintBox(r: Renderer, s: BaseStyle, w: number, h: number): void {
-  if (s.backgroundColor || s.backgroundGradient) {
+  const shadows = normalizeShadows(s);
+  const hasFill = !!(s.backgroundColor || s.backgroundGradient);
+
+  // Drop shadows first (drawn as inflated/offset shadowed rounded-rects, covered by the real fill)
+  for (const sh of shadows.filter((x) => !x.inset)) {
+    const sp = sh.spread ?? 0;
+    r.save();
+    r.setShadow({ color: sh.color, blur: sh.blur, offsetX: sh.offsetX, offsetY: sh.offsetY });
+    r.fillRoundRect(
+      { x: -sp, y: -sp, width: w + 2 * sp, height: h + 2 * sp },
+      inflateRadii(s.borderRadius, sp),
+      { color: '#000' },
+    );
+    r.setShadow(null);
+    r.restore();
+  }
+
+  // Real fill on top
+  if (hasFill) {
     const fill: FillStyle = s.backgroundGradient
       ? { gradient: toHostGradient(s.backgroundGradient) }
       : { color: s.backgroundColor };
-    if (s.boxShadow) {
-      r.save();
-      r.setShadow(s.boxShadow);
-    }
     r.fillRoundRect({ x: 0, y: 0, width: w, height: h }, radiusToRadii(s.borderRadius), fill);
-    if (s.boxShadow) {
-      r.setShadow(null);
-      r.restore();
-    }
+  }
+
+  // Inset shadows: clip to box, draw an offset shadowed stroke inside
+  for (const sh of shadows.filter((x) => x.inset)) {
+    r.save();
+    r.clipRoundRect({ x: 0, y: 0, width: w, height: h }, radiusToRadii(s.borderRadius));
+    r.setShadow({ color: sh.color, blur: sh.blur, offsetX: sh.offsetX, offsetY: sh.offsetY });
+    r.strokeRoundRect(
+      { x: -w, y: -h, width: w * 3, height: h * 3 },
+      0,
+      { color: '#000', width: Math.max(1, sh.blur) },
+    );
+    r.setShadow(null);
+    r.restore();
   }
   if (s.border) {
     const bw = s.border.width;
