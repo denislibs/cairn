@@ -186,6 +186,31 @@ export class Canvas2DRenderer implements Renderer {
   drawText(text: string, pos: Point, style: TextStyle): void {
     const ls = style.letterSpacing;
     const canLS = 'letterSpacing' in this.ctx;
+
+    // Device-resolution glyph rasterization. Under a scaled context (setTransform(dpr))
+    // Chrome rasterizes glyphs at the LOGICAL font size and upscales them → soft text.
+    // For the axis-aligned, uniform-scale case we reset to an identity transform and
+    // draw at the DEVICE font size / position, matching native DOM crispness.
+    // measureText and layout stay in logical units (unaffected).
+    const m = typeof this.ctx.getTransform === 'function' ? this.ctx.getTransform() : null;
+    if (m && m.b === 0 && m.c === 0 && Math.abs(m.a - m.d) < 1e-3) {
+      const scale = m.d;
+      const deviceFont = scaleFontPx(style.font, scale);
+      if (deviceFont) {
+        this.ctx.save();
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        if (canLS && ls != null) (this.ctx as any).letterSpacing = `${ls * scale}px`;
+        this.ctx.font = deviceFont;
+        this.ctx.fillStyle = style.color ?? '#000';
+        this.ctx.textAlign = style.align ?? 'left';
+        this.ctx.textBaseline = style.baseline ?? 'alphabetic';
+        this.ctx.fillText(text, m.a * pos.x + m.e, m.d * pos.y + m.f);
+        this.ctx.restore(); // restores transform + font + letterSpacing state
+        return;
+      }
+    }
+
+    // Fallback (rotated/skewed/non-uniform, or an unparseable font): draw in logical space.
     const prevLS = canLS ? (this.ctx as any).letterSpacing : undefined;
     if (canLS && ls != null) (this.ctx as any).letterSpacing = `${ls}px`;
     this.ctx.font = style.font;
@@ -255,4 +280,13 @@ export class Canvas2DRenderer implements Renderer {
 
 function normalizeRadii(r: Radii): [number, number, number, number] {
   return typeof r === 'number' ? [r, r, r, r] : [r.tl, r.tr, r.br, r.bl];
+}
+
+// Multiply the first px length (the font-size) in a CSS font string by `s`.
+// Returns null if there is no px size to scale (then the caller draws logically).
+const PX_RE = /(\d*\.?\d+)px/;
+function scaleFontPx(font: string, s: number): string | null {
+  const found = font.match(PX_RE);
+  if (!found) return null;
+  return font.replace(PX_RE, `${parseFloat(found[1]) * s}px`);
 }
