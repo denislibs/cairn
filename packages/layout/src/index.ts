@@ -9,3 +9,5 @@ export { FlexNode } from './flex';
 export type { FlexNodeProps, FlexDirection, Justify, Align } from './flex';
 export { StackNode } from './stack';
 export type { StackNodeProps } from './stack';
+export { parseTracks, parsePlacement } from './grid-parse';
+export type { TrackSize, Placement } from './grid-parse';
