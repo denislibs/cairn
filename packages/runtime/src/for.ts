@@ -1,9 +1,10 @@
-import { createEffect, createRoot, onCleanup, untrack } from '@cairn/reactivity';
+import { createEffect, createRoot, onCleanup, untrack, runWithContext, useContext } from '@cairn/reactivity';
 import { FlexNode, type FlexDirection } from '@cairn/layout';
 import { type EasingName, type EasingFn } from '@cairn/style';
 import { type Instance } from './instance';
 import { scheduleFrame, onNextLayout } from './scheduler';
 import { animate } from './animate';
+import { hostContext } from './host-context';
 
 export interface ForProps<T> {
   each: () => T[];
@@ -29,6 +30,9 @@ export function For<T>(props: ForProps<T>): Instance {
   });
   const instance: Instance = { layout, children: [], paintSelf() {} };
   const keyOf = props.key ?? ((item: T) => item as unknown);
+  // Capture the host now (owner context is active during construction). FLIP tweens
+  // run from onNextLayout — outside the reactive owner — so they must re-provide it.
+  const capturedHost = useContext(hostContext);
 
   let entries = new Map<unknown, Entry>();
   let fallback: Entry | null = null;
@@ -127,8 +131,9 @@ export function For<T>(props: ForProps<T>): Instance {
           moving.push({ key: k, inst, dx, dy });
         }
         if (moving.length === 0) return;
-        // Play: drive all moving items with a single shared animation
-        const cancelAll = animate({
+        // Play: drive all moving items with a single shared animation. Re-provide the
+        // host context (this runs from flushAfterLayout, outside the owner scope).
+        const cancelAll = runWithContext(hostContext, capturedHost, () => animate({
           from: 0,
           to: 1,
           duration: opts.duration,
@@ -145,7 +150,7 @@ export function For<T>(props: ForProps<T>): Instance {
               flips.delete(key);
             }
           },
-        });
+        }));
         for (const { key } of moving) flips.set(key, cancelAll);
       });
     }
