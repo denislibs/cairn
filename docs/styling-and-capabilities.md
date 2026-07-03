@@ -97,7 +97,8 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
 - ✅ `animateSpring` — экспортируется из `@cairn/runtime` для ручного использования; semi-implicit Euler, параметры: `stiffness` / `damping` / `mass` / `initialVelocity` / `restDelta` / `restSpeed`.
 - ✅ keyframes-анимации — императивно через `animateKeyframes`; полный CSS `@keyframes`-синтаксис отложен
 - ✅ spring-easing — аппроксимация через `spring()` (временно́й easing для time-based переходов; отличается от `animateSpring` — остаётся доступным)
-- ❌ анимация появления / удаления списков (FLIP) — отложено (нужен захват layout до/после в control-flow)
+- ✅ появление/удаление элементов (enter/exit) — через `Presence` (`@cairn/primitives`): монтирует/размонтирует с анимацией из `from`-стиля; поддерживает `duration`, `easing`, `spring` (AN3).
+- ❌ FLIP-переупорядочивание списков — отложено (нужен захват layout до/после в control-flow) (AN4, отдельно).
 
 ## 9. Интерактивность, состояния, курсор
 - ✅ состояния `hover` / `focus` / `active` / `pressed` / `disabled` (live + реактивно)
@@ -165,7 +166,7 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
 
 ## Текущий набор (для ориентира)
 - **Примитивы:** `Box`, `Text`, `Row`, `Column`, `Stack`, `Grid`, `ScrollView`, `Input`, `Image`, `Icon`, `Path`, `Svg`, `Portal`
-  (+ control-flow `Show`/`For`/`Index`/`Switch`, `ThemeProvider` (принимает `Theme | () => Theme` — реактивная смена темы), сырой `Instance` как escape-hatch;
+  (+ control-flow `Show`/`For`/`Index`/`Switch`, `Presence` (enter/exit — AN3), `ThemeProvider` (принимает `Theme | () => Theme` — реактивная смена темы), сырой `Instance` как escape-hatch;
   позиционирование оверлеев: `computePlacement`, `getAbsRect`).
 - **Виджеты (`@cairn/widgets`):** `Button` (primary / secondary / ghost), `Slider`, `Checkbox`, `Switch`, `Divider`, `Modal`, `Tooltip`, `Popover`.
 - **Адаптивные утилиты (`@cairn/primitives`):** `useViewport`, `useBreakpoint`, `responsive`, `pickBreakpoint`.
@@ -203,4 +204,5 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
 - **Анимации (`@cairn/style` + `@cairn/runtime`):** `animate`, `animateKeyframes`, `animateSpring`, `easings` (linear/ease/ease-in/ease-out/ease-in-out), `cubicBezier`, `spring`, `resolveEasing`, `lerp`, `lerpColor`, `interpolateValue`, `transition` / `TransitionConfig` (декларативные переходы на `BaseStyle`; `TransitionConfig.spring` — реальная физика пружины).
   AN1 — структурная интерполяция: `lerpLength` (px/% / rem / vw / vh / auto / calc), `lerpTransform` (translateX/Y, scale/X/Y, rotate, skewX/Y), `lerpShadow` (blur / offset / color), `lerpRadii` (per-corner), `lerpInsets` (padding/margin по сторонам).
   AN2 — реальная spring-физика: `animateSpring` (semi-implicit Euler; `stiffness`/`damping`/`mass`; overshoot; прерываемо с переносом скорости); `TransitionConfig.spring` активирует её декларативно — `duration`/`easing` при этом игнорируются.
+  AN3 — `Presence` (enter/exit, `@cairn/primitives`): монтирует/размонтирует дочерний элемент с анимацией из `from`-стиля; `when` — accessor, `children` — thunk `() => Instance`; поддерживает `duration`, `easing`, `spring`.
   Переходы охватывают все структурные пропсы: `opacity`, `color`, `backgroundColor`, `width`/`height`/`min*`/`max*`, `padding`, `margin`, `gap`, `borderRadius`, `border`, `boxShadow`, `transform`, `letterSpacing`, `lineHeight` — на Box / Text / Flex / Grid.
