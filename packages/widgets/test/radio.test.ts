@@ -22,7 +22,7 @@ describe('RadioGroup — uncontrolled', () => {
       let checkedB = false;
       let checkedC = false;
 
-      const ctx = { value: groupValue, setValue: setGroupValue, disabled: false, register: () => {}, unregister: () => {}, getValues: () => [] };
+      const ctx = { value: groupValue, setValue: setGroupValue, disabled: false, register: () => {}, unregister: () => {}, getValues: () => [], activeIndex: () => 0, handleArrow: () => false };
       runWithContext(radioGroupContext.context, ctx, () => {
         const radioB = Radio({ value: 'b' });
         const radioC = Radio({ value: 'c' });
@@ -100,7 +100,7 @@ describe('Radio — checked state', () => {
     createRoot(() => {
       const [groupValue] = createSignal('b');
       let checkedB = false;
-      const ctx = { value: groupValue, setValue: () => {}, disabled: false, register: () => {}, unregister: () => {}, getValues: () => [] };
+      const ctx = { value: groupValue, setValue: () => {}, disabled: false, register: () => {}, unregister: () => {}, getValues: () => [], activeIndex: () => 0, handleArrow: () => false };
       runWithContext(radioGroupContext.context, ctx, () => {
         // The radio with value 'b' should be checked
         checkedB = groupValue() === 'b';
@@ -228,9 +228,142 @@ describe('RadioGroup — renders without throwing', () => {
 describe('Radio — focusable', () => {
   it('is focusable', () => {
     createRoot(() => {
-      const ctx = { value: () => 'a', setValue: () => {}, disabled: false, register: () => {}, unregister: () => {}, getValues: () => [] };
+      const ctx = { value: () => 'a', setValue: () => {}, disabled: false, register: () => {}, unregister: () => {}, getValues: () => [], activeIndex: () => 0, handleArrow: () => false };
       runWithContext(radioGroupContext.context, ctx, () => {
         expect(Radio({ value: 'a' }).focusable).toBe(true);
+      });
+    });
+  });
+});
+
+describe('RadioGroup — semantics', () => {
+  it('RadioGroup instance has semantics with role:"radiogroup"', () => {
+    createRoot(() => {
+      const group = RadioGroup({ defaultValue: 'a' });
+      expect(group.semantics).toBeDefined();
+      expect(group.semantics!.role).toBe('radiogroup');
+    });
+  });
+
+  it('RadioGroup semantics.disabled reflects props.disabled', () => {
+    createRoot(() => {
+      const group = RadioGroup({ defaultValue: 'a', disabled: true });
+      expect(group.semantics!.disabled).toBe(true);
+    });
+  });
+});
+
+describe('Radio — semantics', () => {
+  it('Radio has semantics with role:"radio"', () => {
+    createRoot(() => {
+      const group = RadioGroup({ defaultValue: 'a' });
+      runWithContext(radioGroupContext.context, group._ctx, () => {
+        const radio = Radio({ value: 'a' });
+        expect(radio.semantics).toBeDefined();
+        expect(radio.semantics!.role).toBe('radio');
+      });
+    });
+  });
+
+  it('Radio semantics.label matches props.label', () => {
+    createRoot(() => {
+      const group = RadioGroup({ defaultValue: 'a' });
+      runWithContext(radioGroupContext.context, group._ctx, () => {
+        const radio = Radio({ value: 'a', label: 'Option A' });
+        expect(radio.semantics!.label).toBe('Option A');
+      });
+    });
+  });
+
+  it('Radio semantics.checked is true when it matches group value', () => {
+    createRoot(() => {
+      const group = RadioGroup({ defaultValue: 'a' });
+      runWithContext(radioGroupContext.context, group._ctx, () => {
+        const radioA = Radio({ value: 'a' });
+        expect(radioA.semantics!.checked).toBe(true);
+      });
+    });
+  });
+
+  it('Radio semantics.checked is false when it does not match group value', () => {
+    createRoot(() => {
+      const group = RadioGroup({ defaultValue: 'a' });
+      runWithContext(radioGroupContext.context, group._ctx, () => {
+        const radioB = Radio({ value: 'b' });
+        expect(radioB.semantics!.checked).toBe(false);
+      });
+    });
+  });
+
+  it('selecting via onActivate updates semantics.checked', () => {
+    createRoot(() => {
+      const group = RadioGroup({ defaultValue: 'a' });
+      runWithContext(radioGroupContext.context, group._ctx, () => {
+        const radioA = Radio({ value: 'a' });
+        const radioB = Radio({ value: 'b' });
+        expect(radioA.semantics!.checked).toBe(true);
+        expect(radioB.semantics!.checked).toBe(false);
+        radioB.semantics!.onActivate!();
+        expect(radioB.semantics!.checked).toBe(true);
+        expect(radioA.semantics!.checked).toBe(false);
+      });
+    });
+  });
+
+  it('only one radio has focusable:true at a time (roving)', () => {
+    createRoot(() => {
+      const group = RadioGroup({ defaultValue: 'a' });
+      runWithContext(radioGroupContext.context, group._ctx, () => {
+        const radioA = Radio({ value: 'a' });
+        const radioB = Radio({ value: 'b' });
+        const radioC = Radio({ value: 'c' });
+        // Initially active is the first radio (index 0 = 'a')
+        const focusableCount = [radioA, radioB, radioC].filter(r => r.semantics!.focusable).length;
+        expect(focusableCount).toBe(1);
+        expect(radioA.semantics!.focusable).toBe(true);
+        expect(radioB.semantics!.focusable).toBe(false);
+        expect(radioC.semantics!.focusable).toBe(false);
+      });
+    });
+  });
+
+  it('arrow onKeyDown moves selection to next value and returns true', () => {
+    createRoot(() => {
+      const seen: any[] = [];
+      const group = RadioGroup({ defaultValue: 'a', onChange: (v) => seen.push(v) });
+      runWithContext(radioGroupContext.context, group._ctx, () => {
+        const radioA = Radio({ value: 'a' });
+        const radioB = Radio({ value: 'b' });
+        const radioC = Radio({ value: 'c' });
+        const handled = radioA.semantics!.onKeyDown!('ArrowDown', { shift: false, ctrl: false, alt: false, meta: false });
+        expect(handled).toBe(true);
+        expect(seen).toEqual(['b']);
+      });
+    });
+  });
+
+  it('arrow onKeyDown moves selection to prev value', () => {
+    createRoot(() => {
+      const seen: any[] = [];
+      const group = RadioGroup({ defaultValue: 'b', onChange: (v) => seen.push(v) });
+      runWithContext(radioGroupContext.context, group._ctx, () => {
+        const radioA = Radio({ value: 'a' });
+        const radioB = Radio({ value: 'b' });
+        const radioC = Radio({ value: 'c' });
+        const handled = radioB.semantics!.onKeyDown!('ArrowUp', { shift: false, ctrl: false, alt: false, meta: false });
+        expect(handled).toBe(true);
+        expect(seen).toEqual(['a']);
+      });
+    });
+  });
+
+  it('unhandled key returns false from onKeyDown', () => {
+    createRoot(() => {
+      const group = RadioGroup({ defaultValue: 'a' });
+      runWithContext(radioGroupContext.context, group._ctx, () => {
+        const radioA = Radio({ value: 'a' });
+        const handled = radioA.semantics!.onKeyDown!('Tab', { shift: false, ctrl: false, alt: false, meta: false });
+        expect(handled).toBe(false);
       });
     });
   });
