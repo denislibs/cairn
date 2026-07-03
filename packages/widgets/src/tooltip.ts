@@ -1,4 +1,4 @@
-import type { Instance } from '@cairn/runtime';
+import type { Instance, SemanticsNode } from '@cairn/runtime';
 import { useOverlays, hostContext } from '@cairn/runtime';
 import { createSignal, createEffect, useContext } from '@cairn/reactivity';
 import { Portal, Box, Stack, Text, computePlacement, getAbsRect, mergeStyles, type StyleInput, type Side } from '@cairn/primitives';
@@ -94,6 +94,13 @@ export function Tooltip(props: TooltipProps): Instance {
       style: mergeStyles(defaultBubbleStyle, props.style),
       children: bubbleContent,
     });
+
+    // ── Semantics: tooltip role on the bubble ──
+    const bubbleSemantics: SemanticsNode = {
+      role: 'tooltip',
+      label: props.label,
+    };
+    (bubble as any).semantics = bubbleSemantics;
 
     return Portal({
       children: Stack({

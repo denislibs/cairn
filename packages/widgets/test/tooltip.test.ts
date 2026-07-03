@@ -106,3 +106,52 @@ describe('Tooltip — show / hide', () => {
     });
   });
 });
+
+// ─── NF3: Native semantics ────────────────────────────────────────────────────
+
+describe('Tooltip — native semantics (NF3)', () => {
+  it('tooltip bubble has role tooltip', () => {
+    withReg((reg) => {
+      const trigger = Box({ style: { width: 40, height: 20 } });
+      const inst = Tooltip({ trigger, label: 'Hello' });
+      reg.setAppRoot(inst);
+      trigger.handlers!.onPointerEnter?.({} as any);
+      // The overlay is the Portal/Stack; walk its children to find the bubble
+      const overlay = reg.list()[0];
+      // Bubble is a child of the stack (tooltip has a single child stack)
+      const findTooltipRole = (node: any): any => {
+        if (!node) return null;
+        if ((node as any).semantics?.role === 'tooltip') return node;
+        for (const child of node.children ?? []) {
+          const found = findTooltipRole(child);
+          if (found) return found;
+        }
+        return null;
+      };
+      const bubble = findTooltipRole(overlay);
+      expect(bubble).not.toBeNull();
+      expect(bubble.semantics.role).toBe('tooltip');
+    });
+  });
+
+  it('tooltip bubble semantics label matches the label prop', () => {
+    withReg((reg) => {
+      const trigger = Box({ style: { width: 40, height: 20 } });
+      const inst = Tooltip({ trigger, label: 'Save file' });
+      reg.setAppRoot(inst);
+      trigger.handlers!.onPointerEnter?.({} as any);
+      const overlay = reg.list()[0];
+      const findTooltipRole = (node: any): any => {
+        if (!node) return null;
+        if ((node as any).semantics?.role === 'tooltip') return node;
+        for (const child of node.children ?? []) {
+          const found = findTooltipRole(child);
+          if (found) return found;
+        }
+        return null;
+      };
+      const bubble = findTooltipRole(overlay);
+      expect(bubble?.semantics?.label).toBe('Save file');
+    });
+  });
+});

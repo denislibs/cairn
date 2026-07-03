@@ -12,10 +12,12 @@ export type SemanticsRole =
   | 'option'
   | 'listbox'
   | 'menu'
+  | 'combobox'
   | 'dialog'
   | 'group'
   | 'heading'
   | 'image'
+  | 'tooltip'
   | 'none';
 
 export interface SemanticsNodeData {

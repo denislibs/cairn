@@ -91,6 +91,8 @@ describe('MenuItem — onSelect fires and menu closes', () => {
             active: () => -1,
             setActive: vi.fn(),
             register: () => 0,
+            handleRovingKey: () => false,
+            handleTypeaheadChar: () => false,
           },
           children: () => MenuItem({ label: 'Item 1', onSelect }),
         }),
@@ -121,6 +123,8 @@ describe('MenuItem — onSelect fires and menu closes', () => {
           active: () => -1,
           setActive: vi.fn(),
           register: () => 0,
+          handleRovingKey: () => false,
+          handleTypeaheadChar: () => false,
         };
         itemInst = runWithContext(menuContext.context, ctx, () =>
           MenuItem({ label: 'Click me', onSelect }),
@@ -145,6 +149,8 @@ describe('MenuItem — onSelect fires and menu closes', () => {
           active: () => -1,
           setActive: vi.fn(),
           register: () => 0,
+          handleRovingKey: () => false,
+          handleTypeaheadChar: () => false,
         };
         itemInst = runWithContext(menuContext.context, ctx, () =>
           MenuItem({ label: 'Disabled', onSelect, disabled: true }),
@@ -173,6 +179,11 @@ describe('MenuItem — roving keyboard', () => {
           active: () => currentActive,
           setActive: (i: number) => { currentActive = i; activeVals.push(i); },
           register: () => registeredCount++,
+          handleRovingKey: (key: string) => {
+            if (key === 'ArrowDown') { activeVals.push(currentActive + 1); currentActive = currentActive + 1; return true; }
+            return false;
+          },
+          handleTypeaheadChar: () => false,
         };
 
         // Register two items
@@ -201,6 +212,11 @@ describe('MenuItem — roving keyboard', () => {
           active: () => currentActive,
           setActive: (i: number) => { currentActive = i; activeVals.push(i); },
           register: () => registeredCount++,
+          handleRovingKey: (key: string) => {
+            if (key === 'ArrowUp') { const next = Math.max(0, currentActive - 1); activeVals.push(next); currentActive = next; return true; }
+            return false;
+          },
+          handleTypeaheadChar: () => false,
         };
 
         let item0: any;
@@ -225,6 +241,8 @@ describe('MenuItem — roving keyboard', () => {
           active: () => 0,
           setActive: vi.fn(),
           register: () => 0,
+          handleRovingKey: () => false,
+          handleTypeaheadChar: () => false,
         };
 
         let itemInst: any;
@@ -250,5 +268,162 @@ describe('useMenu — throws outside Menu', () => {
         });
       });
     }).toThrow(/Menu/);
+  });
+});
+
+// ─── NF3: Native semantics ────────────────────────────────────────────────────
+
+describe('MenuItem — native semantics (NF3)', () => {
+  it('menuitem has role menuitem', () => {
+    withReg(() => {
+      runWithContext(themeContext, () => defaultTheme, () => {
+        const ctx = {
+          close: vi.fn(),
+          active: () => -1,
+          setActive: vi.fn(),
+          register: () => 0,
+          handleRovingKey: () => false,
+          handleTypeaheadChar: () => false,
+        };
+        let itemInst: any;
+        runWithContext(menuContext.context, ctx, () => {
+          itemInst = MenuItem({ label: 'Cut' });
+        });
+        expect(itemInst.semantics?.role).toBe('menuitem');
+      });
+    });
+  });
+
+  it('menuitem label is set from props.label', () => {
+    withReg(() => {
+      runWithContext(themeContext, () => defaultTheme, () => {
+        const ctx = {
+          close: vi.fn(),
+          active: () => -1,
+          setActive: vi.fn(),
+          register: () => 0,
+          handleRovingKey: () => false,
+          handleTypeaheadChar: () => false,
+        };
+        let itemInst: any;
+        runWithContext(menuContext.context, ctx, () => {
+          itemInst = MenuItem({ label: 'Paste' });
+        });
+        expect(itemInst.semantics?.label).toBe('Paste');
+      });
+    });
+  });
+
+  it('menuitem focusable when active', () => {
+    withReg(() => {
+      runWithContext(themeContext, () => defaultTheme, () => {
+        let activeIdx = 0;
+        const ctx = {
+          close: vi.fn(),
+          active: () => activeIdx,
+          setActive: vi.fn(),
+          register: () => 0,
+          handleRovingKey: () => false,
+          handleTypeaheadChar: () => false,
+        };
+        let itemInst: any;
+        runWithContext(menuContext.context, ctx, () => {
+          itemInst = MenuItem({ label: 'Copy' });
+        });
+        expect(itemInst.semantics?.focusable).toBe(true);
+      });
+    });
+  });
+
+  it('menuitem disabled has disabled semantics', () => {
+    withReg(() => {
+      runWithContext(themeContext, () => defaultTheme, () => {
+        const ctx = {
+          close: vi.fn(),
+          active: () => -1,
+          setActive: vi.fn(),
+          register: () => 0,
+          handleRovingKey: () => false,
+          handleTypeaheadChar: () => false,
+        };
+        let itemInst: any;
+        runWithContext(menuContext.context, ctx, () => {
+          itemInst = MenuItem({ label: 'Disabled Action', disabled: true });
+        });
+        expect(itemInst.semantics?.disabled).toBe(true);
+      });
+    });
+  });
+
+  it('menuitem onActivate fires onSelect and closes', () => {
+    withReg(() => {
+      runWithContext(themeContext, () => defaultTheme, () => {
+        const onSelect = vi.fn();
+        const closeFn = vi.fn();
+        const ctx = {
+          close: closeFn,
+          active: () => 0,
+          setActive: vi.fn(),
+          register: () => 0,
+          handleRovingKey: () => false,
+          handleTypeaheadChar: () => false,
+        };
+        let itemInst: any;
+        runWithContext(menuContext.context, ctx, () => {
+          itemInst = MenuItem({ label: 'Action', onSelect });
+        });
+        itemInst.semantics?.onActivate?.();
+        expect(onSelect).toHaveBeenCalledTimes(1);
+        expect(closeFn).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+
+  it('menuitem onKeyDown Escape closes menu', () => {
+    withReg(() => {
+      runWithContext(themeContext, () => defaultTheme, () => {
+        const closeFn = vi.fn();
+        const ctx = {
+          close: closeFn,
+          active: () => 0,
+          setActive: vi.fn(),
+          register: () => 0,
+          handleRovingKey: () => false,
+          handleTypeaheadChar: () => false,
+        };
+        let itemInst: any;
+        runWithContext(menuContext.context, ctx, () => {
+          itemInst = MenuItem({ label: 'Action' });
+        });
+        const noMods = { shift: false, ctrl: false, alt: false, meta: false };
+        const handled = itemInst.semantics?.onKeyDown?.('Escape', noMods);
+        expect(handled).toBe(true);
+        expect(closeFn).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+
+  it('menuitem onKeyDown ArrowDown delegates to handleRovingKey', () => {
+    withReg(() => {
+      runWithContext(themeContext, () => defaultTheme, () => {
+        const handleRovingKey = vi.fn().mockReturnValue(true);
+        const ctx = {
+          close: vi.fn(),
+          active: () => 0,
+          setActive: vi.fn(),
+          register: () => 0,
+          handleRovingKey,
+          handleTypeaheadChar: () => false,
+        };
+        let itemInst: any;
+        runWithContext(menuContext.context, ctx, () => {
+          itemInst = MenuItem({ label: 'Action' });
+        });
+        const noMods = { shift: false, ctrl: false, alt: false, meta: false };
+        const handled = itemInst.semantics?.onKeyDown?.('ArrowDown', noMods);
+        expect(handleRovingKey).toHaveBeenCalledWith('ArrowDown');
+        expect(handled).toBe(true);
+      });
+    });
   });
 });
