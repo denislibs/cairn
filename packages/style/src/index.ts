@@ -1,4 +1,4 @@
-export type { StateName, BaseStyle, Style, Shadow, CornerRadius, BorderSide, LinearGradient, RadialGradient, StyleGradient, Transform } from './style';
+export type { StateName, BaseStyle, Style, Shadow, CornerRadius, BorderSide, LinearGradient, RadialGradient, StyleGradient, Transform, TransitionConfig } from './style';
 export { STATE_ORDER } from './style';
 export { StyleSheet } from './stylesheet';
 export { resolveStyle } from './resolve';

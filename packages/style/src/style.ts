@@ -1,4 +1,12 @@
 import type { EdgeInsets, Justify, Align, TrackSize, Length } from '@cairn/layout';
+import type { EasingName } from './easing';
+
+export interface TransitionConfig {
+  properties?: string[];              // omitted → all animatable
+  duration: number;                   // ms
+  easing?: EasingName | ((t: number) => number);
+  delay?: number;
+}
 
 /** Structural alias for ImageHandle from @cairn/host — kept local to avoid a cross-package dep. */
 export interface ImageHandle { readonly width: number; readonly height: number; }
@@ -102,6 +110,7 @@ export interface BaseStyle {
   cursor?: string;
   pointerEvents?: 'auto' | 'none';
   userSelect?: 'auto' | 'none' | 'text';
+  transition?: TransitionConfig | TransitionConfig[];
 }
 
 export type Style = BaseStyle & Partial<Record<StateName, BaseStyle>>;

@@ -7,6 +7,7 @@ import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
 import type { EventProps } from './events';
 import { applyLayoutChildProps, applyLayoutStyle, type LayoutChildProps } from './layout-child';
+import { createStyleTransitions } from './transitions';
 
 export interface BoxProps extends EventProps, LayoutChildProps {
   style?: StyleInput;
@@ -154,6 +155,7 @@ function paintBox(r: Renderer, s: BaseStyle, w: number, h: number): void {
 export function Box(props: BoxProps = {}): Instance {
   const child = props.children;
   const { resolved, handlers } = createInteractive(props);
+  const styleSource = createStyleTransitions(resolved);
   const layout = new BoxNode({ child: child?.layout });
   let current: BaseStyle = {};
 
@@ -168,7 +170,7 @@ export function Box(props: BoxProps = {}): Instance {
   };
 
   // Reactive: re-applies (and schedules a frame) when hovered/pressed change.
-  bind(resolved, (s) => {
+  bind(styleSource, (s) => {
     current = s;
     layout.width = s.width;
     layout.height = s.height;
