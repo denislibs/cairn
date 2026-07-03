@@ -2,6 +2,7 @@ export type SemanticsRole =
   | 'button'
   | 'checkbox'
   | 'radio'
+  | 'radiogroup'
   | 'switch'
   | 'textbox'
   | 'link'
