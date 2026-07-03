@@ -66,6 +66,7 @@ export interface BaseStyle {
   aspectRatio?: number;
   color?: string;
   font?: string;
+  overflow?: 'visible' | 'hidden' | 'clip';
 }
 
 export type Style = BaseStyle & Partial<Record<StateName, BaseStyle>>;

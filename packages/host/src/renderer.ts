@@ -28,6 +28,8 @@ export interface Renderer {
   // Intersects the current clip region (does not replace it). Wrap in
   // save()/restore() to scope a clip to a subtree.
   clipRect(rect: Rect): void;
+  // Intersects the current clip with a rounded rect. Scope with save()/restore().
+  clipRoundRect(rect: Rect, radii: Radii): void;
   setShadow(shadow: Shadow | null): void;
   // Multiplies the alpha of subsequent drawing (1 = opaque). Saved/restored by save()/restore().
   setGlobalAlpha(alpha: number): void;

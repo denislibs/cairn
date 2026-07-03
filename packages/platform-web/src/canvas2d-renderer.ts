@@ -65,6 +65,11 @@ export class Canvas2DRenderer implements Renderer {
     this.ctx.rect(rect.x, rect.y, rect.width, rect.height);
     this.ctx.clip();
   }
+  clipRoundRect(rect: Rect, radii: Radii): void {
+    this.ctx.beginPath();
+    this.ctx.roundRect(rect.x, rect.y, rect.width, rect.height, normalizeRadii(radii));
+    this.ctx.clip();
+  }
   setShadow(shadow: Shadow | null): void {
     if (shadow) {
       this.ctx.shadowColor = shadow.color;
