@@ -16,3 +16,5 @@ export { Index } from './index-cf';
 export type { IndexProps } from './index-cf';
 export { Switch, Match } from './switch';
 export type { SwitchProps, MatchProps, MatchDescriptor } from './switch';
+export { animate } from './animate';
+export type { AnimateOptions } from './animate';
