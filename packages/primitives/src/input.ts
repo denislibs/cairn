@@ -88,8 +88,9 @@ export function Input(props: InputProps = {}): Instance {
   let current: BaseStyle = {};
   bind(resolved, (s) => {
     current = s;
-    const pad = toEdgeInsets(s.padding);
-    layout.padding = pad;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pad = toEdgeInsets(s.padding as any);
+    layout.padding = s.padding ?? 0;
     layout.width = s.width;
     const fs = fontSizeOf(s.font ?? DEFAULT_FONT);
     layout.height = s.height ?? fs + pad.top + pad.bottom;
@@ -122,7 +123,8 @@ export function Input(props: InputProps = {}): Instance {
       const s = current;
       const font = s.font ?? DEFAULT_FONT;
       const color = s.color ?? '#000';
-      const pad = toEdgeInsets(s.padding);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const pad = toEdgeInsets(s.padding as any);
       const w = layout.size.w;
       const h = layout.size.h;
       if (s.backgroundColor) {
