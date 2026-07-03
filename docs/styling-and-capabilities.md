@@ -60,14 +60,14 @@
 
 ## 6. Типографика
 - ✅ `font` (CSS-шорткат строкой), `color`
-- ❌ раздельные `fontFamily` / `fontSize` / `fontWeight` / `fontStyle`
+- ✅ раздельные `fontFamily` / `fontSize` / `fontWeight` / `fontStyle` (шорткат `font` тоже работает; `composeFont` собирает строку из лонгхендов)
 - ✅ `lineHeight`
 - ✅ `textAlign` (left / center / right)
-- ❌ `letterSpacing`, `wordSpacing`
-- ❌ `textDecoration` (underline / strikethrough)
-- ❌ `textTransform` (upper / lower / capitalize)
-- ❌ `maxLines` + `ellipsis` (обрезка «…»)
-- ❌ перенос строк / многострочность (сейчас однострочно)
+- ✅ `letterSpacing`; ❌ `wordSpacing`
+- ✅ `textDecoration` (underline / line-through)
+- ✅ `textTransform` (none / uppercase / lowercase / capitalize)
+- ✅ `maxLines` + `ellipsis` (обрезка; `ellipsis` — строка, напр. `'…'`)
+- ✅ перенос строк / многострочность (перенос по ширине, явный `\n`, `TextNode.lines`)
 - ❌ выделение текста (selection)
 
 ## 7. Трансформации
@@ -138,7 +138,7 @@
 8. ✅ `min` / `max` размеры (есть у `BoxNode`)
 
 ## «Дорого» (нужен и движок, и большая фича)
-Перенос строк / многострочный текст, `flexWrap`, `Grid`, `ScrollView`, `Portal` / оверлеи,
+`flexWrap`, `Grid`, `ScrollView`, `Portal` / оверлеи,
 анимации (Фаза 13), полный SVG-парсер, жесты + pointer-capture, dirty-region (Фаза 12),
 a11y (Фаза 14), роутинг (Фаза 15/16).
 
@@ -159,7 +159,9 @@ a11y (Фаза 14), роутинг (Фаза 15/16).
   `border`, `borderTop`, `borderRight`, `borderBottom`, `borderLeft` (`{width,color,style?}`),
   `boxShadow`, `textShadow` (`{color,blur,offsetX,offsetY}`),
   `opacity`, `textAlign`, `lineHeight`,
-  `color`, `font`,
+  `color`, `font`, `fontFamily`, `fontSize`, `fontWeight`, `fontStyle`,
+  `letterSpacing`, `textTransform`, `textDecoration`,
+  `maxLines`, `ellipsis`,
   `overflow`.
 - **Состояния:** `hover`, `focus`, `active`, `pressed`, `disabled` (вложенные варианты, live).
 - **Стилизация:** инлайн `Style`, массив `Style[]` (каскад), функция `(theme) => Style`, `StyleSheet.create`.
