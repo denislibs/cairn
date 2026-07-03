@@ -73,6 +73,8 @@ export interface BaseStyle {
   letterSpacing?: number;
   textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
   overflow?: 'visible' | 'hidden' | 'clip';
+  maxLines?: number;
+  ellipsis?: string;
 }
 
 export type Style = BaseStyle & Partial<Record<StateName, BaseStyle>>;

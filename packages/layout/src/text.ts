@@ -57,6 +57,21 @@ export class TextNode extends LayoutNode {
       lines.push(line);
     }
 
+    if (this.maxLines != null && lines.length > this.maxLines) {
+      const kept = lines.slice(0, this.maxLines);
+      if (this.ellipsis && kept.length > 0) {
+        const maxW = c.maxW;
+        let last = kept[kept.length - 1];
+        // Drop trailing characters until `last + ellipsis` fits maxW (or nothing left).
+        while (last.length > 0 && isFinite(maxW) && ctx.measureText(last + this.ellipsis, this.style).width > maxW) {
+          last = last.slice(0, -1);
+        }
+        kept[kept.length - 1] = last + this.ellipsis;
+      }
+      lines.length = 0;
+      lines.push(...kept);
+    }
+
     this.lines = lines;
     const widest = lines.reduce((m, l) => Math.max(m, ctx.measureText(l, this.style).width), 0);
     const w = clamp(widest, c.minW, c.maxW);

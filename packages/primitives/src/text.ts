@@ -68,6 +68,8 @@ export function Text(props: TextProps = {}): Instance {
     current = s;
     layout.style = { ...layout.style, font: composeFont(s), letterSpacing: s.letterSpacing };
     layout.text = applyTextTransform(rawText, s.textTransform);
+    layout.maxLines = s.maxLines;
+    layout.ellipsis = s.ellipsis;
     applyLayoutStyle(layout, s);
     instance.paintOpacity = s.opacity;
   });
