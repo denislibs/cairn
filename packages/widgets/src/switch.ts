@@ -1,5 +1,5 @@
-import type { Instance } from '@cairn/runtime';
-import { createSignal, type Accessor } from '@cairn/reactivity';
+import type { Instance, SemanticsNode } from '@cairn/runtime';
+import { createSignal, createEffect, type Accessor } from '@cairn/reactivity';
 import { Box, Row, Text, Stack, applyLayoutChildProps, mergeStyles, type StyleInput, type LayoutChildProps } from '@cairn/primitives';
 import { useWidgetTheme } from './theme';
 import { createControl } from './control';
@@ -48,9 +48,23 @@ export function Switch(props: SwitchProps): Instance {
     props.onChange?.(next);
   };
 
-  const { handlers } = createControl({
+  const { handlers, setFocusVisible } = createControl({
     disabled: props.disabled,
     onClick: toggle,
+  });
+
+  // --- Semantics ---
+  const semantics: SemanticsNode = {
+    role: 'switch',
+    label: props.label,
+    checked: read(),
+    disabled: !!props.disabled,
+    onActivate: toggle,
+    onFocus: (keyboard: boolean) => setFocusVisible(keyboard),
+    onBlur: () => setFocusVisible(false),
+  };
+  createEffect(() => {
+    semantics.checked = read();
   });
 
   // Thumb: a Stack direct child with reactive `left` driven by read()
@@ -106,6 +120,7 @@ export function Switch(props: SwitchProps): Instance {
     instance = track;
   }
 
+  instance.semantics = semantics;
   applyLayoutChildProps(instance, props);
   return instance;
 }

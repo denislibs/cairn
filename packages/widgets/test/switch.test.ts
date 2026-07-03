@@ -123,3 +123,77 @@ describe('Switch — label', () => {
     });
   });
 });
+
+describe('Switch — semantics', () => {
+  it('instance has semantics with role:"switch"', () => {
+    createRoot(() => {
+      const inst = Switch({ defaultChecked: false });
+      expect(inst.semantics).toBeDefined();
+      expect(inst.semantics!.role).toBe('switch');
+    });
+  });
+
+  it('semantics.label matches props.label', () => {
+    createRoot(() => {
+      const inst = Switch({ label: 'Dark mode', defaultChecked: false });
+      expect(inst.semantics!.label).toBe('Dark mode');
+    });
+  });
+
+  it('semantics.checked reflects initial off state', () => {
+    createRoot(() => {
+      const inst = Switch({ defaultChecked: false });
+      expect(inst.semantics!.checked).toBe(false);
+    });
+  });
+
+  it('semantics.checked reflects initial on state', () => {
+    createRoot(() => {
+      const inst = Switch({ defaultChecked: true });
+      expect(inst.semantics!.checked).toBe(true);
+    });
+  });
+
+  it('semantics.checked updates after onActivate toggles', () => {
+    createRoot(() => {
+      const inst = Switch({ defaultChecked: false });
+      expect(inst.semantics!.checked).toBe(false);
+      inst.semantics!.onActivate!();
+      expect(inst.semantics!.checked).toBe(true);
+    });
+  });
+
+  it('semantics.disabled reflects props.disabled', () => {
+    createRoot(() => {
+      const inst = Switch({ defaultChecked: false, disabled: true });
+      expect(inst.semantics!.disabled).toBe(true);
+    });
+  });
+
+  it('semantics.onActivate toggles state', () => {
+    createRoot(() => {
+      const seen: boolean[] = [];
+      const inst = Switch({ defaultChecked: false, onChange: (v) => seen.push(v) });
+      inst.semantics!.onActivate!();
+      expect(seen).toEqual([true]);
+    });
+  });
+
+  it('semantics.onActivate is blocked when disabled', () => {
+    createRoot(() => {
+      const seen: boolean[] = [];
+      const inst = Switch({ defaultChecked: false, disabled: true, onChange: (v) => seen.push(v) });
+      inst.semantics!.onActivate!();
+      expect(seen).toEqual([]);
+    });
+  });
+
+  it('semantics onFocus/onBlur callbacks exist and do not throw', () => {
+    createRoot(() => {
+      const inst = Switch({ defaultChecked: false });
+      expect(() => inst.semantics!.onFocus!(true)).not.toThrow();
+      expect(() => inst.semantics!.onFocus!(false)).not.toThrow();
+      expect(() => inst.semantics!.onBlur!()).not.toThrow();
+    });
+  });
+});
