@@ -3,9 +3,10 @@ import type { EasingName } from './easing';
 
 export interface TransitionConfig {
   properties?: string[];              // omitted → all animatable
-  duration: number;                   // ms
+  duration?: number;                  // ms; optional when using spring
   easing?: EasingName | ((t: number) => number);
   delay?: number;
+  spring?: { stiffness?: number; damping?: number; mass?: number };
 }
 
 /** Structural alias for ImageHandle from @cairn/host — kept local to avoid a cross-package dep. */
