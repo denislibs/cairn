@@ -25,7 +25,7 @@
 - ✅ `aspectRatio`
 - ❌ `boxSizing` (сейчас поведение border-box-подобное)
 - ✅ `gap`; ✅ раздельные `rowGap` / `columnGap`
-- ❌ `overflow: visible | hidden | scroll | clip` (в рендерере `clipRect` есть; scroll — отдельная инфраструктура)
+- ✅ `overflow: hidden | clip` (клип детей по скруглённому боксу); ❌ `overflow: scroll` (→ ScrollView-фаза)
 
 ## 2. Флекс и позиционирование
 - ✅ `flexDirection` (`Row` / `Column`)
@@ -109,7 +109,7 @@
 ## 13. Инфраструктура «настоящего приложения»
 - ❌ `ScrollView` (вертикальный / горизонтальный, инерция)
 - ❌ `Portal` / оверлеи / `Modal` / `Tooltip` / `Popover`
-- 🟡 клиппинг / `overflow: hidden` (в рендерере `clipRect` есть, в стиле нет)
+- ✅ клиппинг / `overflow: hidden | clip` (в стиле через `overflow`, клипает детей по скруглённому боксу)
 - ❌ жесты: drag, swipe, long-press, pinch / zoom, pointer-capture (клики / hover / колесо / клавиатура — есть)
 - ❌ виртуализация длинных списков
 - ❌ формы: валидация, группы, submit (частично: `Input`, состояния)
@@ -159,6 +159,7 @@ a11y (Фаза 14), роутинг (Фаза 15/16).
   `border`, `borderTop`, `borderRight`, `borderBottom`, `borderLeft` (`{width,color,style?}`),
   `boxShadow`, `textShadow` (`{color,blur,offsetX,offsetY}`),
   `opacity`, `textAlign`, `lineHeight`,
-  `color`, `font`.
+  `color`, `font`,
+  `overflow`.
 - **Состояния:** `hover`, `focus`, `active`, `pressed`, `disabled` (вложенные варианты, live).
 - **Стилизация:** инлайн `Style`, массив `Style[]` (каскад), функция `(theme) => Style`, `StyleSheet.create`.

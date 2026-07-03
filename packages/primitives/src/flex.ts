@@ -24,6 +24,16 @@ function flex(direction: FlexDirection, props: FlexProps): Instance {
     children: children.map((c) => c.layout),
   });
 
+  const instance: Instance = {
+    layout,
+    children,
+    handlers,
+    focusable: props.focusable,
+    paintSelf() {
+      // containers have no own visuals
+    },
+  };
+
   bind(resolved, (s: BaseStyle) => {
     layout.gap = s.gap ?? 0;
     layout.rowGap = s.rowGap;
@@ -34,17 +44,10 @@ function flex(direction: FlexDirection, props: FlexProps): Instance {
     layout.height = s.height;
     layout.wrap = s.flexWrap ?? 'nowrap';
     applyLayoutStyle(layout, s);
+    instance.clipChildren =
+      s.overflow === 'hidden' || s.overflow === 'clip' ? s.borderRadius ?? 0 : undefined;
   });
 
-  const instance: Instance = {
-    layout,
-    children,
-    handlers,
-    focusable: props.focusable,
-    paintSelf() {
-      // containers have no own visuals
-    },
-  };
   applyLayoutChildProps(instance, props);
   return instance;
 }

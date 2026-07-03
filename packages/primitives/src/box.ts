@@ -117,6 +117,8 @@ export function Box(props: BoxProps = {}): Instance {
     layout.aspectRatio = s.aspectRatio;
     applyLayoutStyle(layout, s);
     instance.paintOpacity = s.opacity;
+    instance.clipChildren =
+      s.overflow === 'hidden' || s.overflow === 'clip' ? s.borderRadius ?? 0 : undefined;
   });
 
   applyLayoutChildProps(instance, props);
