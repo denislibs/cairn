@@ -84,14 +84,16 @@ Status: ✅ stable · 🧪 in progress · ⏳ planned
 ### Forms
 | Component | Kind | Status |
 | --- | --- | --- |
-| `Input` / `TextArea` | flat | ⏳ |
-| `Checkbox` | flat | ⏳ |
-| `Radio` / `RadioGroup` | compound | ⏳ |
-| `Switch` | flat | ⏳ |
+| `Input` | flat | ✅ |
+| `TextArea` | flat | ⏳ H1b (needs multiline host seam) |
+| `Checkbox` | flat | ✅ |
+| `Radio` / `RadioGroup` | compound | ✅ |
+| `Switch` | flat | ✅ |
+| `Field` | compound | ✅ |
 | `Select` / `Option` | compound | ⏳ |
 | `Combobox` | compound | ⏳ |
 | `Slider` | flat | ⏳ |
-| `Form` / `Field` | compound | ⏳ |
+| `Form` | compound | ⏳ |
 
 ### Overlays
 | Component | Kind | Status |
@@ -153,3 +155,35 @@ Toggle({
   children?: Instance | ((s: ControlState & { togglePressed: Accessor<boolean> }) => Instance),
 });
 ```
+
+## Form core
+
+```tsx
+// Checkbox — controlled/uncontrolled, indeterminate, render-fn slot
+Checkbox({ label: 'Accept terms', defaultChecked: true, onChange: (v) => {} });
+
+// Switch — animated track + thumb, built on Toggle
+Switch({ label: 'Notifications', checked: on, onChange: setOn });
+
+// Radio + RadioGroup (compound) — arrow-key roving, one selection
+RadioGroup({ defaultValue: 'pro', onChange: (v) => {}, children: () =>
+  Column({ mainAxisSize: 'min', children: [
+    Radio({ value: 'free', label: 'Free' }),
+    Radio({ value: 'pro',  label: 'Pro' }),
+  ] }),
+});
+
+// Field (compound) — label / control / helper / error; Error shows while invalid()
+Field({ invalid, children: () =>
+  Column({ mainAxisSize: 'min', children: [
+    Field.Label({ children: 'Email' }),
+    Field.Control({ children: Input({ placeholder: 'you@example.com' }) }),
+    Field.Error({ children: 'Email is required' }),   // reads Field.invalid
+  ] }),
+});
+
+// Input — themed text field over the platform text seam; focus-ring, invalid, sizes
+Input({ placeholder: 'Jane Doe', value, onInput: setValue, size: 'md' });
+```
+
+> `TextArea` is planned for H1b — a correct multiline field needs a multiline host text-input seam (today the platform proxy is single-line).
