@@ -180,3 +180,22 @@ test('optional fields (checked, selected, expanded, disabled, readonly, level, m
   expect(node.now).toBe(42);
   expect(node.focusable).toBe(false);
 });
+
+test('collectSemantics carries onInput, placeholder, multiline for textbox', () => {
+  const onInput = (v: string) => { void v; };
+  const sem: SemanticsNode = {
+    role: 'textbox',
+    label: 'Name',
+    value: 'hello',
+    placeholder: 'Enter name',
+    onInput,
+    multiline: true,
+  };
+  const inst = makeInstance(0, 0, 100, 30, sem);
+  const root = makeInstance(0, 0, 200, 100, undefined, [inst]);
+
+  const [node] = collectSemantics(root);
+  expect(node.placeholder).toBe('Enter name');
+  expect(node.onInput).toBe(onInput);
+  expect(node.multiline).toBe(true);
+});

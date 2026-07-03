@@ -18,6 +18,12 @@ export interface SemanticsNode {
   max?: number;
   now?: number;
   focusable?: boolean;
+  /** textbox: placeholder text shown when the field is empty */
+  placeholder?: string;
+  /** textbox: called when the native input changes value */
+  onInput?: (value: string) => void;
+  /** textbox: true if the field is a multi-line textarea */
+  multiline?: boolean;
   onActivate?: () => void;
   onFocus?: (keyboard: boolean) => void;
   onBlur?: () => void;
@@ -75,6 +81,9 @@ function walk(inst: Instance, absX: number, absY: number, out: SemanticsNodeData
     if (sem.max !== undefined) data.max = sem.max;
     if (sem.now !== undefined) data.now = sem.now;
     if (sem.focusable !== undefined) data.focusable = sem.focusable;
+    if (sem.placeholder !== undefined) data.placeholder = sem.placeholder;
+    if (sem.onInput !== undefined) data.onInput = sem.onInput;
+    if (sem.multiline !== undefined) data.multiline = sem.multiline;
     if (sem.onActivate !== undefined) data.onActivate = sem.onActivate;
     if (sem.onFocus !== undefined) data.onFocus = sem.onFocus;
     if (sem.onBlur !== undefined) data.onBlur = sem.onBlur;

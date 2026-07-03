@@ -54,7 +54,7 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
   sync(nodes: SemanticsNodeData[]): void {
     if (!this.container) return;
 
-    const visible = nodes.filter((n) => n.role !== 'textbox'); // SA3: text input owns its own hidden input
+    const visible = nodes;
     const incoming = new Set(visible.map((n) => n.id));
 
     // Remove stale elements
@@ -73,7 +73,7 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
         el = existing.el;
         existing.node = node; // keep listeners' callbacks fresh
       } else {
-        el = this.createElement(node.role);
+        el = this.createElement(node.role, node);
         this.attachListeners(el, node);
         this.elementMap.set(node.id, { el, node });
       }
@@ -113,13 +113,21 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
     }
   }
 
-  private createElement(role: SemanticsNodeData['role']): HTMLElement {
+  private createElement(role: SemanticsNodeData['role'], node?: SemanticsNodeData): HTMLElement {
     const doc = this.getDoc();
     if (role === 'button') {
       return doc.createElement('button');
     }
     if (role === 'link') {
       return doc.createElement('a');
+    }
+    if (role === 'textbox') {
+      if (node?.multiline) {
+        return doc.createElement('textarea');
+      }
+      const input = doc.createElement('input');
+      input.setAttribute('type', 'text');
+      return input;
     }
     const el = doc.createElement('div');
     el.setAttribute('role', role);
@@ -143,8 +151,19 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
       getState()?.node.onBlur?.();
     });
 
+    // Textbox: wire the native input event to onInput.
+    if (nodeRef.role === 'textbox') {
+      el.addEventListener('input', () => {
+        const node = getState()?.node;
+        if (!node) return;
+        const inputEl = el as HTMLInputElement | HTMLTextAreaElement;
+        node.onInput?.(inputEl.value);
+      });
+    }
+
     // Non-button roles use <div role="..."> which don't get native Enter/Space
     // activation — wire it up manually. Buttons already handle this natively.
+    // Textbox elements handle Enter natively (or via onKeyDown forwarding below).
     if (el.tagName !== 'BUTTON') {
       el.addEventListener('keydown', (e: KeyboardEvent) => {
         const node = getState()?.node;
@@ -163,6 +182,10 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
           return; // skip Enter/Space activation
         }
 
+        // Textbox elements handle typing natively — do not synthesize activation
+        // on Enter/Space (those are editing keys in a text field).
+        if (nodeRef.role === 'textbox') return;
+
         // Synthesize activation for Enter and Space (screen-reader convention).
         // Only prevent Space's default scroll when there is an activate handler.
         if (e.key === 'Enter') {
@@ -176,7 +199,8 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
   }
 
   private updateAttributes(el: HTMLElement, node: SemanticsNodeData): void {
-    // aria-label
+    // aria-label (not needed for native <input>/<textarea> which use aria-label directly,
+    // but set it universally for AT compatibility)
     if (node.label !== undefined) {
       el.setAttribute('aria-label', node.label);
     } else {
@@ -206,16 +230,41 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
       el.setAttribute('aria-level', String(node.level));
     }
 
+    // Textbox: sync native input properties
+    if (node.role === 'textbox') {
+      const inputEl = el as HTMLInputElement | HTMLTextAreaElement;
+
+      // Placeholder
+      if (node.placeholder !== undefined) {
+        inputEl.placeholder = node.placeholder;
+      }
+
+      // readOnly / disabled (native attributes take precedence over ARIA for inputs)
+      inputEl.readOnly = node.readonly === true;
+      inputEl.disabled = node.disabled === true;
+
+      // Sync value ONLY when the element is not focused — don't clobber the caret
+      const doc = this.getDoc();
+      if (el !== doc.activeElement) {
+        inputEl.value = node.value ?? '';
+      }
+    }
+
     // Position + size from rect
     el.style.position = 'absolute';
     el.style.left = `${node.rect.x}px`;
     el.style.top = `${node.rect.y}px`;
     el.style.width = `${node.rect.width}px`;
     el.style.height = `${node.rect.height}px`;
-    el.style.pointerEvents = 'none';
+    el.style.pointerEvents = 'auto'; // textbox needs pointer events to accept clicks
 
     // Make the element visually transparent but present in the a11y tree
     el.style.opacity = '0';
+
+    // Restore pointer-events:none for non-textbox elements (canvas handles those)
+    if (node.role !== 'textbox') {
+      el.style.pointerEvents = 'none';
+    }
   }
 
   focus(id: number): void {
