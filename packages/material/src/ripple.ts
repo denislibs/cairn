@@ -1,7 +1,7 @@
 import type { Renderer } from '@cairn/host';
 import { BoxNode } from '@cairn/layout';
-import { type Instance, animate } from '@cairn/runtime';
-import { createSignal, onCleanup } from '@cairn/reactivity';
+import { type Instance, animate, hostContext, scheduleFrame } from '@cairn/runtime';
+import { createSignal, onCleanup, useContext, runWithContext } from '@cairn/reactivity';
 import { alpha } from './colors';
 
 export interface RippleHandle {
@@ -23,6 +23,9 @@ export function createRipple(opts: { color?: string; duration?: number; radius?:
   const [ripples, setRipples] = createSignal<Rip[]>([]);
   const cancels = new Map<number, () => void>();
   let nextId = 1;
+  // Capture the host now (owner context is active during createRipple). `trigger` fires
+  // from an event handler — outside the owner — so it must re-provide the host to `animate`.
+  const capturedHost = useContext(hostContext);
 
   const layout = new BoxNode({ width: '100%' as any, height: '100%' as any });
   const instance: Instance = {
@@ -53,17 +56,20 @@ export function createRipple(opts: { color?: string; duration?: number; radius?:
     const id = nextId++;
     const [p, setP] = createSignal(0);
     setRipples([...ripples(), { id, x, y, p }]);
-    const cancel = animate({
-      from: 0,
-      to: 1,
-      duration,
-      easing: 'ease-out',
-      onUpdate: (v) => setP(v),
-      onDone: () => {
-        setRipples(ripples().filter((r) => r.id !== id));
-        cancels.delete(id);
-      },
-    });
+    const cancel = runWithContext(hostContext, capturedHost, () =>
+      animate({
+        from: 0,
+        to: 1,
+        duration,
+        easing: 'ease-out',
+        onUpdate: (v) => { setP(v); scheduleFrame(); },
+        onDone: () => {
+          setRipples(ripples().filter((r) => r.id !== id));
+          cancels.delete(id);
+          scheduleFrame();
+        },
+      }),
+    );
     cancels.set(id, cancel);
   };
 
