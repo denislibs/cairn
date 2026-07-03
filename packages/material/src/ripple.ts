@@ -28,6 +28,9 @@ export function createRipple(opts: { color?: string; duration?: number; radius?:
   const capturedHost = useContext(hostContext);
 
   const layout = new BoxNode({ width: '100%' as any, height: '100%' as any });
+  // A ripple is an overlay: it fills its host (a hug-sized button) without driving
+  // the host's size. StackNode reads this flag to size to the sibling content only.
+  layout.overlay = true;
   const instance: Instance = {
     layout,
     children: [],

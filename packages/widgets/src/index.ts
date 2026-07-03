@@ -1,7 +1,15 @@
+export { defaultTheme, useWidgetTheme } from './theme';
+export type { WidgetTheme } from './theme';
+export { createCompoundContext } from './context';
+export type { CompoundContext } from './context';
+export { createControl } from './control';
+export type { ControlState, ControlProps } from './control';
 export { Divider } from './divider';
 export type { DividerProps } from './divider';
 export { Button } from './button';
 export type { ButtonProps } from './button';
+export { Toggle } from './toggle';
+export type { ToggleProps } from './toggle';
 export { Checkbox } from './checkbox';
 export type { CheckboxProps } from './checkbox';
 export { Switch } from './switch';

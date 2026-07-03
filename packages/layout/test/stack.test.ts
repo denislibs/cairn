@@ -38,3 +38,22 @@ test('StackNode floors its size at the constraint minimum', () => {
   const size = stack.layout({ minW: 20, maxW: Infinity, minH: 15, maxH: Infinity }, ctx);
   expect(size).toEqual({ w: 20, h: 15 }); // empty bbox (0) floored to min
 });
+
+test('StackNode hugs normal children when an overlay child is present', () => {
+  const content = new BoxNode({ width: 40, height: 24 });
+  const overlay = new BoxNode({ width: '100%' as any, height: '100%' as any });
+  overlay.overlay = true;
+  const stack = new StackNode({ children: [content, overlay] });
+  // Bounded max (as inside a Row) would normally fill to 200 — overlay makes it hug.
+  const size = stack.layout({ minW: 0, maxW: 200, minH: 0, maxH: 200 }, ctx);
+  expect(size).toEqual({ w: 40, h: 24 });
+  // The overlay is laid out tight to the hugged size.
+  expect(overlay.size).toEqual({ w: 40, h: 24 });
+});
+
+test('StackNode without overlay still fills bounded constraints (unchanged)', () => {
+  const content = new BoxNode({ width: 40, height: 24 });
+  const stack = new StackNode({ children: [content] });
+  const size = stack.layout({ minW: 0, maxW: 200, minH: 0, maxH: 80 }, ctx);
+  expect(size).toEqual({ w: 200, h: 80 });
+});

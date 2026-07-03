@@ -13,6 +13,7 @@ export abstract class LayoutNode {
   top?: number;
   right?: number;
   bottom?: number;
+  overlay?: boolean; // parent-data: StackNode overlay child — fills the stack but does not drive its size
   margin: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 }; // parent-data: margin around this node
   alignSelf?: 'start' | 'center' | 'end' | 'stretch'; // parent-data: per-child cross-axis alignment override
 
