@@ -8,6 +8,8 @@
     "typecheck": "tsc --noEmit -p packages/reactivity/tsconfig.json && tsc --noEmit -p packages/host/tsconfig.json && tsc --noEmit -p packages/platform-web/tsconfig.json && tsc --noEmit -p packages/layout/tsconfig.json && tsc --noEmit -p packages/runtime/tsconfig.json && tsc --noEmit -p packages/primitives/tsconfig.json && tsc --noEmit -p packages/style/tsconfig.json && tsc --noEmit -p packages/events/tsconfig.json && tsc --noEmit -p packages/widgets/tsconfig.json && tsc --noEmit -p packages/material/tsconfig.json"
   },
   "devDependencies": {
+    "@types/jsdom": "^28.0.3",
+    "jsdom": "^24.1.3",
     "typescript": "^5.5.0",
     "vite": "^5.4.21",
     "vitest": "^2.0.0"

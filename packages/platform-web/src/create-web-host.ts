@@ -6,6 +6,7 @@ import { WebSurfaceMetrics } from './surface-metrics';
 import { WebInputSource } from './web-input-source';
 import { WebTextInputService } from './web-text-input';
 import { createImageLoader } from './image-loader';
+import { WebAccessibilityBridge } from './web-accessibility';
 
 export function createWebHost(canvas: HTMLCanvasElement): Host {
   const renderer = new Canvas2DRenderer(new HtmlCanvasSurface(canvas));
@@ -56,5 +57,6 @@ export function createWebHost(canvas: HTMLCanvasElement): Host {
     textInput,
     setCursor: (cursor: string) => { canvas.style.cursor = cursor; },
     loadImage,
+    a11y: new WebAccessibilityBridge(canvas),
   };
 }
