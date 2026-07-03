@@ -165,7 +165,7 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
 ---
 
 ## Текущий набор (для ориентира)
-- **Примитивы:** `Box`, `Text`, `Row`, `Column`, `Stack`, `Grid`, `ScrollView`, `Input`, `Image`, `Icon`, `Path`, `Svg`, `Portal`
+- **Примитивы:** `Box`, `Text`, `Row`, `Column`, `Stack`, `Grid`, `ScrollView`, `Spacer`, `Input` (алиас `TextInput`), `Image`, `Icon`, `Path`, `Svg`, `Portal`
   (+ control-flow `Show`/`For`/`Index`/`Switch`, `Presence` (enter/exit — AN3), `ThemeProvider` (принимает `Theme | () => Theme` — реактивная смена темы), сырой `Instance` как escape-hatch;
   позиционирование оверлеев: `computePlacement`, `getAbsRect`).
 - **Виджеты (`@cairn/widgets`):** `Button` (primary / secondary / ghost), `Slider`, `Checkbox`, `Switch`, `Divider`, `Modal`, `Tooltip`, `Popover`.
