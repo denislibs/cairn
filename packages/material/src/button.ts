@@ -47,7 +47,7 @@ export function Button(props: ButtonProps): Instance {
   if (props.startIcon) rowChildren.push(props.startIcon);
   rowChildren.push(labelText);
 
-  const content = Row({ children: rowChildren, style: { gap: 8, alignX: 'center', alignY: 'center' } });
+  const content = Row({ children: rowChildren, mainAxisSize: 'min', style: { gap: 8, alignX: 'center', alignY: 'center' } });
   const childInstance = props.children ?? Stack({ children: [content, ripple.instance] });
 
   // Base style common to all variants

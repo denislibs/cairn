@@ -16,9 +16,17 @@ export class StackNode extends LayoutNode {
     // negative left/top extend outside it and do not enlarge the unbounded size.
     const cw = isFinite(c.maxW) ? c.maxW : c.minW;
     const chh = isFinite(c.maxH) ? c.maxH : c.minH;
+
+    // Overlay children fill the stack but do not drive its size (e.g. a ripple
+    // over a hug-sized button). When any overlay child is present the stack hugs
+    // its normal children, then overlays are laid out tight to that resolved size.
+    const overlays = this.children.filter((ch) => ch.overlay);
+    const normals = this.children.filter((ch) => !ch.overlay);
+    const hasOverlay = overlays.length > 0;
+
     let maxRight = 0;
     let maxBottom = 0;
-    for (const ch of this.children) {
+    for (const ch of normals) {
       const bothX = ch.left != null && ch.right != null;
       const bothY = ch.top != null && ch.bottom != null;
       const tightW = bothX ? Math.max(0, cw - ch.left! - ch.right!) : undefined;
@@ -32,9 +40,20 @@ export class StackNode extends LayoutNode {
       maxRight = Math.max(maxRight, ch.offsetX + s.w);
       maxBottom = Math.max(maxBottom, ch.offsetY + s.h);
     }
-    const w = isFinite(c.maxW) ? c.maxW : maxRight;
-    const h = isFinite(c.maxH) ? c.maxH : maxBottom;
-    this.size = { w: Math.max(w, c.minW), h: Math.max(h, c.minH) };
+
+    // With overlays present, hug the normal children (ignore finite max — hugging
+    // is the whole point of an overlay). Otherwise keep the fill-available default.
+    const w = Math.max(hasOverlay ? maxRight : isFinite(c.maxW) ? c.maxW : maxRight, c.minW);
+    const h = Math.max(hasOverlay ? maxBottom : isFinite(c.maxH) ? c.maxH : maxBottom, c.minH);
+
+    // Pass 2: overlays fill the resolved stack size.
+    for (const ch of overlays) {
+      ch.layout({ minW: w, maxW: w, minH: h, maxH: h }, ctx);
+      ch.offsetX = ch.left ?? 0;
+      ch.offsetY = ch.top ?? 0;
+    }
+
+    this.size = { w, h };
     return this.size;
   }
 }
