@@ -32,7 +32,7 @@
 - ✅ `aspectRatio`
 - ❌ `boxSizing` (сейчас поведение border-box-подобное)
 - ✅ `gap`; ✅ раздельные `rowGap` / `columnGap`
-- ✅ `overflow: hidden | clip` (клип детей по скруглённому боксу); ❌ `overflow: scroll` (→ ScrollView-фаза)
+- ✅ `overflow: hidden | clip` (клип детей по скруглённому боксу); `overflow: scroll` → используй `ScrollView`
 
 ## 2. Флекс и позиционирование
 - ✅ `flexDirection` (`Row` / `Column`)
@@ -115,7 +115,7 @@
 - 🟡 адаптив через `SurfaceMetrics` (реактивные width / height) — хелперы `useBreakpoint` / `useViewport` / `responsive()` уже есть в `@cairn/primitives`
 
 ## 13. Инфраструктура «настоящего приложения»
-- ❌ `ScrollView` (вертикальный / горизонтальный, инерция)
+- ✅ `ScrollView` (колесо + drag, кламп, скроллбар-оверлей; виртуализация ❌ отдельно)
 - ❌ `Portal` / оверлеи / `Modal` / `Tooltip` / `Popover`
 - ✅ клиппинг / `overflow: hidden | clip` (в стиле через `overflow`, клипает детей по скруглённому боксу)
 - ❌ жесты: drag, swipe, long-press, pinch / zoom, pointer-capture (клики / hover / колесо / клавиатура — есть)
@@ -146,14 +146,14 @@
 8. ✅ `min` / `max` размеры (есть у `BoxNode`)
 
 ## «Дорого» (нужен и движок, и большая фича)
-`flexWrap`, `ScrollView`, `Portal` / оверлеи,
+`flexWrap`, `Portal` / оверлеи,
 анимации (Фаза 13), полный SVG-парсер, жесты + pointer-capture, dirty-region (Фаза 12),
 a11y (Фаза 14), роутинг (Фаза 15/16).
 
 ---
 
 ## Текущий набор (для ориентира)
-- **Примитивы:** `Box`, `Text`, `Row`, `Column`, `Stack`, `Grid`, `Input`, `Image`, `Icon`, `Path`, `Svg`
+- **Примитивы:** `Box`, `Text`, `Row`, `Column`, `Stack`, `Grid`, `ScrollView`, `Input`, `Image`, `Icon`, `Path`, `Svg`
   (+ control-flow `Show`/`For`/`Index`/`Switch`, `ThemeProvider` (принимает `Theme | () => Theme` — реактивная смена темы), сырой `Instance` как escape-hatch).
 - **Виджеты (`@cairn/widgets`):** `Button` (primary / secondary / ghost), `Slider`, `Checkbox`, `Switch`, `Divider`.
 - **Адаптивные утилиты (`@cairn/primitives`):** `useViewport`, `useBreakpoint`, `responsive`, `pickBreakpoint`.
