@@ -14,6 +14,12 @@ export interface TextProps extends EventProps, LayoutChildProps {
   focusable?: boolean;
 }
 
+// Extract the pixel font size from a CSS font shorthand, defaulting to 16.
+function fontSizePx(font: string): number {
+  const m = font.match(/(\d+(?:\.\d+)?)px/);
+  return m ? parseFloat(m[1]) : 16;
+}
+
 export function Text(props: TextProps = {}): Instance {
   const { resolved, handlers } = createInteractive(props);
   const layout = new TextNode({ text: '', style: { font: '16px sans-serif' } });
@@ -30,19 +36,29 @@ export function Text(props: TextProps = {}): Instance {
     paintSelf(r: Renderer) {
       const s = current;
       const w = layout.size.w;
-      const h = layout.size.h;
       const align = s.textAlign ?? 'left';
       const x = align === 'center' ? w / 2 : align === 'right' ? w : 0;
       const useLine = s.lineHeight != null;
-      const y = useLine ? h / 2 : 0;
+      const lineH = useLine ? (s.lineHeight as number) : fontSizePx(composeFont(s));
+      const baseline = useLine ? 'middle' : 'top';
+
       if (s.textShadow) { r.save(); r.setShadow(s.textShadow); }
-      r.drawText(layout.text, { x, y }, {
-        font: composeFont(s),
-        color: s.color ?? '#000',
-        align,
-        baseline: useLine ? 'middle' : 'top',
-        letterSpacing: s.letterSpacing,
+
+      const lines: string[] = (layout as any).lines?.length
+        ? (layout as any).lines
+        : [layout.text];
+
+      lines.forEach((line: string, i: number) => {
+        const y = useLine ? i * lineH + lineH / 2 : i * lineH;
+        r.drawText(line, { x, y }, {
+          font: composeFont(s),
+          color: s.color ?? '#000',
+          align,
+          baseline,
+          letterSpacing: s.letterSpacing,
+        });
       });
+
       if (s.textShadow) { r.setShadow(null); r.restore(); }
     },
   };

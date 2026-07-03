@@ -30,7 +30,8 @@ test('BoxNode explicit width/height override content size', () => {
 });
 
 test('BoxNode deflates child constraints by padding', () => {
-  const child = new TextNode({ text: 'wide text here', style: { font: '10px sans-serif' } });
+  // Single word wider than 30px (8 chars * 10px * 0.6 = 48px) -> clamped to child maxW 30
+  const child = new TextNode({ text: 'widetext', style: { font: '10px sans-serif' } });
   // parent maxW 50, padding 10 each side -> child maxW 30 -> width clamped to 30
   const box = new BoxNode({ padding: 10, child });
   box.layout({ minW: 0, maxW: 50, minH: 0, maxH: 1000 }, fakeMeasure());
