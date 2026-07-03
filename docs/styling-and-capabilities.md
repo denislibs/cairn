@@ -85,9 +85,9 @@
 ## 9. Интерактивность, состояния, курсор
 - ✅ состояния `hover` / `focus` / `active` / `pressed` / `disabled` (live + реактивно)
 - ✅ `focusable` / `tabIndex` (проп)
-- ❌ `cursor` (pointer / text / …) — сейчас курсор один на весь канвас
-- ❌ `pointerEvents: none` (пропускать хит-тест)
-- ❌ `userSelect`
+- ✅ `cursor` (pointer / text / …) — применяется к канвасу на hover через `onHoverChange` + `Host.setCursor`
+- ✅ `pointerEvents: none` (пропускать хит-тест)
+- 🟡 `userSelect` (типизирован, инертен — ждёт выделения текста)
 
 ## 10. Изображения и векторы (SVG)
 - ✅ `Image`-примитив (+ `objectFit`: `fill` / `contain` / `cover` / `none` / `scale-down`)
@@ -98,9 +98,9 @@
 
 ## 11. Тема, токены, тёмная тема
 - ✅ базовая тема `createTheme` / `useTheme`
-- 🟡 дизайн-токены (шкала отступов / типографики / палитра / радиусы) — можно класть в тему вручную
-- ❌ переключение light / dark вживую (тема сейчас не реактивна на смену)
-- ❌ варианты компонентов (`variant="primary"`)
+- ✅ дизайн-токены (типизированы: `colors` / `spacing` / `radii` / `fontSizes` через `ThemeTokens`)
+- ✅ переключение light / dark вживую (реактивная тема через accessor: `ThemeProvider` принимает `Theme | () => Theme`)
+- ✅ варианты компонентов (`variant="primary"`) — хелпер `resolveVariant(map, selected, fallback?)`
 
 ## 12. Единицы и адаптивность
 - ✅ `%`, `vw` / `vh`, `rem`, `auto`, `calc` — для `width` / `height` / `min*` / `max*` / `padding` у `Box` / `Flex`; `gap` / `margin` / `borderRadius` пока принимают только px; `calc` — один оператор (`A + B` или `A - B`)
@@ -147,7 +147,7 @@ a11y (Фаза 14), роутинг (Фаза 15/16).
 
 ## Текущий набор (для ориентира)
 - **Примитивы:** `Box`, `Text`, `Row`, `Column`, `Stack`, `Grid`, `Input`, `Image`, `Icon`, `Path`, `Svg`
-  (+ control-flow `Show`/`For`/`Index`/`Switch`, `ThemeProvider`, сырой `Instance` как escape-hatch).
+  (+ control-flow `Show`/`For`/`Index`/`Switch`, `ThemeProvider` (принимает `Theme | () => Theme` — реактивная смена темы), сырой `Instance` как escape-hatch).
 - **Виджеты (`@cairn/widgets`):** `Button` (primary / secondary / ghost), `Slider`, `Checkbox`, `Switch`, `Divider`.
 - **Адаптивные утилиты (`@cairn/primitives`):** `useViewport`, `useBreakpoint`, `responsive`, `pickBreakpoint`.
 - **`BaseStyle` сейчас:** `width`, `height`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`
@@ -171,9 +171,13 @@ a11y (Фаза 14), роутинг (Фаза 15/16).
   `letterSpacing`, `textTransform`, `textDecoration`,
   `maxLines`, `ellipsis`,
   `overflow`,
+  `cursor` (применяется к канвасу на hover),
+  `pointerEvents` (`'none'` — пропуск хит-теста),
+  `userSelect` (типизирован, инертен — v1 limitation),
   `gridTemplateColumns`, `gridTemplateRows`, `gridTemplateAreas`,
   `justifyItems`, `alignItems`
   (дочерние grid-пропсы: `gridColumn`, `gridRow`, `gridArea`),
   `transform` (translate / scale / rotate / skew — один объект или массив), `transformOrigin`.
 - **Состояния:** `hover`, `focus`, `active`, `pressed`, `disabled` (вложенные варианты, live).
 - **Стилизация:** инлайн `Style`, массив `Style[]` (каскад), функция `(theme) => Style`, `StyleSheet.create`.
+- **Тема (`@cairn/style`):** `createTheme`, `useTheme`, `ThemeTokens` (`colors`/`spacing`/`radii`/`fontSizes`), `resolveVariant(map, selected, fallback?)` (хелпер вариантов компонентов).
