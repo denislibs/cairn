@@ -15,3 +15,5 @@ export { GridNode } from './grid';
 export type { GridNodeProps, GridAlign } from './grid';
 export { resolveLength } from './length';
 export type { Length, LengthContext } from './length';
+export { ScrollNode } from './scroll';
+export type { ScrollNodeProps } from './scroll';
