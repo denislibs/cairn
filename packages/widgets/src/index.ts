@@ -18,6 +18,8 @@ export { RadioGroup, Radio, radioGroupContext } from './radio';
 export type { RadioGroupProps, RadioGroupContextValue, RadioProps } from './radio';
 export { Field, useField, useFieldOptional, fieldContext } from './field';
 export type { FieldProps, FieldContextValue, FieldLabelProps, FieldControlProps, FieldHelperProps, FieldErrorProps, FieldComponent } from './field';
+export { Input } from './input';
+export type { InputProps } from './input';
 export { Slider } from './slider';
 export type { SliderProps } from './slider';
 export { Modal } from './modal';
