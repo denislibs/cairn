@@ -14,6 +14,7 @@ export interface Instance {
   children: Instance[];
   handlers?: EventHandlers;
   focusable?: boolean;
+  cursor?: string;
   paintOpacity?: number;
   clipChildren?: Radii | null;
   transform?: TransformSpec | null;

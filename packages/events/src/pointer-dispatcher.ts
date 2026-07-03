@@ -20,6 +20,7 @@ export interface PointerDispatcher {
 
 export interface PointerDispatcherHooks {
   onPointerDown?(path: HitNode[]): void; // fires on every pointerdown, incl. empty path
+  onHoverChange?(path: HitNode[]): void; // fires when the hovered target changes
 }
 
 // Absolute top-left of path[0] (the target): each node's offset is relative to the
@@ -56,6 +57,10 @@ export function createPointerDispatcher(
     }
     for (const n of newPath) {
       if (!oldSet.has(n)) dispatchTo(n, { type: 'pointerenter', ...coords });
+    }
+    // Fire onHoverChange when the topmost hovered target changes
+    if (newPath[0] !== hoverPath[0]) {
+      hooks?.onHoverChange?.(newPath);
     }
     hoverPath = newPath;
   };

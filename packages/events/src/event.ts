@@ -3,6 +3,7 @@ export interface HitNode {
   children: HitNode[];
   handlers?: EventHandlers;
   focusable?: boolean;
+  cursor?: string;
 }
 
 export interface CairnPointerEvent {
