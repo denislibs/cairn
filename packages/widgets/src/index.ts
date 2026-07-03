@@ -16,6 +16,8 @@ export { Switch } from './switch';
 export type { SwitchProps } from './switch';
 export { RadioGroup, Radio, radioGroupContext } from './radio';
 export type { RadioGroupProps, RadioGroupContextValue, RadioProps } from './radio';
+export { Field, useField, useFieldOptional, fieldContext } from './field';
+export type { FieldProps, FieldContextValue, FieldLabelProps, FieldControlProps, FieldHelperProps, FieldErrorProps, FieldComponent } from './field';
 export { Slider } from './slider';
 export type { SliderProps } from './slider';
 export { Modal } from './modal';
