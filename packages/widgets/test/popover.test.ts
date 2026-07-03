@@ -178,3 +178,39 @@ describe('Popover — onOpenChange', () => {
     });
   });
 });
+
+// ─── NF3: Native semantics ────────────────────────────────────────────────────
+
+describe('Popover — native semantics (NF3)', () => {
+  it('trigger expanded is false when closed', () => {
+    withReg((reg) => {
+      const trigger = Box({ style: { width: 40, height: 20 } });
+      const content = Box({ style: { width: 120, height: 80 } });
+      Popover({ trigger, children: content });
+      expect((trigger as any).semantics?.expanded).toBe(false);
+    });
+  });
+
+  it('trigger expanded becomes true when opened', () => {
+    withReg((reg) => {
+      const trigger = Box({ style: { width: 40, height: 20 } });
+      const content = Box({ style: { width: 120, height: 80 } });
+      const inst = Popover({ trigger, children: content });
+      reg.setAppRoot(inst);
+      trigger.handlers!.onClick?.({} as any);
+      expect((trigger as any).semantics?.expanded).toBe(true);
+    });
+  });
+
+  it('trigger expanded reverts to false when closed', () => {
+    withReg((reg) => {
+      const trigger = Box({ style: { width: 40, height: 20 } });
+      const content = Box({ style: { width: 120, height: 80 } });
+      const inst = Popover({ trigger, children: content });
+      reg.setAppRoot(inst);
+      trigger.handlers!.onClick?.({} as any); // open
+      trigger.handlers!.onClick?.({} as any); // close
+      expect((trigger as any).semantics?.expanded).toBe(false);
+    });
+  });
+});

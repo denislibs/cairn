@@ -91,6 +91,8 @@ describe('MenuItem — onSelect fires and menu closes', () => {
             active: () => -1,
             setActive: vi.fn(),
             register: () => 0,
+            handleRovingKey: () => false,
+            handleTypeaheadChar: () => false,
           },
           children: () => MenuItem({ label: 'Item 1', onSelect }),
         }),
