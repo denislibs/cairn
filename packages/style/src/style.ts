@@ -1,4 +1,4 @@
-import type { EdgeInsets, Justify, Align } from '@cairn/layout';
+import type { EdgeInsets, Justify, Align, TrackSize } from '@cairn/layout';
 
 /** Structural alias for ImageHandle from @cairn/host — kept local to avoid a cross-package dep. */
 export interface ImageHandle { readonly width: number; readonly height: number; }
@@ -57,6 +57,11 @@ export interface BaseStyle {
   flexBasis?: number;
   flexShrink?: number;
   flexWrap?: 'nowrap' | 'wrap';
+  gridTemplateColumns?: string | TrackSize[];
+  gridTemplateRows?: string | TrackSize[];
+  gridTemplateAreas?: string[]; // each string = a row of space-separated area names
+  justifyItems?: 'start' | 'center' | 'end' | 'stretch';
+  alignItems?: 'start' | 'center' | 'end' | 'stretch';
   zIndex?: number;
   // paint
   backgroundColor?: string;

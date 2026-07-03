@@ -1,5 +1,5 @@
 import { type Instance } from '@cairn/runtime';
-import { toEdgeInsets, type EdgeInsets, type LayoutNode } from '@cairn/layout';
+import { toEdgeInsets, type EdgeInsets, type LayoutNode, parsePlacement } from '@cairn/layout';
 import { type BaseStyle } from '@cairn/style';
 
 // Parent-data props: meaningful inside a Flex (flex) or Stack (left/top/right/bottom) parent.
@@ -15,6 +15,9 @@ export interface LayoutChildProps {
   margin?: number | Partial<EdgeInsets>;
   alignSelf?: 'start' | 'center' | 'end' | 'stretch';
   zIndex?: number;
+  gridColumn?: string | number;
+  gridRow?: string | number;
+  gridArea?: string;
 }
 
 export function applyLayoutChildProps(inst: Instance, props: LayoutChildProps): void {
@@ -35,6 +38,19 @@ export function applyLayoutChildProps(inst: Instance, props: LayoutChildProps): 
   if (props.margin !== undefined) inst.layout.margin = toEdgeInsets(props.margin);
   if (props.alignSelf !== undefined) inst.layout.alignSelf = props.alignSelf;
   if (props.zIndex !== undefined) inst.layout.zIndex = props.zIndex;
+  if (props.gridColumn !== undefined) {
+    const p = parsePlacement(props.gridColumn);
+    if (p.start !== undefined) inst.layout.gridColumnStart = p.start;
+    if (p.end !== undefined) inst.layout.gridColumnEnd = p.end;
+    if (p.span !== undefined) inst.layout.gridColumnSpan = p.span;
+  }
+  if (props.gridRow !== undefined) {
+    const p = parsePlacement(props.gridRow);
+    if (p.start !== undefined) inst.layout.gridRowStart = p.start;
+    if (p.end !== undefined) inst.layout.gridRowEnd = p.end;
+    if (p.span !== undefined) inst.layout.gridRowSpan = p.span;
+  }
+  if (props.gridArea !== undefined) inst.layout.gridArea = props.gridArea;
 }
 
 // Apply parent-data fields sourced from a resolved style onto a layout node, so
