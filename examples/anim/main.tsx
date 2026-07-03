@@ -1,7 +1,7 @@
 import { createSignal } from '@cairn/reactivity';
 import { createWebHost } from '@cairn/platform-web';
 import { mount } from '@cairn/runtime';
-import { Box, Column, Text } from '@cairn/primitives';
+import { Box, Column, Text, Presence } from '@cairn/primitives';
 import { StyleSheet } from '@cairn/style';
 import { Button } from '@cairn/widgets';
 
@@ -10,6 +10,7 @@ const host = createWebHost(canvas);
 
 const [on, setOn] = createSignal(false);
 const [spring, setSpring] = createSignal(false);
+const [shown, setShown] = createSignal(true);
 
 const s = StyleSheet.create({
   card: {
@@ -116,6 +117,45 @@ function App() {
               variant="secondary"
               style={{ width: 200, height: 48, borderRadius: 14 }}
               onClick={() => setSpring(v => !v)}
+            />
+          </Column>
+
+          {/* Divider */}
+          <Box style={s.divider} />
+
+          {/* AN3 — enter/exit presence demo */}
+          <Column style={s.section} mainAxisSize="min">
+            <Column style={{ gap: 6, align: 'center' }} mainAxisSize="min">
+              <Text style={s.title}>Presence Demo</Text>
+              <Text style={s.subtitle}>AN3 — появление / удаление (enter/exit)</Text>
+            </Column>
+
+            {Presence({
+              when: shown,
+              from: { opacity: 0, transform: { translateY: 24, scale: 0.9 } },
+              duration: 300,
+              easing: 'ease-out',
+              children: () => (
+                <Box
+                  style={{
+                    width: 200,
+                    height: 90,
+                    backgroundColor: '#7c3aed',
+                    borderRadius: 18,
+                    alignX: 'center',
+                    alignY: 'center',
+                  }}
+                >
+                  <Text style={s.label}>Привет</Text>
+                </Box>
+              ),
+            })}
+
+            <Button
+              label="Показать / Скрыть"
+              variant="primary"
+              style={{ width: 200, height: 48, borderRadius: 14 }}
+              onClick={() => setShown(v => !v)}
             />
           </Column>
 
