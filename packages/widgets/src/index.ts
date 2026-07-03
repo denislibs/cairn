@@ -10,3 +10,7 @@ export { Slider } from './slider';
 export type { SliderProps } from './slider';
 export { Modal } from './modal';
 export type { ModalProps } from './modal';
+export { Tooltip } from './tooltip';
+export type { TooltipProps } from './tooltip';
+export { Popover } from './popover';
+export type { PopoverProps } from './popover';
