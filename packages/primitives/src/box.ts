@@ -1,4 +1,5 @@
 import { type Renderer, type Radii, type FillStyle, type Gradient, createPath } from '@cairn/host';
+import { computeObjectFit } from './image';
 import { BoxNode, toEdgeInsets } from '@cairn/layout';
 import { type Instance, bind } from '@cairn/runtime';
 import { type BaseStyle, type CornerRadius, type BorderSide, type StyleGradient, type Shadow } from '@cairn/style';
@@ -121,6 +122,15 @@ function paintBox(r: Renderer, s: BaseStyle, w: number, h: number): void {
     r.setShadow(null);
     r.restore();
   }
+  if (s.backgroundImage) {
+    r.save();
+    r.clipRoundRect({ x: 0, y: 0, width: w, height: h }, radiusToRadii(s.borderRadius));
+    const fit = s.backgroundSize ?? 'cover';
+    const { src, dest } = computeObjectFit(fit, { x: 0, y: 0, width: w, height: h }, { w: s.backgroundImage.width, h: s.backgroundImage.height });
+    r.drawImage(s.backgroundImage, dest, src);
+    r.restore();
+  }
+
   if (s.border) {
     const bw = s.border.width;
     r.save();

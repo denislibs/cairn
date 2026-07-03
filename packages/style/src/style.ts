@@ -1,5 +1,8 @@
 import type { EdgeInsets, Justify, Align } from '@cairn/layout';
 
+/** Structural alias for ImageHandle from @cairn/host — kept local to avoid a cross-package dep. */
+export interface ImageHandle { readonly width: number; readonly height: number; }
+
 // Fixed precedence: later states override earlier ones (disabled wins).
 // STATE_ORDER is the single source of truth; StateName is derived from it so the two
 // can never drift out of sync. Frozen so it cannot be mutated at runtime.
@@ -89,6 +92,8 @@ export interface BaseStyle {
   transformOrigin?: { x: number; y: number };
   filter?: string;
   backdropFilter?: string;
+  backgroundImage?: ImageHandle;
+  backgroundSize?: 'cover' | 'contain' | 'fill';
 }
 
 export type Style = BaseStyle & Partial<Record<StateName, BaseStyle>>;
