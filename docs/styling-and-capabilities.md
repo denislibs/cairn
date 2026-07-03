@@ -103,9 +103,9 @@
 - ❌ варианты компонентов (`variant="primary"`)
 
 ## 12. Единицы и адаптивность
-- ✅ только px; ❌ `%`, `vw` / `vh`, `rem`, `auto`, `calc`
-- ❌ media-queries / breakpoints
-- 🟡 адаптив через `SurfaceMetrics` (реактивные width / height) — можно вручную считать от размера канваса
+- ✅ `%`, `vw` / `vh`, `rem`, `auto`, `calc` — для `width` / `height` / `min*` / `max*` / `padding` у `Box` / `Flex`; `gap` / `margin` / `borderRadius` пока принимают только px; `calc` — один оператор (`A + B` или `A - B`)
+- ✅ media-queries / breakpoints — через `useBreakpoint` / `useViewport` / `responsive()`, реактивно от `SurfaceMetrics`
+- 🟡 адаптив через `SurfaceMetrics` (реактивные width / height) — хелперы `useBreakpoint` / `useViewport` / `responsive()` уже есть в `@cairn/primitives`
 
 ## 13. Инфраструктура «настоящего приложения»
 - ❌ `ScrollView` (вертикальный / горизонтальный, инерция)
@@ -149,9 +149,11 @@ a11y (Фаза 14), роутинг (Фаза 15/16).
 - **Примитивы:** `Box`, `Text`, `Row`, `Column`, `Stack`, `Grid`, `Input`, `Image`, `Icon`, `Path`, `Svg`
   (+ control-flow `Show`/`For`/`Index`/`Switch`, `ThemeProvider`, сырой `Instance` как escape-hatch).
 - **Виджеты (`@cairn/widgets`):** `Button` (primary / secondary / ghost), `Slider`, `Checkbox`, `Switch`, `Divider`.
-- **`BaseStyle` сейчас:** `width`, `height`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`,
+- **Адаптивные утилиты (`@cairn/primitives`):** `useViewport`, `useBreakpoint`, `responsive`, `pickBreakpoint`.
+- **`BaseStyle` сейчас:** `width`, `height`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`
+  (все принимают `Length`: px-числа, `'50%'`, `'100vw'`, `'2rem'`, `'auto'`, `'calc(100% - 16px)'`),
   `left`, `top`, `right`, `bottom`, `inset`,
-  `padding`, `margin` (+ `EdgeInsets`), `gap`, `rowGap`, `columnGap`,
+  `padding` (принимает `Length`; `margin`, `gap`, `rowGap`, `columnGap` — пока px), `margin` (+ `EdgeInsets`), `gap`, `rowGap`, `columnGap`,
   `justify`, `align`, `alignSelf`, `alignX`, `alignY`,
   `flex`, `flexShrink`, `flexBasis`, `flexWrap`,
   `zIndex`, `aspectRatio`,
