@@ -1,6 +1,6 @@
-import type { Instance } from '@cairn/runtime';
+import type { Instance, SemanticsNode } from '@cairn/runtime';
 import { Show } from '@cairn/runtime';
-import { createSignal, type Accessor } from '@cairn/reactivity';
+import { createSignal, createEffect, type Accessor } from '@cairn/reactivity';
 import { Box, Row, Column, Text, Icon, applyLayoutChildProps, mergeStyles, type StyleInput, type LayoutChildProps } from '@cairn/primitives';
 import { useWidgetTheme } from './theme';
 import { createControl, type ControlState } from './control';
@@ -41,9 +41,24 @@ export function Checkbox(props: CheckboxProps): Instance {
     props.onChange?.(next);
   };
 
-  const { state, handlers } = createControl({
+  const { state, handlers, setFocusVisible } = createControl({
     disabled: props.disabled,
     onClick: toggle,
+  });
+
+  // --- Semantics ---
+  const semantics: SemanticsNode = {
+    role: 'checkbox',
+    label: props.label,
+    checked: props.indeterminate ? 'mixed' : read(),
+    disabled: !!props.disabled,
+    onActivate: toggle,
+    onFocus: (keyboard: boolean) => setFocusVisible(keyboard),
+    onBlur: () => setFocusVisible(false),
+  };
+  // Keep checked in sync reactively
+  createEffect(() => {
+    semantics.checked = props.indeterminate ? 'mixed' : read();
   });
 
   // --- Render-fn slot ---
@@ -56,6 +71,7 @@ export function Checkbox(props: CheckboxProps): Instance {
       ...handlers,
       children: child,
     });
+    instance.semantics = semantics;
     applyLayoutChildProps(instance, props);
     return instance;
   }
@@ -139,6 +155,7 @@ export function Checkbox(props: CheckboxProps): Instance {
     });
   }
 
+  instance.semantics = semantics;
   applyLayoutChildProps(instance, props);
   return instance;
 }
