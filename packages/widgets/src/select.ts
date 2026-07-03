@@ -108,6 +108,8 @@ export function Select(props: SelectProps): Instance {
     paddingLeft: theme.control.padX.md,
     paddingRight: theme.control.padX.md,
     height: theme.control.height.md,
+    minWidth: 140,
+    alignY: 'center' as const,
     opacity: props.disabled ? 0.5 : 1,
     cursor: props.disabled ? 'default' : 'pointer',
   });
@@ -124,7 +126,6 @@ export function Select(props: SelectProps): Instance {
     style: () => ({
       color: isPlaceholder() ? theme.colors.textMuted : theme.colors.text,
       fontSize: theme.fontSizes.sm,
-      flex: 1,
     }),
     children: labelText,
   });
@@ -140,7 +141,6 @@ export function Select(props: SelectProps): Instance {
     style: {
       alignY: 'center' as const,
       gap: theme.spacing.xs,
-      width: '100%' as any,
     },
     children: [triggerLabel, chevron],
   });

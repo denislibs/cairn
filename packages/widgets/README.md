@@ -90,7 +90,7 @@ Status: ✅ stable · 🧪 in progress · ⏳ planned
 | `Radio` / `RadioGroup` | compound | ✅ |
 | `Switch` | flat | ✅ |
 | `Field` | compound | ✅ |
-| `Select` / `Option` | compound | ⏳ |
+| `Select` / `Option` | compound | ✅ (see Overlays) |
 | `Combobox` | compound | ⏳ |
 | `Slider` | flat | ⏳ |
 | `Form` | compound | ⏳ |
@@ -98,10 +98,12 @@ Status: ✅ stable · 🧪 in progress · ⏳ planned
 ### Overlays
 | Component | Kind | Status |
 | --- | --- | --- |
+| `Popover` | flat | ✅ |
+| `Tooltip` | flat | ✅ |
+| `Menu` / `MenuItem` | compound | ✅ |
+| `Select` / `Option` | compound | ✅ |
 | `Dialog` / `AlertDialog` | compound | ⏳ |
 | `Drawer` | compound | ⏳ |
-| `Popover` | compound | ⏳ |
-| `Tooltip` | flat | ⏳ |
 | `Toast` | compound | ⏳ |
 
 ### Navigation
@@ -187,3 +189,32 @@ Input({ placeholder: 'Jane Doe', value, onInput: setValue, size: 'md' });
 ```
 
 > `TextArea` is planned for H1b — a correct multiline field needs a multiline host text-input seam (today the platform proxy is single-line).
+
+## Overlays & selection
+
+All position via the canvas overlay layer (`Portal` + `computePlacement`), close on outside-click / Escape, and are platform-agnostic.
+
+```tsx
+// Popover — click trigger to toggle a themed panel
+Popover({ trigger: Button({ label: 'Open' }), children: panelInstance, side: 'bottom' });
+
+// Tooltip — hover bubble
+Tooltip({ trigger: Button({ label: 'Hover' }), label: 'Helpful hint' });
+
+// Menu (compound) — roving keyboard, close-on-select
+Menu({ trigger: Button({ label: 'Actions' }), children: () =>
+  Column({ mainAxisSize: 'min', children: [
+    MenuItem({ label: 'Cut',  onSelect: cut }),
+    MenuItem({ label: 'Copy', onSelect: copy }),
+    MenuItem({ label: 'Paste', disabled: true }),
+  ] }),
+});
+
+// Select (compound) — listbox, controlled/uncontrolled, keyboard
+Select({ placeholder: 'Choose…', value, onChange: setValue, children: () =>
+  Column({ mainAxisSize: 'min', children: [
+    Option({ value: 'a', label: 'Apple' }),
+    Option({ value: 'b', label: 'Banana' }),
+  ] }),
+});
+```
