@@ -33,3 +33,5 @@ export { Portal } from './portal';
 export type { PortalProps } from './portal';
 export { computePlacement, getAbsRect } from './placement';
 export type { Side, PlaceAlign, Rect } from './placement';
+export { Presence } from './presence';
+export type { PresenceProps } from './presence';
