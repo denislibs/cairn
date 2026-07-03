@@ -12,4 +12,6 @@ export interface Host {
   input: InputSource;
   textInput: TextInputService;
   setCursor?(cursor: string): void;
+  // Load an image by URL (async, cached by the platform). Returns a drawable handle.
+  loadImage?(url: string): Promise<import('./types').ImageHandle>;
 }
