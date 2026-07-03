@@ -18,16 +18,31 @@ export class Canvas2DRenderer implements Renderer {
   private ctx: CanvasRenderingContext2D;
   private logicalWidth = 0;
   private logicalHeight = 0;
+  private lastBackingW = -1;
+  private lastBackingH = -1;
 
   constructor(private surface: CanvasSurface) {
     this.ctx = surface.context;
   }
 
   // Size the backing store to logical*dpr and draw in logical coordinates.
+  // Idempotent: setting canvas.width/height CLEARS and resets the context, so we
+  // only touch the backing store when it actually changed. This makes it safe to
+  // call every frame as a self-healing size sync (crisp text after zoom / DPR change).
   resize(logicalWidth: number, logicalHeight: number, dpr: number): void {
     this.logicalWidth = logicalWidth;
     this.logicalHeight = logicalHeight;
-    this.surface.setBackingSize(Math.round(logicalWidth * dpr), Math.round(logicalHeight * dpr));
+    const backingW = Math.round(logicalWidth * dpr);
+    const backingH = Math.round(logicalHeight * dpr);
+    if (backingW === this.lastBackingW && backingH === this.lastBackingH) {
+      // Backing already correct — just ensure the base transform is the current dpr
+      // (cheap; guards against any external context-state reset).
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return;
+    }
+    this.lastBackingW = backingW;
+    this.lastBackingH = backingH;
+    this.surface.setBackingSize(backingW, backingH);
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
