@@ -20,6 +20,7 @@ function makeNoopRenderer(): Renderer {
     translate() {},
     scale() {},
     clipRect() {},
+    clipRoundRect() {},
     setShadow() {},
     setGlobalAlpha() {},
     setLineDash() {},

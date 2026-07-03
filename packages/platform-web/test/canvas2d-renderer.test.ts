@@ -244,3 +244,33 @@ test('setLineDash forwards segments to ctx.setLineDash', () => {
   r.setLineDash([6, 4]);
   expect(ctx.calls).toContainEqual(['setLineDash', [6, 4]]);
 });
+
+test('clipRoundRect calls beginPath, roundRect with normalized radii, then clip (scalar)', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  r.clipRoundRect({ x: 0, y: 0, width: 10, height: 10 }, 4);
+  expect(ctx.calls).toContainEqual(['beginPath']);
+  expect(ctx.calls).toContainEqual(['roundRect', 0, 0, 10, 10, [4, 4, 4, 4]]);
+  expect(ctx.calls).toContainEqual(['clip']);
+});
+
+test('clipRoundRect accepts per-corner radii object', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  r.clipRoundRect({ x: 5, y: 5, width: 20, height: 15 }, { tl: 1, tr: 2, br: 3, bl: 4 });
+  expect(ctx.calls).toContainEqual(['beginPath']);
+  expect(ctx.calls).toContainEqual(['roundRect', 5, 5, 20, 15, [1, 2, 3, 4]]);
+  expect(ctx.calls).toContainEqual(['clip']);
+});
+
+test('clipRoundRect call order is beginPath → roundRect → clip', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  r.clipRoundRect({ x: 0, y: 0, width: 10, height: 10 }, 4);
+  const names = ctx.calls.map((c) => c[0]);
+  const bp = names.indexOf('beginPath');
+  const rr = names.indexOf('roundRect');
+  const cl = names.indexOf('clip');
+  expect(bp).toBeLessThan(rr);
+  expect(rr).toBeLessThan(cl);
+});
