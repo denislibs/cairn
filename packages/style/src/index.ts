@@ -5,3 +5,5 @@ export { resolveStyle } from './resolve';
 export { createTheme, themeContext, useTheme } from './theme';
 export type { Theme } from './theme';
 export { composeFont } from './font';
+export { applyTextTransform } from './text-transform';
+export type { TextTransform } from './text-transform';

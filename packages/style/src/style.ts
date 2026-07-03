@@ -70,6 +70,8 @@ export interface BaseStyle {
   fontSize?: number;
   fontWeight?: number | 'normal' | 'bold';
   fontStyle?: 'normal' | 'italic';
+  letterSpacing?: number;
+  textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
   overflow?: 'visible' | 'hidden' | 'clip';
 }
 

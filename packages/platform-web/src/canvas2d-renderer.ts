@@ -160,16 +160,27 @@ export class Canvas2DRenderer implements Renderer {
   }
 
   drawText(text: string, pos: Point, style: TextStyle): void {
+    const ls = style.letterSpacing;
+    const canLS = 'letterSpacing' in this.ctx;
+    const prevLS = canLS ? (this.ctx as any).letterSpacing : undefined;
+    if (canLS && ls != null) (this.ctx as any).letterSpacing = `${ls}px`;
     this.ctx.font = style.font;
     this.ctx.fillStyle = style.color ?? '#000';
     this.ctx.textAlign = style.align ?? 'left';
     this.ctx.textBaseline = style.baseline ?? 'alphabetic';
     this.ctx.fillText(text, pos.x, pos.y);
+    if (canLS && ls != null) (this.ctx as any).letterSpacing = prevLS;
   }
 
   measureText(text: string, style: TextStyle): TextMeasurement {
+    const ls = style.letterSpacing;
+    const canLS = 'letterSpacing' in this.ctx;
+    const prevLS = canLS ? (this.ctx as any).letterSpacing : undefined;
+    if (canLS && ls != null) (this.ctx as any).letterSpacing = `${ls}px`;
     this.ctx.font = style.font;
-    return { width: this.ctx.measureText(text).width };
+    const width = this.ctx.measureText(text).width;
+    if (canLS && ls != null) (this.ctx as any).letterSpacing = prevLS;
+    return { width };
   }
 
   drawImage(image: ImageHandle, dest: Rect, src?: Rect): void {
