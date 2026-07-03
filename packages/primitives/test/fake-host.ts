@@ -5,6 +5,8 @@ import type {
   TextInputService,
   TextInputClient,
   TextEditingValue,
+  AccessibilityBridge,
+  SemanticsNodeData,
 } from '@cairn/host';
 import { createFakeRenderer } from './fake';
 
@@ -49,7 +51,19 @@ export function createFakeTextInput() {
   };
 }
 
-export function createFakeHost() {
+/** Minimal a11y bridge stub — records synced nodes for inspection. */
+export function createFakeA11yBridge(): AccessibilityBridge & { synced: SemanticsNodeData[] } {
+  const synced: SemanticsNodeData[] = [];
+  return {
+    synced,
+    sync(nodes) { synced.splice(0, synced.length, ...nodes); },
+    focus() {},
+    announce() {},
+    dispose() {},
+  };
+}
+
+export function createFakeHost(options?: { a11y?: boolean }) {
   const renderer = createFakeRenderer();
   const pending: Array<() => void> = [];
   const scheduler: FrameScheduler = {
@@ -68,11 +82,13 @@ export function createFakeHost() {
   };
   const input = { onPointer: () => () => {}, onWheel: () => () => {}, onKey: () => () => {} };
   const textInput = createFakeTextInput();
-  const host: Host = { renderer, scheduler, metrics, input, textInput: textInput.service };
+  const a11y = options?.a11y ? createFakeA11yBridge() : undefined;
+  const host: Host = { renderer, scheduler, metrics, input, textInput: textInput.service, a11y };
   return {
     host,
     renderer,
     textInput,
+    a11y: a11y ?? null,
     flush() {
       const q = pending.splice(0);
       for (const f of q) f();

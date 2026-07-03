@@ -92,3 +92,109 @@ test('Input is focusable', () => {
   dispose();
   setFrameRequester(null);
 });
+
+// ── NF3b Task 3: textbox semantics + a11y editing path ────────────────────────
+
+test('(a11y) instance.semantics has role textbox with label and value', () => {
+  setFrameRequester(() => {});
+  const fh = createFakeHost({ a11y: true });
+  const { inst, dispose } = mountInput(fh.host, () =>
+    Input({ value: 'hello', label: 'Name', placeholder: 'Enter name', style: { width: 100 } }),
+  );
+  const sem = (inst as any).semantics;
+  expect(sem).toBeDefined();
+  expect(sem.role).toBe('textbox');
+  expect(sem.label).toBe('Name');
+  expect(sem.value).toBe('hello');
+  expect(sem.placeholder).toBe('Enter name');
+  dispose();
+  setFrameRequester(null);
+});
+
+test('(a11y) semantics.value reflects text() reactively', () => {
+  setFrameRequester(() => {});
+  const fh = createFakeHost({ a11y: true });
+  const [val, setVal] = createSignal('a');
+  const { inst, dispose } = mountInput(fh.host, () =>
+    Input({ value: val, style: { width: 100 } }),
+  );
+  setVal('updated');
+  const sem = (inst as any).semantics;
+  expect(sem.value).toBe('updated');
+  dispose();
+  setFrameRequester(null);
+});
+
+test('(a11y) semantics.onInput updates text() and fires props.onInput', () => {
+  setFrameRequester(() => {});
+  const fh = createFakeHost({ a11y: true });
+  const received: string[] = [];
+  const { inst, dispose } = mountInput(fh.host, () =>
+    Input({ onInput: (t) => received.push(t), style: { width: 100 } }),
+  );
+  const sem = (inst as any).semantics;
+  sem.onInput('typed value');
+  expect(received).toEqual(['typed value']);
+  expect(sem.value).toBe('typed value');
+  dispose();
+  setFrameRequester(null);
+});
+
+test('(a11y) semantics.onKeyDown Enter fires onSubmit and returns true', () => {
+  setFrameRequester(() => {});
+  const fh = createFakeHost({ a11y: true });
+  const submitted: string[] = [];
+  const { inst, dispose } = mountInput(fh.host, () =>
+    Input({ onSubmit: (t) => submitted.push(t), style: { width: 100 } }),
+  );
+  const sem = (inst as any).semantics;
+  sem.onInput('done');
+  const result = sem.onKeyDown('Enter', { shift: false, ctrl: false, alt: false, meta: false });
+  expect(result).toBe(true);
+  expect(submitted).toEqual(['done']);
+  dispose();
+  setFrameRequester(null);
+});
+
+test('(a11y) onKeyDown non-Enter returns false', () => {
+  setFrameRequester(() => {});
+  const fh = createFakeHost({ a11y: true });
+  const { inst, dispose } = mountInput(fh.host, () => Input({ style: { width: 100 } }));
+  const sem = (inst as any).semantics;
+  expect(sem.onKeyDown('ArrowLeft', { shift: false, ctrl: false, alt: false, meta: false })).toBe(false);
+  dispose();
+  setFrameRequester(null);
+});
+
+test('(a11y) focusing does NOT start the seam session', () => {
+  setFrameRequester(() => {});
+  const fh = createFakeHost({ a11y: true });
+  const { inst, dispose } = mountInput(fh.host, () => Input({ value: 'hi', style: { width: 100 } }));
+  inst.handlers!.onFocus!({ target: inst } as never);
+  // seam should NOT have been started
+  expect(fh.textInput.lastInitial).toBeNull();
+  dispose();
+  setFrameRequester(null);
+});
+
+test('(no a11y) focusing still starts the seam session (existing behavior)', () => {
+  setFrameRequester(() => {});
+  const fh = createFakeHost(); // no a11y
+  const { inst, dispose } = mountInput(fh.host, () => Input({ value: 'hi', style: { width: 100 } }));
+  inst.handlers!.onFocus!({ target: inst } as never);
+  expect(fh.textInput.lastInitial).toEqual({ text: 'hi', selectionStart: 2, selectionEnd: 2 });
+  dispose();
+  setFrameRequester(null);
+});
+
+test('(a11y) label falls back to placeholder when no explicit label', () => {
+  setFrameRequester(() => {});
+  const fh = createFakeHost({ a11y: true });
+  const { inst, dispose } = mountInput(fh.host, () =>
+    Input({ placeholder: 'Search…', style: { width: 100 } }),
+  );
+  const sem = (inst as any).semantics;
+  expect(sem.label).toBe('Search…');
+  dispose();
+  setFrameRequester(null);
+});

@@ -1,6 +1,7 @@
 import type { Renderer, TextInputConnection, TextEditingValue } from '@cairn/host';
 import { BoxNode, toEdgeInsets } from '@cairn/layout';
 import { type Instance, bind, useHost, type MaybeReactive } from '@cairn/runtime';
+import type { SemanticsNode } from '@cairn/runtime';
 import { createSignal, createEffect, untrack } from '@cairn/reactivity';
 import { type BaseStyle } from '@cairn/style';
 import type { CairnFocusEvent } from '@cairn/events';
@@ -22,6 +23,8 @@ export interface InputProps extends EventProps {
   onInput?: (text: string) => void;
   onSubmit?: (text: string) => void;
   placeholder?: MaybeReactive<string>;
+  /** Accessible label for the field (aria-label). Falls back to placeholder when omitted. */
+  label?: string;
   style?: StyleInput;
 }
 
@@ -54,12 +57,16 @@ export function Input(props: InputProps = {}): Instance {
   const interactiveProps = {
     ...props,
     onFocus: (e: CairnFocusEvent) => {
-      conn?.close(); // guard re-entrant focus: never orphan a live session
-      conn = host.textInput.start(client, {
-        text: untrack(text),
-        selectionStart: untrack(caret),
-        selectionEnd: untrack(caret),
-      });
+      if (!host.a11y) {
+        // No a11y bridge: use the platform text-input seam for editing.
+        conn?.close(); // guard re-entrant focus: never orphan a live session
+        conn = host.textInput.start(client, {
+          text: untrack(text),
+          selectionStart: untrack(caret),
+          selectionEnd: untrack(caret),
+        });
+      }
+      // With a11y bridge: the bridge's real <input> is the editor; seam not started.
       setFocused(true);
       props.onFocus?.(e);
     },
@@ -114,11 +121,49 @@ export function Input(props: InputProps = {}): Instance {
     placeholder = String(v);
   });
 
-  return {
+  // ── A11y: textbox semantics ────────────────────────────────────────────────
+  // Build a mutable SemanticsNode; createEffect keeps reactive fields in sync.
+  const semantics: SemanticsNode = {
+    role: 'textbox',
+    label: props.label ?? (typeof props.placeholder === 'string' ? props.placeholder : undefined),
+    value: seed,
+    placeholder: typeof props.placeholder === 'string' ? props.placeholder : undefined,
+    onInput: (v: string) => {
+      setText(v);
+      setCaret(v.length);
+      props.onInput?.(v);
+    },
+    onKeyDown: (key: string) => {
+      if (key === 'Enter') {
+        props.onSubmit?.(untrack(text));
+        return true;
+      }
+      return false;
+    },
+    onFocus: (_kb: boolean) => {
+      setFocused(true);
+    },
+    onBlur: () => {
+      setFocused(false);
+    },
+  };
+
+  // Keep reactive fields in sync via createEffect
+  createEffect(() => {
+    semantics.value = text();
+    semantics.placeholder = placeholder || undefined;
+    // label: explicit prop takes priority; else re-read reactive placeholder
+    if (!props.label) {
+      semantics.label = placeholder || undefined;
+    }
+  });
+
+  const instance: Instance = {
     layout,
     children: [],
     focusable: true,
     handlers,
+    semantics,
     paintSelf(r: Renderer) {
       const s = current;
       const font = s.font ?? DEFAULT_FONT;
@@ -152,4 +197,5 @@ export function Input(props: InputProps = {}): Instance {
       r.restore();
     },
   };
+  return instance;
 }
