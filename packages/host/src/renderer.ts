@@ -25,6 +25,11 @@ export interface Renderer {
   restore(): void;
   translate(x: number, y: number): void;
   scale(x: number, y: number): void;
+  rotate(radians: number): void;
+  // Multiplies the current matrix (enables skew). a,b,c,d,e,f per canvas setTransform semantics.
+  transform(a: number, b: number, c: number, d: number, e: number, f: number): void;
+  // Sets a CSS filter string for subsequent draws; null clears it. No-op where unsupported.
+  setFilter(filter: string | null): void;
   // Intersects the current clip region (does not replace it). Wrap in
   // save()/restore() to scope a clip to a subtree.
   clipRect(rect: Rect): void;

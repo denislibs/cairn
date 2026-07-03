@@ -60,6 +60,15 @@ export class Canvas2DRenderer implements Renderer {
   scale(x: number, y: number): void {
     this.ctx.scale(x, y);
   }
+  rotate(radians: number): void {
+    this.ctx.rotate(radians);
+  }
+  transform(a: number, b: number, c: number, d: number, e: number, f: number): void {
+    this.ctx.transform(a, b, c, d, e, f);
+  }
+  setFilter(filter: string | null): void {
+    if ('filter' in this.ctx) (this.ctx as any).filter = filter ?? 'none';
+  }
   clipRect(rect: Rect): void {
     this.ctx.beginPath();
     this.ctx.rect(rect.x, rect.y, rect.width, rect.height);
