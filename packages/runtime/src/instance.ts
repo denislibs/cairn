@@ -1,4 +1,4 @@
-import type { Renderer } from '@cairn/host';
+import type { Renderer, Radii } from '@cairn/host';
 import type { LayoutNode } from '@cairn/layout';
 import type { EventHandlers } from '@cairn/events';
 
@@ -9,6 +9,7 @@ export interface Instance {
   handlers?: EventHandlers;
   focusable?: boolean;
   paintOpacity?: number;
+  clipChildren?: Radii | null;
 }
 
 // Walk the instance tree, translating into each node's local coordinate space.
@@ -19,6 +20,9 @@ export function paint(inst: Instance, r: Renderer, parentAlpha = 1): void {
   const alpha = o !== undefined && o < 1 ? parentAlpha * o : parentAlpha;
   if (alpha !== parentAlpha) r.setGlobalAlpha(alpha);
   inst.paintSelf(r);
+  if (inst.clipChildren !== undefined && inst.clipChildren !== null) {
+    r.clipRoundRect({ x: 0, y: 0, width: inst.layout.size.w, height: inst.layout.size.h }, inst.clipChildren);
+  }
   const ordered = orderByZ(inst.children);
   for (const child of ordered) paint(child, r, alpha);
   r.restore();
