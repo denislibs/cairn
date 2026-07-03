@@ -13,3 +13,9 @@ export type {
   MaterialTheme,
   MaterialThemeOptions,
 } from './theme';
+export { Button } from './button';
+export type { ButtonProps, MaterialColor, ButtonVariant } from './button';
+export { IconButton } from './icon-button';
+export type { IconButtonProps } from './icon-button';
+export { Fab } from './fab';
+export type { FabProps } from './fab';
