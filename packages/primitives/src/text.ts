@@ -6,6 +6,7 @@ import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
 import type { EventProps } from './events';
 import { applyLayoutChildProps, applyLayoutStyle, type LayoutChildProps } from './layout-child';
+import { createStyleTransitions } from './transitions';
 
 export interface TextProps extends EventProps, LayoutChildProps {
   children?: MaybeReactive<string | number>;
@@ -22,6 +23,7 @@ function fontSizePx(font: string): number {
 
 export function Text(props: TextProps = {}): Instance {
   const { resolved, handlers } = createInteractive(props);
+  const styleSource = createStyleTransitions(resolved);
   const layout = new TextNode({ text: '', style: { font: '16px sans-serif' } });
   let current: BaseStyle = {};
   let rawText = '';
@@ -83,7 +85,7 @@ export function Text(props: TextProps = {}): Instance {
   };
 
   // Reactive style: font drives both layout (measure) and paint; color is paint-only.
-  bind(resolved, (s) => {
+  bind(styleSource, (s) => {
     current = s;
     layout.style = { ...layout.style, font: composeFont(s), letterSpacing: s.letterSpacing };
     layout.text = applyTextTransform(rawText, s.textTransform);

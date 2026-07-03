@@ -17,6 +17,13 @@
 
 ---
 
+> **Статус блока S1–S7 (стилизация):** ЗАВЕРШЁН. Все семь фаз продакшн-стилизации реализованы:
+> overflow (S1), текстовый движок (S2), трансформации и эффекты (S3), Grid (S4), единицы/адаптивность (S5), тема/токены/варианты/курсор (S6), анимации (S7).
+> Оставшиеся ❌-строки в этом документе относятся к нестилизационной инфраструктуре:
+> scroll, оверлеи, жесты, a11y, производительность, роутинг, i18n, выделение текста.
+
+---
+
 ## 1. Размеры и box-model
 - ✅ `width`, `height`
 - ✅ `minWidth` / `maxWidth` / `minHeight` / `maxHeight`
@@ -77,10 +84,10 @@
 - ❌ 3D-трансформации (perspective / rotateX / rotateY)
 
 ## 8. Анимации и переходы (Фаза 13)
-- ❌ `transition` (свойство / длительность / easing / delay)
-- ❌ keyframes-анимации
-- ❌ spring-физика
-- ❌ анимация появления / удаления списков (FLIP)
+- ✅ `transition` (свойство / длительность / easing / delay) — декларативно для `opacity` / `color` / `backgroundColor` через `TransitionConfig` на `BaseStyle`; остальные свойства — императивно через `animate`
+- ✅ keyframes-анимации — императивно через `animateKeyframes`; полный CSS `@keyframes`-синтаксис отложен
+- ✅ spring-физика — аппроксимация через `spring()`
+- ❌ анимация появления / удаления списков (FLIP) — отложено (нужен захват layout до/после в control-flow)
 
 ## 9. Интерактивность, состояния, курсор
 - ✅ состояния `hover` / `focus` / `active` / `pressed` / `disabled` (live + реактивно)
@@ -181,3 +188,4 @@ a11y (Фаза 14), роутинг (Фаза 15/16).
 - **Состояния:** `hover`, `focus`, `active`, `pressed`, `disabled` (вложенные варианты, live).
 - **Стилизация:** инлайн `Style`, массив `Style[]` (каскад), функция `(theme) => Style`, `StyleSheet.create`.
 - **Тема (`@cairn/style`):** `createTheme`, `useTheme`, `ThemeTokens` (`colors`/`spacing`/`radii`/`fontSizes`), `resolveVariant(map, selected, fallback?)` (хелпер вариантов компонентов).
+- **Анимации (`@cairn/style` + `@cairn/runtime`):** `animate`, `animateKeyframes`, `easings` (linear/ease/ease-in/ease-out/ease-in-out), `cubicBezier`, `spring`, `resolveEasing`, `lerp`, `lerpColor`, `interpolateValue`, `transition` / `TransitionConfig` (декларативные переходы на `BaseStyle`).

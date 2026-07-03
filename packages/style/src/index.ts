@@ -1,4 +1,4 @@
-export type { StateName, BaseStyle, Style, Shadow, CornerRadius, BorderSide, LinearGradient, RadialGradient, StyleGradient, Transform } from './style';
+export type { StateName, BaseStyle, Style, Shadow, CornerRadius, BorderSide, LinearGradient, RadialGradient, StyleGradient, Transform, TransitionConfig } from './style';
 export { STATE_ORDER } from './style';
 export { StyleSheet } from './stylesheet';
 export { resolveStyle } from './resolve';
@@ -8,3 +8,6 @@ export { composeFont } from './font';
 export { applyTextTransform } from './text-transform';
 export type { TextTransform } from './text-transform';
 export { resolveVariant } from './variant';
+export { easings, cubicBezier, resolveEasing, spring } from './easing';
+export type { EasingName, EasingFn } from './easing';
+export { lerp, lerpColor, interpolateValue } from './interpolate';
