@@ -5,6 +5,7 @@ import { WebFrameScheduler } from './frame-scheduler';
 import { WebSurfaceMetrics } from './surface-metrics';
 import { WebInputSource } from './web-input-source';
 import { WebTextInputService } from './web-text-input';
+import { createImageLoader } from './image-loader';
 
 export function createWebHost(canvas: HTMLCanvasElement): Host {
   const renderer = new Canvas2DRenderer(new HtmlCanvasSurface(canvas));
@@ -18,6 +19,7 @@ export function createWebHost(canvas: HTMLCanvasElement): Host {
   const input = new WebInputSource(canvas);
 
   const textInput = new WebTextInputService();
+  const loadImage = createImageLoader();
 
   return {
     renderer,
@@ -26,5 +28,6 @@ export function createWebHost(canvas: HTMLCanvasElement): Host {
     input,
     textInput,
     setCursor: (cursor: string) => { canvas.style.cursor = cursor; },
+    loadImage,
   };
 }
