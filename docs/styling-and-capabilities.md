@@ -41,9 +41,9 @@
 ## 3. Фон и заливки
 - ✅ `backgroundColor`
 - ✅ `backgroundGradient` (linear / radial)
-- ❌ `backgroundImage` / `objectFit`
+- ✅ `backgroundImage` (через `backgroundSize: cover | contain | fill`, клип по скруглению)
 - ✅ `opacity` (альфа всего элемента)
-- ❌ `backdropFilter` (блюр под элементом)
+- 🟡 `backdropFilter` (принят в типе, отложен — нужен ресэмплинг фона)
 
 ## 4. Границы
 - ✅ `border { width, color }` (все стороны одинаково)
@@ -53,10 +53,10 @@
 - ❌ `outline` / focus-ring как отдельный слой
 
 ## 5. Тени и эффекты
-- ✅ `boxShadow` (color / blur / offsetX / offsetY)
+- ✅ `boxShadow` (массив теней; каждая: color / blur / offsetX / offsetY / spread + inset best-effort)
 - ✅ `textShadow`
-- ❌ `elevation` (пресеты material-теней)
-- ❌ `filter`: blur / brightness / contrast / …
+- ✅ `elevation` (пресеты material-теней)
+- ✅ `filter`: blur / brightness / contrast / … (CSS filter string на Box)
 
 ## 6. Типографика
 - ✅ `font` (CSS-шорткат строкой), `color`
@@ -71,9 +71,10 @@
 - ❌ выделение текста (selection)
 
 ## 7. Трансформации
-- 🟡 `translate`, `scale` (рендерер умеет)
-- ❌ `rotate`, `skew` (в рендерере нет `rotate` — надо добавить)
-- ❌ `transformOrigin`
+- ✅ `translate`, `scale` (через `transform` в стиле; paint-walker применяет к поддереву)
+- ✅ `rotate`, `skew` (через `transform`; рендерер: `rotate` + аффинный `transform`)
+- ✅ `transformOrigin`
+- ❌ 3D-трансформации (perspective / rotateX / rotateY)
 
 ## 8. Анимации и переходы (Фаза 13)
 - ❌ `transition` (свойство / длительность / easing / delay)
@@ -155,13 +156,19 @@ a11y (Фаза 14), роутинг (Фаза 15/16).
   `flex`, `flexShrink`, `flexBasis`, `flexWrap`,
   `zIndex`, `aspectRatio`,
   `backgroundColor`, `backgroundGradient` (linear/radial),
+  `backgroundImage`, `backgroundSize` (`cover | contain | fill`),
   `borderRadius` (единый или `{tl,tr,br,bl}`),
   `border`, `borderTop`, `borderRight`, `borderBottom`, `borderLeft` (`{width,color,style?}`),
-  `boxShadow`, `textShadow` (`{color,blur,offsetX,offsetY}`),
+  `boxShadow` (массив `Shadow[]`; каждая: `{color,blur,offsetX,offsetY,spread?,inset?}`),
+  `textShadow` (`{color,blur,offsetX,offsetY}`),
+  `elevation` (пресет: `0–24`),
+  `filter` (CSS filter string),
+  `backdropFilter` (принят в типе, отложен — v1 limitation),
   `opacity`, `textAlign`, `lineHeight`,
   `color`, `font`, `fontFamily`, `fontSize`, `fontWeight`, `fontStyle`,
   `letterSpacing`, `textTransform`, `textDecoration`,
   `maxLines`, `ellipsis`,
-  `overflow`.
+  `overflow`,
+  `transform` (translate / scale / rotate / skew — один объект или массив), `transformOrigin`.
 - **Состояния:** `hover`, `focus`, `active`, `pressed`, `disabled` (вложенные варианты, live).
 - **Стилизация:** инлайн `Style`, массив `Style[]` (каскад), функция `(theme) => Style`, `StyleSheet.create`.

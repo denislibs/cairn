@@ -10,6 +10,8 @@ const METHODS = [
   'setTransform',
   'translate',
   'scale',
+  'rotate',
+  'transform',
   'clearRect',
   'fillRect',
   'strokeRect',
@@ -42,6 +44,7 @@ const PROPS = [
   'shadowOffsetY',
   'globalAlpha',
   'letterSpacing',
+  'filter',
 ] as const;
 
 export function createFakeContext(): FakeContext {

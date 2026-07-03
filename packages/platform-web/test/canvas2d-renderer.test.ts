@@ -281,3 +281,31 @@ test('drawText sets ctx.letterSpacing when letterSpacing is provided', () => {
   r.drawText('x', { x: 0, y: 0 }, { font: '16px sans-serif', letterSpacing: 3 });
   expect(ctx.calls).toContainEqual(['set:letterSpacing', '3px']);
 });
+
+test('rotate(0.5) calls ctx.rotate(0.5)', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  r.rotate(0.5);
+  expect(ctx.calls).toContainEqual(['rotate', 0.5]);
+});
+
+test('transform(1,0.2,0.3,1,0,0) calls ctx.transform with same args', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  r.transform(1, 0.2, 0.3, 1, 0, 0);
+  expect(ctx.calls).toContainEqual(['transform', 1, 0.2, 0.3, 1, 0, 0]);
+});
+
+test('setFilter sets ctx.filter to the given string', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  r.setFilter('blur(4px)');
+  expect(ctx.calls).toContainEqual(['set:filter', 'blur(4px)']);
+});
+
+test('setFilter(null) sets ctx.filter to "none"', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  r.setFilter(null);
+  expect(ctx.calls).toContainEqual(['set:filter', 'none']);
+});

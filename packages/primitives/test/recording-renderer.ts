@@ -9,6 +9,7 @@ export function recordingRenderer(): { r: Renderer; calls: Call[] } {
   const calls: Call[] = [];
   const names = [
     'resize', 'beginFrame', 'endFrame', 'clear', 'save', 'restore', 'translate', 'scale',
+    'rotate', 'transform', 'setFilter',
     'clipRect', 'clipRoundRect', 'setShadow', 'setGlobalAlpha', 'setLineDash', 'fillRect', 'strokeRect',
     'fillRoundRect', 'strokeRoundRect', 'fillPath', 'strokePath', 'drawText', 'drawImage',
   ];

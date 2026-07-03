@@ -28,17 +28,24 @@ describe('Box paint', () => {
     expect(fill!.args[2].gradient).toBeTruthy();
   });
 
-  it('wraps fill in shadow save/restore for boxShadow', () => {
+  it('drop shadow: a shadowed fill precedes the real fill, then shadow is cleared', () => {
     const { calls } = paintBox({
       backgroundColor: '#fff',
       boxShadow: { color: '#000', blur: 4, offsetX: 0, offsetY: 2 },
     });
+    // The first setShadow(non-null) should come before the first fillRoundRect (shadow fill)
     const shadowOn = calls.findIndex((c) => c.name === 'setShadow' && c.args[0]);
-    const fill = calls.findIndex((c) => c.name === 'fillRoundRect');
-    const shadowOff = calls.findIndex((c, i) => i > fill && c.name === 'setShadow' && !c.args[0]);
+    const firstFill = calls.findIndex((c) => c.name === 'fillRoundRect');
+    // There should be at least 2 fills: the shadow fill and the real fill
+    const fills = calls.filter((c) => c.name === 'fillRoundRect');
+    const lastFill = calls.map((c, i) => ({ c, i })).filter(({ c }) => c.name === 'fillRoundRect').at(-1)!.i;
+    // setShadow(null) occurs between the shadow fill and the real fill
+    const shadowOff = calls.findIndex((c, i) => i > firstFill && c.name === 'setShadow' && !c.args[0]);
     expect(shadowOn).toBeGreaterThanOrEqual(0);
-    expect(shadowOn).toBeLessThan(fill);
-    expect(shadowOff).toBeGreaterThan(fill);
+    expect(shadowOn).toBeLessThan(firstFill);
+    expect(shadowOff).toBeGreaterThan(firstFill);
+    expect(shadowOff).toBeLessThan(lastFill);
+    expect(fills.length).toBeGreaterThanOrEqual(2);
   });
 
   it('per-corner borderRadius passed through', () => {

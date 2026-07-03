@@ -1,5 +1,8 @@
 import type { EdgeInsets, Justify, Align } from '@cairn/layout';
 
+/** Structural alias for ImageHandle from @cairn/host — kept local to avoid a cross-package dep. */
+export interface ImageHandle { readonly width: number; readonly height: number; }
+
 // Fixed precedence: later states override earlier ones (disabled wins).
 // STATE_ORDER is the single source of truth; StateName is derived from it so the two
 // can never drift out of sync. Frozen so it cannot be mutated at runtime.
@@ -15,6 +18,14 @@ export type StateName = (typeof STATE_ORDER)[number];
 
 export interface Shadow {
   color: string; blur: number; offsetX: number; offsetY: number;
+  spread?: number;
+  inset?: boolean;
+}
+export interface Transform {
+  translateX?: number; translateY?: number;
+  scale?: number; scaleX?: number; scaleY?: number;
+  rotate?: number;   // degrees
+  skewX?: number; skewY?: number; // degrees
 }
 export type CornerRadius = number | { tl: number; tr: number; br: number; bl: number };
 export interface BorderSide { width: number; color: string; style?: 'solid' | 'dashed' | 'dotted' }
@@ -56,7 +67,8 @@ export interface BaseStyle {
   borderBottom?: BorderSide;
   borderLeft?: BorderSide;
   backgroundGradient?: StyleGradient;
-  boxShadow?: Shadow;
+  boxShadow?: Shadow | Shadow[];
+  elevation?: number;
   opacity?: number;
   textShadow?: Shadow;
   textAlign?: 'left' | 'center' | 'right';
@@ -76,6 +88,12 @@ export interface BaseStyle {
   maxLines?: number;
   ellipsis?: string;
   textDecoration?: 'none' | 'underline' | 'line-through';
+  transform?: Transform;
+  transformOrigin?: { x: number; y: number };
+  filter?: string;
+  backdropFilter?: string;
+  backgroundImage?: ImageHandle;
+  backgroundSize?: 'cover' | 'contain' | 'fill';
 }
 
 export type Style = BaseStyle & Partial<Record<StateName, BaseStyle>>;
