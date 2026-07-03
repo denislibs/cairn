@@ -10,6 +10,7 @@ export function hitTest(root: HitNode, x: number, y: number): HitNode[] {
 }
 
 function hitAt(node: HitNode, x: number, y: number, ax: number, ay: number): HitNode[] | null {
+  if (node.pointerEvents === 'none') return null;
   const nx = ax + node.layout.offsetX;
   const ny = ay + node.layout.offsetY;
   const { w, h } = node.layout.size;

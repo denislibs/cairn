@@ -187,6 +187,8 @@ export function Box(props: BoxProps = {}): Instance {
     instance.transform = s.transform;
     instance.transformOrigin = s.transformOrigin;
     instance.cursor = s.cursor;
+    instance.pointerEvents = s.pointerEvents;
+    instance.userSelect = s.userSelect;
   });
 
   applyLayoutChildProps(instance, props);
