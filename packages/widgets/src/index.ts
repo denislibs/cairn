@@ -8,3 +8,5 @@ export { Switch } from './switch';
 export type { SwitchProps } from './switch';
 export { Slider } from './slider';
 export type { SliderProps } from './slider';
+export { Modal } from './modal';
+export type { ModalProps } from './modal';
