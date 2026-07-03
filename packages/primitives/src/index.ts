@@ -37,3 +37,5 @@ export { Presence } from './presence';
 export type { PresenceProps } from './presence';
 export { Spacer } from './spacer';
 export type { SpacerProps } from './spacer';
+export { Spinner } from './spinner';
+export type { SpinnerProps } from './spinner';
