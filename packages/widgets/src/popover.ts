@@ -1,6 +1,6 @@
 import type { Instance } from '@cairn/runtime';
-import { Show, useOverlays, hostContext } from '@cairn/runtime';
-import { createSignal, useContext } from '@cairn/reactivity';
+import { useOverlays, hostContext } from '@cairn/runtime';
+import { createSignal, createEffect, useContext } from '@cairn/reactivity';
 import { Portal, Box, Stack, computePlacement, getAbsRect } from '@cairn/primitives';
 import type { Side } from '@cairn/primitives';
 
@@ -77,10 +77,12 @@ export function Popover(props: PopoverProps): Instance {
     });
   };
 
-  return Stack({
-    children: [
-      trigger,
-      Show({ when: open, children: portalContent }),
-    ],
+  // Register the popover Portal as an overlay while open (self-removes via onCleanup
+  // when the effect re-runs on close / owner disposes). The trigger returns inline;
+  // top-layer rendering is handled by the overlay layer, so no wrapping Stack.
+  createEffect(() => {
+    if (open()) portalContent();
   });
+
+  return trigger;
 }

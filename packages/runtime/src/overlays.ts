@@ -1,5 +1,6 @@
-import { createSignal, createContext, useContext, type Context } from '@cairn/reactivity';
+import { createSignal, createContext, useContext, untrack, type Context } from '@cairn/reactivity';
 import type { Instance } from './instance';
+import { scheduleFrame } from './scheduler';
 
 export interface OverlayRegistry {
   add(inst: Instance): number;
@@ -16,14 +17,18 @@ export function createOverlayRegistry(): OverlayRegistry {
   return {
     add(inst) {
       const id = nextId++;
-      setEntries([...entries(), { id, inst }]);
+      // untrack: registering must not make the caller's effect depend on the overlay
+      // signal (that would loop: add → setEntries → effect re-runs → add …).
+      setEntries([...untrack(entries), { id, inst }]);
+      scheduleFrame(); // repaint to show the new overlay
       return id;
     },
     remove(id) {
-      setEntries(entries().filter((e) => e.id !== id));
+      setEntries(untrack(entries).filter((e) => e.id !== id));
+      scheduleFrame(); // repaint to drop the removed overlay
     },
     list() {
-      return entries().map((e) => e.inst);
+      return untrack(entries).map((e) => e.inst);
     },
     appRoot() {
       return root;

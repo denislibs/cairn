@@ -75,7 +75,7 @@ const s = StyleSheet.create({
 function ModalContent() {
   return (
     <Box style={s.modalPanel}>
-      <Column style={s.modalPanelInner}>
+      <Column style={s.modalPanelInner} mainAxisSize="min">
         <Text style={s.modalTitle}>Диалоговое окно</Text>
         <Text style={s.modalBody}>Это Modal поверх основного контента.</Text>
         <Button
@@ -100,7 +100,7 @@ function TooltipContent() {
 function PopoverContent() {
   return (
     <Box style={s.popoverMenu}>
-      <Column style={s.popoverMenuInner}>
+      <Column style={s.popoverMenuInner} mainAxisSize="min">
         <Box style={s.menuItem}>
           <Text style={s.menuItemText}>Профиль</Text>
         </Box>
@@ -119,11 +119,11 @@ function App() {
   return (
     <Column style={s.root}>
       <Box style={s.card}>
-        <Column style={s.cardInner}>
+        <Column style={s.cardInner} mainAxisSize="min">
           <Text style={s.title}>Оверлеи</Text>
 
           {/* ── Modal demo ─────────────────────────────────────── */}
-          <Column style={s.section}>
+          <Column style={s.section} mainAxisSize="min">
             <Text style={s.label}>Modal</Text>
             <Button
               label="Открыть модалку"
@@ -134,7 +134,7 @@ function App() {
           </Column>
 
           {/* ── Tooltip demo ────────────────────────────────────── */}
-          <Column style={s.section}>
+          <Column style={s.section} mainAxisSize="min">
             <Text style={s.label}>Tooltip</Text>
             <Tooltip content={<TooltipContent />} side="top">
               <Button label="Наведи на меня" variant="secondary" style={{ width: 200 }} />
@@ -142,7 +142,7 @@ function App() {
           </Column>
 
           {/* ── Popover demo ────────────────────────────────────── */}
-          <Column style={s.section}>
+          <Column style={s.section} mainAxisSize="min">
             <Text style={s.label}>Popover</Text>
             <Popover content={<PopoverContent />} side="bottom">
               <Button label="Меню" variant="ghost" style={{ width: 200, border: { width: 1, color: '#3a3a3e' } }} />

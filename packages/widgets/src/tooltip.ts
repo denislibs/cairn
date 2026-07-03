@@ -1,6 +1,6 @@
 import type { Instance } from '@cairn/runtime';
-import { Show, useOverlays } from '@cairn/runtime';
-import { createSignal, useContext } from '@cairn/reactivity';
+import { useOverlays } from '@cairn/runtime';
+import { createSignal, createEffect, useContext } from '@cairn/reactivity';
 import { Portal, Box, Stack, computePlacement, getAbsRect } from '@cairn/primitives';
 import { hostContext } from '@cairn/runtime';
 import type { Side } from '@cairn/primitives';
@@ -65,10 +65,14 @@ export function Tooltip(props: TooltipProps): Instance {
     });
   };
 
-  return Stack({
-    children: [
-      trigger,
-      Show({ when: shown, children: portalContent }),
-    ],
+  // Register the tooltip Portal as an overlay while shown. The Portal self-registers
+  // on creation and removes itself via onCleanup when this effect re-runs (shown→false)
+  // or the owner disposes. The trigger is returned inline so it lays out at its natural
+  // size (wrapping it in a Stack would fill its container — the overlay layer handles
+  // top-layer rendering, so no wrapper is needed here).
+  createEffect(() => {
+    if (shown()) portalContent();
   });
+
+  return trigger;
 }
