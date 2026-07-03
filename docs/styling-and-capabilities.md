@@ -84,7 +84,7 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
 - ✅ `transformOrigin`
 - ❌ 3D-трансформации (perspective / rotateX / rotateY)
 
-## 8. Анимации и переходы (Фаза 13 + AN1)
+## 8. Анимации и переходы (Фаза 13 + AN1 + AN2)
 - ✅ `transition` (свойство / длительность / easing / delay) — декларативно через `TransitionConfig` на `BaseStyle`; поддерживаемые свойства (Box / Text / Flex / Grid; ScrollView маршрутизирован; Image отложен — leaf-примитив):
   `opacity`, `color`, `backgroundColor`,
   `width`, `height`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`,
@@ -93,8 +93,10 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
   `transform` (структурная интерполяция: `translateX`/`translateY`/`scale`/`scaleX`/`scaleY`/`rotate`/`skewX`/`skewY`),
   `letterSpacing`, `lineHeight`.
   Структурная интерполяция реализована через `lerpLength`, `lerpTransform`, `lerpShadow`, `lerpRadii`, `lerpInsets` (AN1).
+- ✅ `TransitionConfig.spring` (`{ stiffness?, damping?, mass? }`) — реальная физика пружины через `animateSpring` (AN2): без фиксированной длительности, overshoot, прерываемо с переносом скорости; при наличии `spring` поля `duration`/`easing` игнорируются.
+- ✅ `animateSpring` — экспортируется из `@cairn/runtime` для ручного использования; semi-implicit Euler, параметры: `stiffness` / `damping` / `mass` / `initialVelocity` / `restDelta` / `restSpeed`.
 - ✅ keyframes-анимации — императивно через `animateKeyframes`; полный CSS `@keyframes`-синтаксис отложен
-- ✅ spring-физика — аппроксимация через `spring()`
+- ✅ spring-easing — аппроксимация через `spring()` (временно́й easing для time-based переходов; отличается от `animateSpring` — остаётся доступным)
 - ❌ анимация появления / удаления списков (FLIP) — отложено (нужен захват layout до/после в control-flow)
 
 ## 9. Интерактивность, состояния, курсор
@@ -198,6 +200,7 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
 - **Состояния:** `hover`, `focus`, `active`, `pressed`, `disabled` (вложенные варианты, live).
 - **Стилизация:** инлайн `Style`, массив `Style[]` (каскад), функция `(theme) => Style`, `StyleSheet.create`.
 - **Тема (`@cairn/style`):** `createTheme`, `useTheme`, `ThemeTokens` (`colors`/`spacing`/`radii`/`fontSizes`), `resolveVariant(map, selected, fallback?)` (хелпер вариантов компонентов).
-- **Анимации (`@cairn/style` + `@cairn/runtime`):** `animate`, `animateKeyframes`, `easings` (linear/ease/ease-in/ease-out/ease-in-out), `cubicBezier`, `spring`, `resolveEasing`, `lerp`, `lerpColor`, `interpolateValue`, `transition` / `TransitionConfig` (декларативные переходы на `BaseStyle`).
+- **Анимации (`@cairn/style` + `@cairn/runtime`):** `animate`, `animateKeyframes`, `animateSpring`, `easings` (linear/ease/ease-in/ease-out/ease-in-out), `cubicBezier`, `spring`, `resolveEasing`, `lerp`, `lerpColor`, `interpolateValue`, `transition` / `TransitionConfig` (декларативные переходы на `BaseStyle`; `TransitionConfig.spring` — реальная физика пружины).
   AN1 — структурная интерполяция: `lerpLength` (px/% / rem / vw / vh / auto / calc), `lerpTransform` (translateX/Y, scale/X/Y, rotate, skewX/Y), `lerpShadow` (blur / offset / color), `lerpRadii` (per-corner), `lerpInsets` (padding/margin по сторонам).
+  AN2 — реальная spring-физика: `animateSpring` (semi-implicit Euler; `stiffness`/`damping`/`mass`; overshoot; прерываемо с переносом скорости); `TransitionConfig.spring` активирует её декларативно — `duration`/`easing` при этом игнорируются.
   Переходы охватывают все структурные пропсы: `opacity`, `color`, `backgroundColor`, `width`/`height`/`min*`/`max*`, `padding`, `margin`, `gap`, `borderRadius`, `border`, `boxShadow`, `transform`, `letterSpacing`, `lineHeight` — на Box / Text / Flex / Grid.
