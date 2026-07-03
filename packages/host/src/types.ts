@@ -54,6 +54,7 @@ export interface TextStyle {
   color?: Color;
   align?: 'left' | 'center' | 'right';
   baseline?: 'top' | 'middle' | 'alphabetic' | 'bottom';
+  letterSpacing?: number; // px
 }
 
 export interface TextMeasurement {

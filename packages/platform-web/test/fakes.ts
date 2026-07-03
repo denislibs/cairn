@@ -41,6 +41,7 @@ const PROPS = [
   'shadowOffsetX',
   'shadowOffsetY',
   'globalAlpha',
+  'letterSpacing',
 ] as const;
 
 export function createFakeContext(): FakeContext {

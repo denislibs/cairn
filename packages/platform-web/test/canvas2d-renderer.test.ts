@@ -274,3 +274,10 @@ test('clipRoundRect call order is beginPath → roundRect → clip', () => {
   expect(bp).toBeLessThan(rr);
   expect(rr).toBeLessThan(cl);
 });
+
+test('drawText sets ctx.letterSpacing when letterSpacing is provided', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  r.drawText('x', { x: 0, y: 0 }, { font: '16px sans-serif', letterSpacing: 3 });
+  expect(ctx.calls).toContainEqual(['set:letterSpacing', '3px']);
+});

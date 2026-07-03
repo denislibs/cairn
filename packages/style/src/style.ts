@@ -66,7 +66,16 @@ export interface BaseStyle {
   aspectRatio?: number;
   color?: string;
   font?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  fontWeight?: number | 'normal' | 'bold';
+  fontStyle?: 'normal' | 'italic';
+  letterSpacing?: number;
+  textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
   overflow?: 'visible' | 'hidden' | 'clip';
+  maxLines?: number;
+  ellipsis?: string;
+  textDecoration?: 'none' | 'underline' | 'line-through';
 }
 
 export type Style = BaseStyle & Partial<Record<StateName, BaseStyle>>;
