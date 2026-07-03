@@ -1,4 +1,5 @@
 import { createSignal, type Accessor } from '@cairn/reactivity';
+import { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT, HOME, END } from './keys';
 
 export interface RovingOptions {
   count: Accessor<number>;
@@ -25,12 +26,12 @@ export function createRoving(opts: RovingOptions): RovingResult {
     const cur = active();
 
     let delta = 0;
-    if ((orientation === 'vertical' || orientation === 'both') && key === 'ArrowUp') delta = -1;
-    else if ((orientation === 'vertical' || orientation === 'both') && key === 'ArrowDown') delta = 1;
-    else if ((orientation === 'horizontal' || orientation === 'both') && key === 'ArrowLeft') delta = -1;
-    else if ((orientation === 'horizontal' || orientation === 'both') && key === 'ArrowRight') delta = 1;
-    else if (key === 'Home') { setActive(0); return true; }
-    else if (key === 'End') { setActive(n - 1); return true; }
+    if ((orientation === 'vertical' || orientation === 'both') && key === ARROW_UP) delta = -1;
+    else if ((orientation === 'vertical' || orientation === 'both') && key === ARROW_DOWN) delta = 1;
+    else if ((orientation === 'horizontal' || orientation === 'both') && key === ARROW_LEFT) delta = -1;
+    else if ((orientation === 'horizontal' || orientation === 'both') && key === ARROW_RIGHT) delta = 1;
+    else if (key === HOME) { setActive(0); return true; }
+    else if (key === END) { setActive(n - 1); return true; }
     else return false;
 
     let next = cur + delta;

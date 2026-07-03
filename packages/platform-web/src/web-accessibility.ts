@@ -163,12 +163,13 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
           return; // skip Enter/Space activation
         }
 
-        // Synthesize activation for Enter and Space (screen-reader convention)
+        // Synthesize activation for Enter and Space (screen-reader convention).
+        // Only prevent Space's default scroll when there is an activate handler.
         if (e.key === 'Enter') {
           node.onActivate?.();
-        } else if (e.key === ' ') {
+        } else if (e.key === ' ' && node.onActivate) {
           e.preventDefault();
-          node.onActivate?.();
+          node.onActivate();
         }
       });
     }
@@ -222,6 +223,7 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
   }
 
   announce(message: string, assertive = false): void {
+    if (!this.container) return; // guard against post-dispose calls
     const region = assertive ? this.getAssertiveRegion() : this.getPoliteRegion();
     region.textContent = '';
     Promise.resolve().then(() => { region.textContent = message; });
