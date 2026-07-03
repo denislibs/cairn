@@ -1,11 +1,12 @@
 import type { Instance } from '@cairn/runtime';
-import { Box, Text, applyLayoutChildProps, mergeStyles, type StyleInput, type LayoutChildProps } from '@cairn/primitives';
-import { StyleSheet } from '@cairn/style';
-import type { Style } from '@cairn/style';
+import { Box, Text, applyLayoutChildProps, mergeStyles, type StyleInput, type LayoutChildProps, type EventProps } from '@cairn/primitives';
+import { StyleSheet, type Style } from '@cairn/style';
 import { useWidgetTheme } from './theme';
 import { createControl, type ControlState } from './control';
 
-export interface ButtonProps extends LayoutChildProps {
+// Pointer/keyboard handlers are typed via EventProps so consumers (e.g. Material)
+// can pass onPointerDown with types. onClick is our own no-arg form.
+export interface ButtonProps extends LayoutChildProps, Omit<EventProps, 'onClick'> {
   variant?: 'solid' | 'soft' | 'outline' | 'ghost' | 'link';
   size?: 'sm' | 'md' | 'lg';
   /** A key in WidgetTheme.colors (the "base" key, e.g. 'primary', 'secondary', 'danger'). Defaults to 'primary'. */
@@ -41,19 +42,25 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+// Static default geometry lives in StyleSheet.create (the library idiom: default
+// styles are authored here; colours/state come from the theme + variant below).
+const STYLES = StyleSheet.create({
+  base: { alignX: 'center', alignY: 'center', overflow: 'hidden' },
+});
+
 export function Button(props: ButtonProps): Instance {
   const t = useWidgetTheme();
   const { state, handlers } = createControl({
     disabled: props.disabled,
     onClick: props.onClick,
-    onPointerEnter: (props as any).onPointerEnter,
-    onPointerLeave: (props as any).onPointerLeave,
-    onPointerDown: (props as any).onPointerDown,
-    onPointerUp: (props as any).onPointerUp,
-    onFocus: (props as any).onFocus,
-    onBlur: (props as any).onBlur,
-    onKeyDown: (props as any).onKeyDown,
-    onKeyUp: (props as any).onKeyUp,
+    onPointerEnter: props.onPointerEnter,
+    onPointerLeave: props.onPointerLeave,
+    onPointerDown: props.onPointerDown,
+    onPointerUp: props.onPointerUp,
+    onFocus: props.onFocus,
+    onBlur: props.onBlur,
+    onKeyDown: props.onKeyDown,
+    onKeyUp: props.onKeyUp,
   });
 
   const size = props.size ?? 'md';
@@ -68,12 +75,10 @@ export function Button(props: ButtonProps): Instance {
   const onColor = t.colors['on' + capitalize(colorKey)] ?? t.colors.onPrimary;
 
   const baseStyle: Style = {
+    ...STYLES.base,
     borderRadius: t.radii.md,
-    alignX: 'center',
-    alignY: 'center',
     padding: { left: t.control.padX[size], right: t.control.padX[size], top: 0, bottom: 0 },
     height: t.control.height[size],
-    overflow: 'hidden',
     cursor: disabled ? 'default' : 'pointer',
     opacity: disabled ? 0.5 : 1,
   };

@@ -1,7 +1,7 @@
 import type { Instance } from '@cairn/runtime';
 import { useTheme } from '@cairn/style';
 import { Stack } from '@cairn/primitives';
-import { Button as HeadlessButton } from '@cairn/widgets';
+import { Button as HeadlessButton, type ButtonProps as HeadlessButtonProps } from '@cairn/widgets';
 import { createRipple } from './ripple';
 import { stateOverlay } from './state-layer';
 import type { MaterialTheme } from './theme';
@@ -27,11 +27,11 @@ export function IconButton(props: IconButtonProps): Instance {
 
   const childInstance = Stack({ children: [props.icon, ripple.instance] });
 
-  const headlessProps: any = {
+  const headlessProps: HeadlessButtonProps = {
     variant: 'ghost',
     disabled,
     onClick: props.onClick,
-    onPointerDown: (e: any) => { if (!disabled) ripple.trigger(e.localX ?? 0, e.localY ?? 0); },
+    onPointerDown: (e) => { if (!disabled) ripple.trigger(e.localX ?? 0, e.localY ?? 0); },
     style: [{
       width: size,
       height: size,
@@ -48,7 +48,7 @@ export function IconButton(props: IconButtonProps): Instance {
       pressed: {
         backgroundColor: stateOverlay(color, 'pressed'),
       },
-    }],
+    }] as any,
     children: childInstance,
   };
   return HeadlessButton(headlessProps);

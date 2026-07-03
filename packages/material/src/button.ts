@@ -1,7 +1,7 @@
 import type { Instance } from '@cairn/runtime';
 import { useTheme } from '@cairn/style';
 import { Stack, Row, Text } from '@cairn/primitives';
-import { Button as HeadlessButton } from '@cairn/widgets';
+import { Button as HeadlessButton, type ButtonProps as HeadlessButtonProps } from '@cairn/widgets';
 import { createRipple } from './ripple';
 import { stateOverlay } from './state-layer';
 import { alpha, darken } from './colors';
@@ -106,14 +106,15 @@ export function Button(props: ButtonProps): Instance {
 
   const fullWidthStyle = props.fullWidth ? { width: '100%' as any } : {};
 
-  // HeadlessButton reads onPointerDown via (props as any).onPointerDown in createControl,
-  // so passing it here wires the ripple to every pointer-down event.
-  const headlessProps: any = {
+  // The headless Button forwards onPointerDown (typed via EventProps) to createControl,
+  // so passing it here wires the ripple to every pointer-down event. All keyboard/
+  // disabled/click/focus behaviour comes from the headless Button — nothing duplicated.
+  const headlessProps: HeadlessButtonProps = {
     variant: 'ghost',
     disabled,
     onClick: props.onClick,
-    onPointerDown: (e: any) => { if (!disabled) ripple.trigger(e.localX ?? 0, e.localY ?? 0); },
-    style: [{ ...baseStyle, ...variantStyle, ...fullWidthStyle }],
+    onPointerDown: (e) => { if (!disabled) ripple.trigger(e.localX ?? 0, e.localY ?? 0); },
+    style: [{ ...baseStyle, ...variantStyle, ...fullWidthStyle }] as any,
     children: childInstance,
   };
   return HeadlessButton(headlessProps);
