@@ -117,7 +117,7 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
 
 ## 13. Инфраструктура «настоящего приложения»
 - ✅ `ScrollView` (колесо + drag, кламп, скроллбар-оверлей; виртуализация ❌ отдельно)
-- ❌ `Portal` / оверлеи / `Modal` / `Tooltip` / `Popover`
+- ✅ `Portal` / `Modal` / `Tooltip` / `Popover` (оверлей-слой в mount: рендер поверх всего, хит-тест первым; позиционирование `computePlacement` + `getAbsRect` с авто-флипом)
 - ✅ клиппинг / `overflow: hidden | clip` (в стиле через `overflow`, клипает детей по скруглённому боксу)
 - ❌ жесты: drag, swipe, long-press, pinch / zoom, pointer-capture (клики / hover / колесо / клавиатура — есть)
 - ❌ виртуализация длинных списков
@@ -147,17 +147,18 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
 8. ✅ `min` / `max` размеры (есть у `BoxNode`)
 
 ## «Дорого» — осталось (нужен и движок, и большая фича)
-`Portal` / оверлеи (Modal/Tooltip/Popover), виртуализация длинных списков,
-жесты + pointer-capture, FLIP-анимация списков, полный SVG-парсер, формы/валидация,
-dirty-region (Фаза 12), a11y (Фаза 14), роутинг (Фаза 15/16), i18n / RTL, выделение текста.
-(Реализовано ранее и убрано из списка: `flexWrap`, анимации/переходы, Grid, ScrollView, единицы/адаптив.)
+Виртуализация длинных списков, жесты + pointer-capture, FLIP-анимация списков,
+полный SVG-парсер, формы/валидация, dirty-region (Фаза 12), a11y (Фаза 14),
+роутинг (Фаза 15/16), i18n / RTL, выделение текста.
+(Реализовано ранее и убрано из списка: `flexWrap`, анимации/переходы, Grid, ScrollView, единицы/адаптив, Portal/оверлеи.)
 
 ---
 
 ## Текущий набор (для ориентира)
-- **Примитивы:** `Box`, `Text`, `Row`, `Column`, `Stack`, `Grid`, `ScrollView`, `Input`, `Image`, `Icon`, `Path`, `Svg`
-  (+ control-flow `Show`/`For`/`Index`/`Switch`, `ThemeProvider` (принимает `Theme | () => Theme` — реактивная смена темы), сырой `Instance` как escape-hatch).
-- **Виджеты (`@cairn/widgets`):** `Button` (primary / secondary / ghost), `Slider`, `Checkbox`, `Switch`, `Divider`.
+- **Примитивы:** `Box`, `Text`, `Row`, `Column`, `Stack`, `Grid`, `ScrollView`, `Input`, `Image`, `Icon`, `Path`, `Svg`, `Portal`
+  (+ control-flow `Show`/`For`/`Index`/`Switch`, `ThemeProvider` (принимает `Theme | () => Theme` — реактивная смена темы), сырой `Instance` как escape-hatch;
+  позиционирование оверлеев: `computePlacement`, `getAbsRect`).
+- **Виджеты (`@cairn/widgets`):** `Button` (primary / secondary / ghost), `Slider`, `Checkbox`, `Switch`, `Divider`, `Modal`, `Tooltip`, `Popover`.
 - **Адаптивные утилиты (`@cairn/primitives`):** `useViewport`, `useBreakpoint`, `responsive`, `pickBreakpoint`.
 - **`BaseStyle` сейчас:** `width`, `height`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`
   (все принимают `Length`: px-числа, `'50%'`, `'100vw'`, `'2rem'`, `'auto'`, `'calc(100% - 16px)'`),

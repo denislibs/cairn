@@ -5,6 +5,7 @@ import type { LayoutContext } from '@cairn/layout';
 import { type Instance, paint } from './instance';
 import { setFrameRequester } from './scheduler';
 import { hostContext } from './host-context';
+import { createOverlayRegistry, overlayContext } from './overlays';
 
 // Returns the topmost cursor in a target-first path, falling back to 'default'.
 export function cursorOf(path: { cursor?: string }[]): string {
@@ -22,21 +23,39 @@ export function mount(component: () => Instance, host: Host): () => void {
       rootFontSize: 16,
     };
     let root: Instance;
+    const overlays = createOverlayRegistry();
+
+    const layered = (): Instance => ({
+      layout: {
+        offsetX: 0,
+        offsetY: 0,
+        size: { w: host.metrics.width, h: host.metrics.height },
+      } as any,
+      children: [root, ...overlays.list()],
+      handlers: {},
+      paintSelf() {},
+    });
 
     const renderFrame = (): void => {
       const w = host.metrics.width;
       const h = host.metrics.height;
       ctx.viewport = { w, h };
       root.layout.layout({ minW: w, maxW: w, minH: h, maxH: h }, ctx); // tight = surface
+      const list = overlays.list();
+      for (const o of list) o.layout.layout({ minW: 0, maxW: w, minH: 0, maxH: h }, ctx);
       host.renderer.beginFrame();
       host.renderer.clear();
       paint(root, host.renderer);
+      for (const o of list) paint(o, host.renderer);
       host.renderer.endFrame();
     };
 
     // Build the tree first. Effects run now; scheduleFrame() no-ops because the
     // requester is not installed yet (avoids a redundant initial frame).
-    root = runWithContext(hostContext, host, () => component());
+    root = runWithContext(hostContext, host, () =>
+      runWithContext(overlayContext, overlays, () => component()),
+    );
+    overlays.setAppRoot(root);
     renderFrame(); // initial paint
 
     let frameScheduled = false;
@@ -51,8 +70,8 @@ export function mount(component: () => Instance, host: Host): () => void {
 
     const unsubscribeResize = host.metrics.onResize(() => renderFrame());
 
-    const focus = createFocusManager(() => root);
-    const dispatcher = createPointerDispatcher(() => root, {
+    const focus = createFocusManager(layered);
+    const dispatcher = createPointerDispatcher(layered, {
       onPointerDown: (path) => focus.focusFromPointer(path),
       onHoverChange: (path) => host.setCursor?.(cursorOf(path)),
     });

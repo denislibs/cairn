@@ -20,3 +20,5 @@ export { animate } from './animate';
 export type { AnimateOptions } from './animate';
 export { animateKeyframes } from './keyframes';
 export type { Keyframe, KeyframesOptions } from './keyframes';
+export { createOverlayRegistry, overlayContext, useOverlays } from './overlays';
+export type { OverlayRegistry } from './overlays';
