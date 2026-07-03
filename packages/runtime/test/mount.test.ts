@@ -42,10 +42,12 @@ test('changes coalesce into a single frame', () => {
   expect(beginFrames(renderer)).toBe(before + 1);
 });
 
-test('re-renders on surface resize', () => {
-  const { host, renderer, metrics } = createFakeHost();
+test('re-renders on surface resize (coalesced via scheduleFrame)', () => {
+  const { host, renderer, metrics, scheduler } = createFakeHost();
   dispose = mount(makeInstance, host);
   const before = beginFrames(renderer);
   metrics.resize(400, 300);
+  expect(scheduler.pending.length).toBe(1); // scheduled, not a synchronous render
+  scheduler.flush();
   expect(beginFrames(renderer)).toBe(before + 1);
 });
