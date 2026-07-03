@@ -10,7 +10,7 @@ export { Stack } from './stack';
 export type { StackProps } from './stack';
 export { Input, Input as TextInput } from './input';
 export type { InputProps, InputProps as TextInputProps } from './input';
-export { resolveStyleInput } from './resolve-input';
+export { resolveStyleInput, mergeStyles } from './resolve-input';
 export type { StyleInput } from './resolve-input';
 export { ThemeProvider } from './theme-provider';
 export type { ThemeProviderProps } from './theme-provider';

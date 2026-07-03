@@ -12,3 +12,23 @@ export function resolveStyleInput(
   const styles = typeof input === 'function' ? input(theme) : input;
   return resolveStyle(styles, activeStates);
 }
+
+// Merge multiple StyleInputs into a single function-form StyleInput.
+// Each input is resolved (fn inputs invoked with theme, arrays flattened),
+// undefined inputs are skipped. Order is preserved — later entries win when
+// passed to resolveStyle.
+export function mergeStyles(...inputs: (StyleInput | undefined)[]): StyleInput {
+  return (theme: Theme): Style[] => {
+    const result: Style[] = [];
+    for (const input of inputs) {
+      if (input === undefined) continue;
+      const resolved = typeof input === 'function' ? input(theme) : input;
+      if (Array.isArray(resolved)) {
+        for (const s of resolved) result.push(s);
+      } else {
+        result.push(resolved);
+      }
+    }
+    return result;
+  };
+}
