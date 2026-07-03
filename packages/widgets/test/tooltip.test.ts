@@ -1,52 +1,107 @@
 import { describe, it, expect } from 'vitest';
 import { createRoot, runWithContext } from '@cairn/reactivity';
 import { overlayContext, createOverlayRegistry } from '@cairn/runtime';
+import { themeContext } from '@cairn/style';
 import { Tooltip } from '../src/tooltip';
 import { Box } from '@cairn/primitives';
+import { defaultTheme } from '../src/theme';
 
 function withReg(fn: (reg: ReturnType<typeof createOverlayRegistry>) => void) {
   createRoot(() => {
     const reg = createOverlayRegistry();
-    runWithContext(overlayContext, reg, () => fn(reg));
+    runWithContext(overlayContext, reg, () =>
+      runWithContext(themeContext, () => defaultTheme, () => fn(reg)),
+    );
   });
 }
 
-function findTrigger(inst: any): any {
-  // trigger is the first child of the returned Stack (or the inst itself)
-  return inst.children && inst.children.length ? inst.children[0] : inst;
-}
-
-describe('Tooltip', () => {
-  it('shows on hover, hides on leave', () => {
+describe('Tooltip — show / hide', () => {
+  it('starts hidden (no overlay)', () => {
     withReg((reg) => {
-      reg.setAppRoot({ layout: { offsetX: 0, offsetY: 0, size: { w: 0, h: 0 } }, children: [], paintSelf() {} } as any);
       const trigger = Box({ style: { width: 40, height: 20 } });
-      const tip = Tooltip({ content: Box({ style: { width: 80, height: 24 } }), children: trigger });
-      reg.setAppRoot(tip);
-      const t = findTrigger(tip);
+      Tooltip({ trigger, label: 'hello' });
       expect(reg.list().length).toBe(0);
-      t.handlers.onPointerEnter?.({} as any);
+    });
+  });
+
+  it('pointer enter shows the tooltip (one overlay)', () => {
+    withReg((reg) => {
+      const trigger = Box({ style: { width: 40, height: 20 } });
+      const inst = Tooltip({ trigger, label: 'hello' });
+      reg.setAppRoot(inst);
+      trigger.handlers!.onPointerEnter?.({} as any);
       expect(reg.list().length).toBe(1);
-      t.handlers.onPointerLeave?.({} as any);
+    });
+  });
+
+  it('pointer leave hides the tooltip', () => {
+    withReg((reg) => {
+      const trigger = Box({ style: { width: 40, height: 20 } });
+      const inst = Tooltip({ trigger, label: 'hello' });
+      reg.setAppRoot(inst);
+      trigger.handlers!.onPointerEnter?.({} as any);
+      expect(reg.list().length).toBe(1);
+      trigger.handlers!.onPointerLeave?.({} as any);
       expect(reg.list().length).toBe(0);
+    });
+  });
+
+  it('returns the trigger as root instance', () => {
+    withReg((reg) => {
+      const trigger = Box({ style: { width: 40, height: 20 } });
+      const inst = Tooltip({ trigger, label: 'hello' });
+      expect(inst).toBe(trigger);
+    });
+  });
+
+  it('works with children (Instance) instead of label string', () => {
+    withReg((reg) => {
+      const trigger = Box({ style: { width: 40, height: 20 } });
+      const content = Box({ style: { width: 80, height: 24 } });
+      const inst = Tooltip({ trigger, children: content });
+      reg.setAppRoot(inst);
+      trigger.handlers!.onPointerEnter?.({} as any);
+      expect(reg.list().length).toBe(1);
     });
   });
 
   it('defaults side to top', () => {
     withReg((reg) => {
       const trigger = Box({ style: { width: 40, height: 20 } });
-      const tip = Tooltip({ content: Box({ style: { width: 80, height: 24 } }), children: trigger });
-      reg.setAppRoot(tip);
-      const t = findTrigger(tip);
-      t.handlers.onPointerEnter?.({} as any);
+      const inst = Tooltip({ trigger, label: 'test' });
+      reg.setAppRoot(inst);
+      trigger.handlers!.onPointerEnter?.({} as any);
       expect(reg.list().length).toBe(1);
     });
   });
 
-  it('does not render portal when not hovered', () => {
+  it('chains trigger onPointerEnter — existing handler still fires', () => {
     withReg((reg) => {
-      const trigger = Box({ style: { width: 40, height: 20 } });
-      Tooltip({ content: Box({ style: { width: 80, height: 24 } }), children: trigger, side: 'bottom' });
+      let prevFired = 0;
+      const trigger = Box({
+        style: { width: 40, height: 20 },
+        onPointerEnter: () => { prevFired++; },
+      });
+      const inst = Tooltip({ trigger, label: 'chained' });
+      reg.setAppRoot(inst);
+      trigger.handlers!.onPointerEnter?.({} as any);
+      expect(prevFired).toBe(1);
+      expect(reg.list().length).toBe(1);
+    });
+  });
+
+  it('chains trigger onPointerLeave — existing handler still fires', () => {
+    withReg((reg) => {
+      let prevFired = 0;
+      const trigger = Box({
+        style: { width: 40, height: 20 },
+        onPointerLeave: () => { prevFired++; },
+      });
+      const inst = Tooltip({ trigger, label: 'chained' });
+      reg.setAppRoot(inst);
+      trigger.handlers!.onPointerEnter?.({} as any);
+      trigger.handlers!.onPointerLeave?.({} as any);
+      expect(prevFired).toBe(1);
       expect(reg.list().length).toBe(0);
     });
   });

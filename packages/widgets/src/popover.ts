@@ -1,8 +1,8 @@
 import type { Instance } from '@cairn/runtime';
 import { useOverlays, hostContext } from '@cairn/runtime';
-import { createSignal, createEffect, useContext } from '@cairn/reactivity';
-import { Portal, Box, Stack, computePlacement, getAbsRect } from '@cairn/primitives';
-import type { Side } from '@cairn/primitives';
+import { createSignal, createEffect, useContext, type Accessor } from '@cairn/reactivity';
+import { Portal, Box, Stack, computePlacement, getAbsRect, mergeStyles, type StyleInput, type Side } from '@cairn/primitives';
+import { useWidgetTheme } from './theme';
 
 function safeViewport(): { w: number; h: number } {
   try {
@@ -15,41 +15,87 @@ function safeViewport(): { w: number; h: number } {
 }
 
 export interface PopoverProps {
-  content: Instance;
+  /** The trigger element — returned inline as the root of Popover. */
+  trigger: Instance;
+  /** The popover content. */
   children: Instance;
   side?: Side;
+  align?: 'start' | 'center' | 'end';
+  offset?: number;
+  /**
+   * Controlled open state. When provided (as a boolean or Accessor<boolean>),
+   * Popover does NOT toggle internally — it calls onOpenChange instead.
+   */
+  open?: boolean | Accessor<boolean>;
+  /** Initial open state for uncontrolled usage. */
+  defaultOpen?: boolean;
+  /** Fires with the next desired open value. */
+  onOpenChange?: (open: boolean) => void;
+  style?: StyleInput;
+  // Legacy alias kept for backward compat (old API used `content`)
+  content?: Instance;
 }
 
 export function Popover(props: PopoverProps): Instance {
-  const trigger = props.children;
+  const trigger = props.trigger;
+  const content = props.children ?? props.content!;
   const side = props.side ?? 'bottom';
+  const align = props.align ?? 'start';
+  const offset = props.offset ?? 4;
   const overlays = useOverlays();
+  const theme = useWidgetTheme();
 
-  const [open, setOpen] = createSignal(false);
+  // Determine controlled vs. uncontrolled
+  const isControlled = props.open !== undefined;
+  const resolveOpen = (): boolean =>
+    typeof props.open === 'function'
+      ? (props.open as Accessor<boolean>)()
+      : (props.open as boolean) ?? false;
 
-  // Chain existing onClick handler on trigger
+  const [internalOpen, setInternalOpen] = createSignal(props.defaultOpen ?? false);
+
+  const open = (): boolean => (isControlled ? resolveOpen() : internalOpen());
+
+  const toggle = (): void => {
+    const next = !open();
+    if (isControlled) {
+      props.onOpenChange?.(next);
+    } else {
+      setInternalOpen(next);
+      props.onOpenChange?.(next);
+    }
+  };
+
+  const close = (): void => {
+    if (isControlled) {
+      props.onOpenChange?.(false);
+    } else {
+      setInternalOpen(false);
+      props.onOpenChange?.(false);
+    }
+  };
+
+  // Chain existing onClick on trigger
   const prevClick = trigger.handlers?.onClick;
-
   trigger.handlers ??= {};
   trigger.handlers.onClick = (e) => {
     prevClick?.(e);
-    setOpen(!open());
-    return;
+    toggle();
   };
 
   const portalContent = (): Instance => {
     const appRoot = overlays.appRoot();
-    const anchor = appRoot ? (getAbsRect(trigger, appRoot) ?? { x: 0, y: 0, width: 0, height: 0 }) : { x: 0, y: 0, width: 0, height: 0 };
+    const anchor = appRoot
+      ? (getAbsRect(trigger, appRoot) ?? { x: 0, y: 0, width: 0, height: 0 })
+      : { x: 0, y: 0, width: 0, height: 0 };
     const vp = safeViewport();
     const contentSize = {
-      width: props.content.layout.size.w || 160,
-      height: props.content.layout.size.h || 40,
+      width: content.layout.size.w || 160,
+      height: content.layout.size.h || 40,
     };
-    const { x, y } = computePlacement(anchor, contentSize, vp, { side });
+    const { x, y } = computePlacement(anchor, contentSize, vp, { side, align, offset, flip: true });
 
-    const close = (): void => { setOpen(false); };
-
-    // Full-surface transparent catcher that closes on click / Escape
+    // Full-surface transparent catcher — closes on click or Escape
     const catcher = Box({
       style: { width: '100%', height: '100%' },
       focusable: true,
@@ -62,11 +108,20 @@ export function Popover(props: PopoverProps): Instance {
       },
     });
 
-    // Positioned content box — stopPropagation so clicks don't bubble to catcher
+    // Themed surface box wrapping the content, positioned absolutely
+    const defaultSurfaceStyle: StyleInput = () => ({
+      backgroundColor: theme.colors.surface,
+      border: { width: 1, color: theme.colors.borderStrong },
+      borderRadius: theme.radii.md,
+      boxShadow: { color: 'rgba(0,0,0,0.12)', blur: 12, offsetX: 0, offsetY: 4 },
+      padding: theme.spacing.sm,
+    });
+
     const contentBox = Box({
       left: x,
       top: y,
-      children: props.content,
+      style: mergeStyles(defaultSurfaceStyle, props.style),
+      children: content,
       onClick: (e) => { e.stopPropagation?.(); },
     });
 
@@ -77,9 +132,6 @@ export function Popover(props: PopoverProps): Instance {
     });
   };
 
-  // Register the popover Portal as an overlay while open (self-removes via onCleanup
-  // when the effect re-runs on close / owner disposes). The trigger returns inline;
-  // top-layer rendering is handled by the overlay layer, so no wrapping Stack.
   createEffect(() => {
     if (open()) portalContent();
   });
