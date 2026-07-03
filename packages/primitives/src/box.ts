@@ -1,6 +1,6 @@
 import { type Renderer, type Radii, type FillStyle, type Gradient, createPath } from '@cairn/host';
 import { computeObjectFit } from './image';
-import { BoxNode, toEdgeInsets } from '@cairn/layout';
+import { BoxNode } from '@cairn/layout';
 import { type Instance, bind } from '@cairn/runtime';
 import { type BaseStyle, type CornerRadius, type BorderSide, type StyleGradient, type Shadow } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
@@ -176,7 +176,7 @@ export function Box(props: BoxProps = {}): Instance {
     layout.maxWidth = s.maxWidth;
     layout.minHeight = s.minHeight;
     layout.maxHeight = s.maxHeight;
-    layout.padding = toEdgeInsets(s.padding);
+    layout.padding = s.padding ?? 0;
     layout.alignX = s.alignX ?? 'start';
     layout.alignY = s.alignY ?? 'start';
     layout.aspectRatio = s.aspectRatio;

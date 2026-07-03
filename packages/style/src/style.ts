@@ -1,4 +1,4 @@
-import type { EdgeInsets, Justify, Align, TrackSize } from '@cairn/layout';
+import type { EdgeInsets, Justify, Align, TrackSize, Length } from '@cairn/layout';
 
 /** Structural alias for ImageHandle from @cairn/host — kept local to avoid a cross-package dep. */
 export interface ImageHandle { readonly width: number; readonly height: number; }
@@ -35,18 +35,18 @@ export type StyleGradient = LinearGradient | RadialGradient;
 
 export interface BaseStyle {
   // layout
-  width?: number;
-  height?: number;
-  minWidth?: number;
-  maxWidth?: number;
-  minHeight?: number;
-  maxHeight?: number;
+  width?: Length;
+  height?: Length;
+  minWidth?: Length;
+  maxWidth?: Length;
+  minHeight?: Length;
+  maxHeight?: Length;
   left?: number;
   top?: number;
   right?: number;
   bottom?: number;
   inset?: number;
-  padding?: number | Partial<EdgeInsets>;
+  padding?: Length | Partial<Record<'top' | 'right' | 'bottom' | 'left', Length>>;
   margin?: number | Partial<EdgeInsets>;
   gap?: number;
   rowGap?: number;
