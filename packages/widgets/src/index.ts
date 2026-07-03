@@ -32,3 +32,13 @@ export { Menu, MenuItem, menuContext } from './menu';
 export type { MenuProps, MenuItemProps, MenuContextValue, MenuItemRecord } from './menu';
 export { Select, Option, selectContext } from './select';
 export type { SelectProps, OptionProps, SelectContextValue } from './select';
+export {
+  ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT,
+  HOME, END, ESCAPE, ENTER, SPACE, PAGE_UP, PAGE_DOWN,
+  isArrow, isVerticalArrow, isHorizontalArrow,
+} from './native/keys';
+export { createRoving } from './native/roving';
+export type { RovingOptions, RovingResult } from './native/roving';
+export { createTypeahead } from './native/typeahead';
+export type { TypeaheadOptions, TypeaheadResult } from './native/typeahead';
+export { useAnnounce } from './native/announce';
