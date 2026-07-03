@@ -8,7 +8,7 @@ import { Switch } from '../src/switch';
 describe('Switch thumb position', () => {
   it('thumb left reflects off/on and updates on toggle', () => {
     createRoot(() => {
-      const inst = Switch({ defaultValue: false });
+      const inst = Switch({ defaultChecked: false });
       const stack = inst.children[0];
       const thumb = stack.children[0];
       expect((thumb.layout as any).left).toBe(2);
