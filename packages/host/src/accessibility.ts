@@ -35,6 +35,12 @@ export interface SemanticsNodeData {
   max?: number;
   now?: number;
   focusable?: boolean;
+  /** textbox: current text value to reflect in the native input element */
+  placeholder?: string;
+  /** textbox: called when the native input changes value */
+  onInput?: (value: string) => void;
+  /** textbox: true if the field is a multi-line textarea */
+  multiline?: boolean;
   rect: { x: number; y: number; width: number; height: number };
   onActivate?: () => void;
   onFocus?: (keyboard: boolean) => void;
