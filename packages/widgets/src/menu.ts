@@ -1,9 +1,12 @@
-import type { Instance } from '@cairn/runtime';
+import type { Instance, SemanticsNode } from '@cairn/runtime';
 import { useOverlays, hostContext, Provider } from '@cairn/runtime';
 import { createSignal, createEffect, useContext, type Accessor } from '@cairn/reactivity';
 import { Box, Stack, Column, Row, Text, Portal, computePlacement, getAbsRect, mergeStyles, type StyleInput, type Side } from '@cairn/primitives';
 import { createCompoundContext } from './context';
 import { useWidgetTheme } from './theme';
+import { createRoving } from './native/roving';
+import { createTypeahead } from './native/typeahead';
+import { ESCAPE } from './native/keys';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
@@ -13,10 +16,15 @@ export interface MenuContextValue {
   setActive: (i: number) => void;
   /** Register an item; returns its index. */
   register: (item: MenuItemRecord) => number;
+  /** Handle arrow/Home/End key for roving. Returns true if consumed. */
+  handleRovingKey: (key: string) => boolean;
+  /** Handle a printable char for typeahead. Returns true if matched. */
+  handleTypeaheadChar: (ch: string) => boolean;
 }
 
 export interface MenuItemRecord {
   disabled: boolean;
+  label?: string;
 }
 
 export const menuContext = createCompoundContext<MenuContextValue>('Menu');
@@ -84,23 +92,42 @@ export function Menu(props: MenuProps): Instance {
     }
   };
 
-  // Roving state
-  const [active, setActive] = createSignal<number>(-1);
-
   // Registered items
   const items: MenuItemRecord[] = [];
+  const itemLabels: string[] = [];
+
+  const [itemCount, setItemCount] = createSignal(0);
+
+  // Roving: use createRoving toolkit
+  const roving = createRoving({ count: itemCount, orientation: 'vertical', loop: true });
+
+  // Typeahead for items
+  const typeahead = createTypeahead({
+    getLabels: () => itemLabels,
+    onMatch: (idx) => { roving.setActive(idx); },
+  });
 
   const register = (item: MenuItemRecord): number => {
     items.push(item);
+    itemLabels.push(item.label ?? '');
+    setItemCount(items.length);
     return items.length - 1;
   };
 
   const ctx: MenuContextValue = {
     close,
-    active,
-    setActive,
+    active: roving.active,
+    setActive: roving.setActive,
     register,
+    handleRovingKey: roving.handleKey,
+    handleTypeaheadChar: typeahead.handleChar,
   };
+
+  // Keep trigger expanded semantics in sync
+  createEffect(() => {
+    const sem = (trigger as any).semantics as SemanticsNode | undefined;
+    if (sem) sem.expanded = open();
+  });
 
   // Chain existing onClick on trigger
   const prevClick = trigger.handlers?.onClick;
@@ -189,7 +216,7 @@ export function MenuItem(props: MenuItemProps): Instance {
   const theme = useWidgetTheme();
   const ctx = menuContext.use();
 
-  const myIndex = ctx.register({ disabled: !!props.disabled });
+  const myIndex = ctx.register({ disabled: !!props.disabled, label: props.label ?? '' });
 
   const isDisabled = !!props.disabled;
 
@@ -202,18 +229,16 @@ export function MenuItem(props: MenuItemProps): Instance {
   };
 
   const handleKeyDown = (e: any): void => {
-    if (isDisabled) return;
     if (e.key === 'Enter') {
       e.preventDefault?.();
-      select();
-    } else if (e.key === 'ArrowDown') {
+      if (!isDisabled) select();
+    } else if (e.key === ESCAPE) {
       e.preventDefault?.();
-      const current = ctx.active();
-      ctx.setActive(current + 1);
-    } else if (e.key === 'ArrowUp') {
+      ctx.close();
+    } else if (ctx.handleRovingKey(e.key)) {
       e.preventDefault?.();
-      const current = ctx.active();
-      ctx.setActive(Math.max(0, current - 1));
+    } else if (e.key.length === 1) {
+      ctx.handleTypeaheadChar(e.key);
     }
   };
 
@@ -251,6 +276,30 @@ export function MenuItem(props: MenuItemProps): Instance {
     },
     onKeyDown: handleKeyDown,
     children: [content],
+  });
+
+  // ── Semantics ──
+  const itemSemantics: SemanticsNode = {
+    role: 'menuitem',
+    label: props.label,
+    disabled: isDisabled,
+    focusable: isActive(),
+    autoFocus: isActive(),
+    onActivate: isDisabled ? undefined : select,
+    onKeyDown: (key, _mods) => {
+      if (key === ESCAPE) { ctx.close(); return true; }
+      if (ctx.handleRovingKey(key)) return true;
+      if (key.length === 1) return ctx.handleTypeaheadChar(key);
+      return false;
+    },
+  };
+
+  instance.semantics = itemSemantics;
+
+  // Keep focusable/autoFocus reactive
+  createEffect(() => {
+    itemSemantics.focusable = isActive();
+    itemSemantics.autoFocus = isActive();
   });
 
   return instance;
