@@ -11,3 +11,5 @@ export { StackNode } from './stack';
 export type { StackNodeProps } from './stack';
 export { parseTracks, parsePlacement } from './grid-parse';
 export type { TrackSize, Placement } from './grid-parse';
+export { GridNode } from './grid';
+export type { GridNodeProps, GridAlign } from './grid';
