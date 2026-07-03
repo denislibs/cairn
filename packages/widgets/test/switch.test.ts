@@ -22,11 +22,11 @@ describe('Switch — uncontrolled', () => {
     });
   });
 
-  it('Space key toggles', () => {
+  it('Space key toggles (on keyup)', () => {
     createRoot(() => {
       const seen: boolean[] = [];
       const inst = Switch({ defaultChecked: false, onChange: (v) => seen.push(v) });
-      inst.handlers!.onKeyDown!({ key: ' ' } as any);
+      inst.handlers!.onKeyUp!({ key: ' ' } as any);
       expect(seen).toEqual([true]);
     });
   });
@@ -88,7 +88,7 @@ describe('Switch — disabled', () => {
     createRoot(() => {
       const seen: boolean[] = [];
       const inst = Switch({ defaultChecked: false, disabled: true, onChange: (v) => seen.push(v) });
-      inst.handlers!.onKeyDown!({ key: ' ' } as any);
+      inst.handlers!.onKeyUp!({ key: ' ' } as any);
       expect(seen).toEqual([]);
     });
   });

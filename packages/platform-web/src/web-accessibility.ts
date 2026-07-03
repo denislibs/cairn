@@ -17,8 +17,11 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
   private container: HTMLElement | null = null;
   private elementMap = new Map<number, ElementState>();
   private modality: 'keyboard' | 'pointer' = 'pointer';
+  private lastAutoFocusId: number | null = null;
+  private livePolite: HTMLElement | null = null;
+  private liveAssertive: HTMLElement | null = null;
 
-  private onKeyDown = (): void => { this.modality = 'keyboard'; };
+  private onModalityKeyDown = (): void => { this.modality = 'keyboard'; };
   private onPointerDown = (): void => { this.modality = 'pointer'; };
 
   constructor(private canvas: HTMLCanvasElement, private doc?: Document) {
@@ -40,7 +43,7 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
 
     // Track input modality via window listeners
     const win = document.defaultView ?? globalThis;
-    win.addEventListener('keydown', this.onKeyDown, true);
+    win.addEventListener('keydown', this.onModalityKeyDown, true);
     win.addEventListener('pointerdown', this.onPointerDown, true);
   }
 
@@ -97,6 +100,17 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
         active.focus();
       }
     }
+
+    // autoFocus — edge-triggered: only focus when the autoFocus target changes
+    const autoFocusNode = visible.find((n) => n.autoFocus === true);
+    if (autoFocusNode) {
+      if (autoFocusNode.id !== this.lastAutoFocusId) {
+        this.elementMap.get(autoFocusNode.id)?.el.focus();
+        this.lastAutoFocusId = autoFocusNode.id;
+      }
+    } else {
+      this.lastAutoFocusId = null;
+    }
   }
 
   private createElement(role: SemanticsNodeData['role']): HTMLElement {
@@ -128,6 +142,37 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
     el.addEventListener('blur', () => {
       getState()?.node.onBlur?.();
     });
+
+    // Non-button roles use <div role="..."> which don't get native Enter/Space
+    // activation — wire it up manually. Buttons already handle this natively.
+    if (el.tagName !== 'BUTTON') {
+      el.addEventListener('keydown', (e: KeyboardEvent) => {
+        const node = getState()?.node;
+        if (!node) return;
+
+        // Forward to onKeyDown first; if handled, preventDefault and skip activation
+        const handled = node.onKeyDown?.(e.key, {
+          shift: e.shiftKey,
+          ctrl: e.ctrlKey,
+          alt: e.altKey,
+          meta: e.metaKey,
+        }) ?? false;
+
+        if (handled) {
+          e.preventDefault();
+          return; // skip Enter/Space activation
+        }
+
+        // Synthesize activation for Enter and Space (screen-reader convention).
+        // Only prevent Space's default scroll when there is an activate handler.
+        if (e.key === 'Enter') {
+          node.onActivate?.();
+        } else if (e.key === ' ' && node.onActivate) {
+          e.preventDefault();
+          node.onActivate();
+        }
+      });
+    }
   }
 
   private updateAttributes(el: HTMLElement, node: SemanticsNodeData): void {
@@ -173,6 +218,46 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
     el.style.opacity = '0';
   }
 
+  focus(id: number): void {
+    this.elementMap.get(id)?.el.focus();
+  }
+
+  announce(message: string, assertive = false): void {
+    if (!this.container) return; // guard against post-dispose calls
+    const region = assertive ? this.getAssertiveRegion() : this.getPoliteRegion();
+    region.textContent = '';
+    Promise.resolve().then(() => { region.textContent = message; });
+  }
+
+  private getPoliteRegion(): HTMLElement {
+    if (!this.livePolite) {
+      this.livePolite = this.createLiveRegion('polite');
+    }
+    return this.livePolite;
+  }
+
+  private getAssertiveRegion(): HTMLElement {
+    if (!this.liveAssertive) {
+      this.liveAssertive = this.createLiveRegion('assertive');
+    }
+    return this.liveAssertive;
+  }
+
+  private createLiveRegion(politeness: 'polite' | 'assertive'): HTMLElement {
+    const doc = this.getDoc();
+    const el = doc.createElement('div');
+    el.setAttribute('aria-live', politeness);
+    el.setAttribute('aria-atomic', 'true');
+    el.style.position = 'absolute';
+    el.style.width = '1px';
+    el.style.height = '1px';
+    el.style.overflow = 'hidden';
+    el.style.clip = 'rect(0,0,0,0)';
+    // Append directly to the container's parent so it persists across syncs
+    (this.container?.parentElement ?? doc.body).appendChild(el);
+    return el;
+  }
+
   private setOrRemoveAttr(el: HTMLElement, attr: string, value: string | undefined): void {
     if (value !== undefined) {
       el.setAttribute(attr, value);
@@ -185,11 +270,16 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
     if (!this.container) return;
 
     const win = this.getDoc().defaultView ?? globalThis;
-    win.removeEventListener('keydown', this.onKeyDown, true);
+    win.removeEventListener('keydown', this.onModalityKeyDown, true);
     win.removeEventListener('pointerdown', this.onPointerDown, true);
 
     this.container.remove();
     this.container = null;
     this.elementMap.clear();
+    this.livePolite?.remove();
+    this.livePolite = null;
+    this.liveAssertive?.remove();
+    this.liveAssertive = null;
+    this.lastAutoFocusId = null;
   }
 }

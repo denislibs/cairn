@@ -111,13 +111,13 @@ describe('Radio — checked state', () => {
 });
 
 describe('Radio — Space key', () => {
-  it('Space key selects the radio', () => {
+  it('Space key selects the radio (on keyup)', () => {
     createRoot(() => {
       const seen: any[] = [];
       const group = RadioGroup({ defaultValue: 'a', onChange: (v) => seen.push(v) });
       runWithContext(radioGroupContext.context, group._ctx, () => {
         const radio = Radio({ value: 'b' });
-        radio.handlers!.onKeyDown!({ key: ' ' } as any);
+        radio.handlers!.onKeyUp!({ key: ' ' } as any);
       });
       expect(seen).toEqual(['b']);
     });

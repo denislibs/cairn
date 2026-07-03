@@ -45,11 +45,11 @@ describe('Material Button — onClick', () => {
     }));
   });
 
-  it('calls onClick via Space key', () => {
+  it('calls onClick via Space key (on keyup)', () => {
     createRoot(() => withContext(() => {
       let clicked = 0;
       const inst = Button({ label: 'Click', onClick: () => clicked++ });
-      inst.handlers!.onKeyDown!({ key: ' ' } as any);
+      inst.handlers!.onKeyUp!({ key: ' ' } as any);
       expect(clicked).toBe(1);
     }));
   });

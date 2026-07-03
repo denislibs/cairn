@@ -36,9 +36,13 @@ export interface SemanticsNodeData {
   onActivate?: () => void;
   onFocus?: (keyboard: boolean) => void;
   onBlur?: () => void;
+  onKeyDown?: (key: string, mods: { shift: boolean; ctrl: boolean; alt: boolean; meta: boolean }) => boolean;
+  autoFocus?: boolean;
 }
 
 export interface AccessibilityBridge {
   sync(nodes: SemanticsNodeData[]): void;
+  focus(id: number): void;
+  announce(message: string, assertive?: boolean): void;
   dispose(): void;
 }

@@ -25,11 +25,11 @@ describe('Button — onClick', () => {
     });
   });
 
-  it('calls onClick via Space key', () => {
+  it('calls onClick via Space key (on keyup)', () => {
     createRoot(() => {
       let clicked = 0;
       const inst = Button({ label: 'OK', onClick: () => clicked++ });
-      inst.handlers!.onKeyDown!({ key: ' ' } as any);
+      inst.handlers!.onKeyUp!({ key: ' ' } as any);
       expect(clicked).toBe(1);
     });
   });
