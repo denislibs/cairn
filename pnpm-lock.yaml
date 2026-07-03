@@ -32,6 +32,33 @@ importers:
         specifier: workspace:*
         version: link:../host
 
+  packages/material:
+    dependencies:
+      '@cairn/events':
+        specifier: workspace:*
+        version: link:../events
+      '@cairn/host':
+        specifier: workspace:*
+        version: link:../host
+      '@cairn/layout':
+        specifier: workspace:*
+        version: link:../layout
+      '@cairn/primitives':
+        specifier: workspace:*
+        version: link:../primitives
+      '@cairn/reactivity':
+        specifier: workspace:*
+        version: link:../reactivity
+      '@cairn/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@cairn/style':
+        specifier: workspace:*
+        version: link:../style
+      '@cairn/widgets':
+        specifier: workspace:*
+        version: link:../widgets
+
   packages/platform-web:
     dependencies:
       '@cairn/host':
