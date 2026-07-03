@@ -121,6 +121,35 @@ test('onActivate, onFocus, onBlur are carried through', () => {
   expect(blurred).toBe(true);
 });
 
+test('onKeyDown is carried through', () => {
+  let lastKey = '';
+  let lastMods = { shift: false, ctrl: false, alt: false, meta: false };
+  const handler = (key: string, mods: { shift: boolean; ctrl: boolean; alt: boolean; meta: boolean }) => {
+    lastKey = key;
+    lastMods = mods;
+    return true;
+  };
+  const sem: SemanticsNode = { role: 'button', label: 'K', onKeyDown: handler };
+  const inst = makeInstance(0, 0, 50, 50, sem);
+  const root = makeInstance(0, 0, 200, 100, undefined, [inst]);
+
+  const [node] = collectSemantics(root);
+  expect(node.onKeyDown).toBeDefined();
+  const result = node.onKeyDown!('Enter', { shift: false, ctrl: true, alt: false, meta: false });
+  expect(result).toBe(true);
+  expect(lastKey).toBe('Enter');
+  expect(lastMods.ctrl).toBe(true);
+});
+
+test('autoFocus is carried through', () => {
+  const sem: SemanticsNode = { role: 'textbox', label: 'Name', autoFocus: true };
+  const inst = makeInstance(0, 0, 50, 50, sem);
+  const root = makeInstance(0, 0, 200, 100, undefined, [inst]);
+
+  const [node] = collectSemantics(root);
+  expect(node.autoFocus).toBe(true);
+});
+
 test('optional fields (checked, selected, expanded, disabled, readonly, level, min, max, now, focusable) are carried through', () => {
   const sem: SemanticsNode = {
     role: 'checkbox',

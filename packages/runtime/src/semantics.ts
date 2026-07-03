@@ -21,6 +21,8 @@ export interface SemanticsNode {
   onActivate?: () => void;
   onFocus?: (keyboard: boolean) => void;
   onBlur?: () => void;
+  onKeyDown?: (key: string, mods: { shift: boolean; ctrl: boolean; alt: boolean; meta: boolean }) => boolean;
+  autoFocus?: boolean;
 }
 
 // Stable id assignment: WeakMap so Instance keys are not retained beyond their
@@ -76,6 +78,8 @@ function walk(inst: Instance, absX: number, absY: number, out: SemanticsNodeData
     if (sem.onActivate !== undefined) data.onActivate = sem.onActivate;
     if (sem.onFocus !== undefined) data.onFocus = sem.onFocus;
     if (sem.onBlur !== undefined) data.onBlur = sem.onBlur;
+    if (sem.onKeyDown !== undefined) data.onKeyDown = sem.onKeyDown;
+    if (sem.autoFocus !== undefined) data.autoFocus = sem.autoFocus;
     out.push(data);
   }
 
