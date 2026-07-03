@@ -10,4 +10,4 @@ export type { TextTransform } from './text-transform';
 export { resolveVariant } from './variant';
 export { easings, cubicBezier, resolveEasing, spring } from './easing';
 export type { EasingName, EasingFn } from './easing';
-export { lerp, lerpColor, interpolateValue } from './interpolate';
+export { lerp, lerpColor, interpolateValue, lerpLength, lerpTransform, lerpShadow, lerpRadii, lerpInsets } from './interpolate';
