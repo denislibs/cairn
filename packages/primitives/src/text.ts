@@ -48,10 +48,11 @@ export function Text(props: TextProps = {}): Instance {
         ? (layout as any).lines
         : [layout.text];
 
+      const font = composeFont(s);
       lines.forEach((line: string, i: number) => {
         const y = useLine ? i * lineH + lineH / 2 : i * lineH;
         r.drawText(line, { x, y }, {
-          font: composeFont(s),
+          font,
           color: s.color ?? '#000',
           align,
           baseline,
@@ -60,6 +61,24 @@ export function Text(props: TextProps = {}): Instance {
       });
 
       if (s.textShadow) { r.setShadow(null); r.restore(); }
+
+      if (s.textDecoration && s.textDecoration !== 'none') {
+        const lineWidths: number[] = (layout as any).lineWidths ?? [];
+        const fontSize = fontSizePx(font);
+        const thickness = Math.max(1, fontSize / 16);
+        lines.forEach((_line: string, i: number) => {
+          const lw = lineWidths[i] ?? w;
+          const xStart = align === 'center' ? w / 2 - lw / 2 : align === 'right' ? w - lw : 0;
+          const lineTop = i * lineH;
+          const decorY = s.textDecoration === 'underline'
+            ? (useLine ? lineTop + lineH / 2 + fontSize / 2 : lineTop + fontSize)
+            : (useLine ? lineTop + lineH / 2 : lineTop + lineH / 2);
+          r.fillRect(
+            { x: xStart, y: decorY, width: lw, height: thickness },
+            { color: s.color ?? '#000' },
+          );
+        });
+      }
     },
   };
 

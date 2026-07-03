@@ -23,6 +23,7 @@ export class TextNode extends LayoutNode {
   maxLines?: number;
   ellipsis?: string;
   lines: string[] = [];
+  lineWidths: number[] = [];
 
   constructor(props: TextNodeProps) {
     super();
@@ -73,7 +74,9 @@ export class TextNode extends LayoutNode {
     }
 
     this.lines = lines;
-    const widest = lines.reduce((m, l) => Math.max(m, ctx.measureText(l, this.style).width), 0);
+    const measuredWidths = lines.map((l) => ctx.measureText(l, this.style).width);
+    this.lineWidths = measuredWidths;
+    const widest = measuredWidths.reduce((m, lw) => Math.max(m, lw), 0);
     const w = clamp(widest, c.minW, c.maxW);
     const h = clamp(lines.length * lineH, c.minH, c.maxH);
     this.size = { w, h };

@@ -75,6 +75,7 @@ export interface BaseStyle {
   overflow?: 'visible' | 'hidden' | 'clip';
   maxLines?: number;
   ellipsis?: string;
+  textDecoration?: 'none' | 'underline' | 'line-through';
 }
 
 export type Style = BaseStyle & Partial<Record<StateName, BaseStyle>>;
