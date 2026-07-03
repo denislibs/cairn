@@ -10,7 +10,7 @@ Button / Checkbox / Switch / Slider / Divider (`@cairn/widgets`); `Input` = Text
 ## Sub-phases
 - **P10-1 — Spacer + TextInput alias.** `Spacer` (flex filler / fixed gap); export `Input as TextInput`.
 - **P10-2 — Image async.** `Image` accepts `src: string` (URL): async load, module-level cache, loading spinner + error fallback (keeps the existing `ImageHandle` path).
-- **P10-3 — ScrollView virtualization + inertia.** Virtual viewport (render only visible items for large keyed lists) + momentum/inertia fling after drag release.
+- **P10-3 — ScrollView inertia.** Momentum/inertia fling after drag release. (Virtualization DESCOPED — out of scope for the framework for now.)
 - **P10-4 — TextArea.** Multi-line text input on the text-input seam + S2 multi-line text engine.
 - **P10-5 — Form + validation.** `Form` container, field registration, validation rules, submit handling, per-field errors.
 - **P10-6 — M6 showcase demo.** One example app using every primitive/widget together.
