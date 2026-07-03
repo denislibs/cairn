@@ -6,6 +6,7 @@ import { type Instance, paint } from './instance';
 import { setFrameRequester, flushAfterLayout, scheduleFrame } from './scheduler';
 import { hostContext } from './host-context';
 import { createOverlayRegistry, overlayContext } from './overlays';
+import { collectSemantics } from './semantics';
 
 // Returns the topmost cursor in a target-first path, falling back to 'default'.
 export function cursorOf(path: { cursor?: string }[]): string {
@@ -44,6 +45,7 @@ export function mount(component: () => Instance, host: Host): () => void {
       const list = overlays.list();
       for (const o of list) o.layout.layout({ minW: 0, maxW: w, minH: 0, maxH: h }, ctx);
       flushAfterLayout();
+      if (host.a11y) host.a11y.sync(collectSemantics(root));
       host.renderer.beginFrame();
       host.renderer.clear();
       paint(root, host.renderer);
@@ -74,14 +76,27 @@ export function mount(component: () => Instance, host: Host): () => void {
     // during rapid changes. The host syncs the backing store before the frame.
     const unsubscribeResize = host.metrics.onResize(() => scheduleFrame());
 
-    const focus = createFocusManager(layered);
-    const dispatcher = createPointerDispatcher(layered, {
-      onPointerDown: (path) => focus.focusFromPointer(path),
-      onHoverChange: (path) => host.setCursor?.(cursorOf(path)),
-    });
+    // When a11y bridge is present, native DOM focus is authoritative — the bridge
+    // owns Tab/keyboard navigation for semantic nodes. Skip the canvas focus
+    // manager to prevent double-activation. The pointer dispatcher stays on so
+    // mouse clicks still flow through the canvas pipeline.
+    let unsubscribeKey: () => void = () => {};
+    const dispatcher = host.a11y
+      ? createPointerDispatcher(layered, {
+          onHoverChange: (path) => host.setCursor?.(cursorOf(path)),
+        })
+      : (() => {
+          const focus = createFocusManager(layered);
+          const d = createPointerDispatcher(layered, {
+            onPointerDown: (path) => focus.focusFromPointer(path),
+            onHoverChange: (path) => host.setCursor?.(cursorOf(path)),
+          });
+          unsubscribeKey = host.input.onKey((e) => focus.handleKey(e));
+          return d;
+        })();
+
     const unsubscribePointer = host.input.onPointer((e) => dispatcher.handlePointer(e));
     const unsubscribeWheel = host.input.onWheel((e) => dispatcher.handleWheel(e));
-    const unsubscribeKey = host.input.onKey((e) => focus.handleKey(e));
 
     return () => {
       unsubscribePointer();
@@ -89,6 +104,7 @@ export function mount(component: () => Instance, host: Host): () => void {
       unsubscribeKey();
       unsubscribeResize(); // avoid re-render on a disposed tree
       setFrameRequester(null);
+      host.a11y?.dispose();
       dispose();
     };
   });
