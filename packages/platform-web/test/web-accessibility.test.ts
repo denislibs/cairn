@@ -283,3 +283,119 @@ test('re-syncing the same nodes does not move elements — focus is preserved', 
 
   bridge.dispose();
 });
+
+// ── NF1 Task 2: keyboard forwarding, autoFocus, focus(), announce() ──────────
+
+test('checkbox keydown Space calls onActivate and prevents default', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  let activated = false;
+  bridge.sync([{ id: 1, role: 'checkbox', label: 'Accept', rect: makeRect(), onActivate: () => { activated = true; } }]);
+  const el = canvas.parentElement!.querySelector('[role="checkbox"]') as HTMLElement;
+  const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+  el.dispatchEvent(event);
+  expect(activated).toBe(true);
+  expect(event.defaultPrevented).toBe(true);
+  bridge.dispose();
+});
+
+test('checkbox keydown Enter calls onActivate', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  let activated = false;
+  bridge.sync([{ id: 1, role: 'checkbox', label: 'Accept', rect: makeRect(), onActivate: () => { activated = true; } }]);
+  const el = canvas.parentElement!.querySelector('[role="checkbox"]') as HTMLElement;
+  el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  expect(activated).toBe(true);
+  bridge.dispose();
+});
+
+test('onKeyDown returning true prevents default and skips activation', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  let activated = false;
+  const onKeyDown = (key: string) => { return key === 'ArrowDown'; };
+  bridge.sync([{ id: 1, role: 'checkbox', label: 'X', rect: makeRect(), onKeyDown, onActivate: () => { activated = false; } }]);
+  const el = canvas.parentElement!.querySelector('[role="checkbox"]') as HTMLElement;
+  const event = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true });
+  el.dispatchEvent(event);
+  expect(event.defaultPrevented).toBe(true);
+  expect(activated).toBe(false);
+  bridge.dispose();
+});
+
+test('onKeyDown returning false on Space does not prevent default — activation runs', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  let activated = false;
+  const onKeyDown = () => false;
+  bridge.sync([{ id: 1, role: 'checkbox', label: 'X', rect: makeRect(), onKeyDown, onActivate: () => { activated = true; } }]);
+  const el = canvas.parentElement!.querySelector('[role="checkbox"]') as HTMLElement;
+  const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+  el.dispatchEvent(event);
+  expect(activated).toBe(true);
+  bridge.dispose();
+});
+
+test('autoFocus node is focused after sync', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  bridge.sync([{ id: 1, role: 'button', label: 'Auto', rect: makeRect(), focusable: true, autoFocus: true }]);
+  const btn = canvas.parentElement!.querySelector('button') as HTMLElement;
+  expect(document.activeElement).toBe(btn);
+  bridge.dispose();
+});
+
+test('autoFocus is edge-triggered — does not re-focus on identical second sync', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  const node: SemanticsNodeData = { id: 1, role: 'button', label: 'Auto', rect: makeRect(), focusable: true, autoFocus: true };
+  bridge.sync([node]);
+
+  // Now focus something else manually
+  const other = document.createElement('button');
+  document.body.appendChild(other);
+  other.focus();
+  expect(document.activeElement).toBe(other);
+
+  // Second sync with same autoFocus id should NOT re-focus the bridge element
+  bridge.sync([node]);
+  expect(document.activeElement).toBe(other); // still on 'other'
+
+  bridge.dispose();
+});
+
+test('focus(id) focuses the element with that id', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  bridge.sync([{ id: 5, role: 'button', label: 'Target', rect: makeRect(), focusable: true }]);
+  bridge.focus(5);
+  const btn = canvas.parentElement!.querySelector('button') as HTMLElement;
+  expect(document.activeElement).toBe(btn);
+  bridge.dispose();
+});
+
+test('announce sets polite aria-live region text', async () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  bridge.sync([]);
+  bridge.announce('Hello world');
+  // wait for microtask
+  await Promise.resolve();
+  const polite = canvas.parentElement!.querySelector('[aria-live="polite"]');
+  expect(polite).not.toBeNull();
+  expect(polite!.textContent).toBe('Hello world');
+  bridge.dispose();
+});
+
+test('announce assertive sets assertive aria-live region text', async () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  bridge.sync([]);
+  bridge.announce('Alert!', true);
+  await Promise.resolve();
+  const assertive = canvas.parentElement!.querySelector('[aria-live="assertive"]');
+  expect(assertive).not.toBeNull();
+  expect(assertive!.textContent).toBe('Alert!');
+  bridge.dispose();
+});
