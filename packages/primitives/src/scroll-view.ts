@@ -1,6 +1,6 @@
 import { ScrollNode, StackNode, BoxNode, clamp } from '@cairn/layout';
-import { type Instance, bind } from '@cairn/runtime';
-import { createSignal, type Accessor } from '@cairn/reactivity';
+import { type Instance, bind, hostContext } from '@cairn/runtime';
+import { createSignal, useContext, type Accessor } from '@cairn/reactivity';
 import { type BaseStyle } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
@@ -17,6 +17,7 @@ export interface ScrollViewProps extends EventProps, LayoutChildProps {
   scrollLeft?: number | Accessor<number>;
   onScroll?: (pos: { x: number; y: number }) => void;
   focusable?: boolean;
+  momentum?: boolean;
 }
 
 function readCtl(v: number | Accessor<number> | undefined): number {
@@ -73,6 +74,29 @@ export function ScrollView(props: ScrollViewProps = {}): Instance {
   const scrollsY = (props.direction ?? 'vertical') !== 'horizontal';
   const scrollsX = props.direction === 'horizontal' || props.direction === 'both';
 
+  const host = useContext(hostContext);
+  const momentumOn = props.momentum !== false && host !== null;
+  let velX = 0, velY = 0;
+  let momentumHandle = 0;
+  let momentumCancel: (() => void) | null = null;
+  const stopMomentum = (): void => { momentumCancel?.(); momentumCancel = null; };
+  const FRICTION = 0.94, MIN_V = 0.4, START = 1;
+  const startMomentum = (): void => {
+    if (!host) return;
+    stopMomentum();
+    let cancelled = false;
+    const step = (): void => {
+      if (cancelled) return;
+      velY *= FRICTION; velX *= FRICTION;
+      let alive = false;
+      if (scrollsY && Math.abs(velY) > MIN_V) { const b = readY(); commitY(b + velY); if (readY() !== b) alive = true; else velY = 0; }
+      if (scrollsX && Math.abs(velX) > MIN_V) { const b = readX(); commitX(b + velX); if (readX() !== b) alive = true; else velX = 0; }
+      if (alive) { momentumHandle = host.scheduler.requestFrame(step); } else { momentumCancel = null; }
+    };
+    momentumHandle = host.scheduler.requestFrame(step);
+    momentumCancel = () => { cancelled = true; host.scheduler.cancelFrame(momentumHandle); };
+  };
+
   // Build the viewport instance (the scroll container itself, without input handlers)
   const viewportInst: Instance = {
     layout: node,
@@ -98,6 +122,7 @@ export function ScrollView(props: ScrollViewProps = {}): Instance {
   // Wheel handler: scroll on wheel event
   const prevOnWheel = props.onWheel;
   handlers.onWheel = (e) => {
+    stopMomentum();
     if (scrollsY && e.deltaY) commitY(readY() + e.deltaY);
     if (scrollsX && e.deltaX) commitX(readX() + e.deltaX);
     prevOnWheel?.(e);
@@ -110,6 +135,7 @@ export function ScrollView(props: ScrollViewProps = {}): Instance {
 
   const prevOnPointerDown = props.onPointerDown;
   handlers.onPointerDown = (e) => {
+    stopMomentum(); velX = 0; velY = 0;
     dragging = true;
     lastX = e.localX ?? 0;
     lastY = e.localY ?? 0;
@@ -121,8 +147,12 @@ export function ScrollView(props: ScrollViewProps = {}): Instance {
     if (dragging) {
       const nx = e.localX ?? 0;
       const ny = e.localY ?? 0;
-      if (scrollsY) commitY(readY() - (ny - lastY));
-      if (scrollsX) commitX(readX() - (nx - lastX));
+      const dScrollY = -(ny - lastY);
+      const dScrollX = -(nx - lastX);
+      if (scrollsY) commitY(readY() + dScrollY);
+      if (scrollsX) commitX(readX() + dScrollX);
+      velY = 0.7 * velY + 0.3 * dScrollY;
+      velX = 0.7 * velX + 0.3 * dScrollX;
       lastX = nx;
       lastY = ny;
     }
@@ -132,12 +162,14 @@ export function ScrollView(props: ScrollViewProps = {}): Instance {
   const prevOnPointerUp = props.onPointerUp;
   handlers.onPointerUp = (e) => {
     dragging = false;
+    if (momentumOn && (Math.abs(velY) > START || Math.abs(velX) > START)) startMomentum();
     prevOnPointerUp?.(e);
   };
 
   const prevOnPointerLeave = props.onPointerLeave;
   handlers.onPointerLeave = (e) => {
     dragging = false;
+    if (momentumOn && (Math.abs(velY) > START || Math.abs(velX) > START)) startMomentum();
     prevOnPointerLeave?.(e);
   };
 
