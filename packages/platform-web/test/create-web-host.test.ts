@@ -54,6 +54,44 @@ test('createWebHost configures the renderer backing store from metrics (DPR appl
   expect(fakeCtx.calls).toContainEqual(['setTransform', 2, 0, 0, 2, 0, 0]);
 });
 
+test('frame scheduler self-heals the backing to the live DPR before each frame', () => {
+  const raf = vi.fn((cb: (t: number) => void) => { cb(0); return 1; });
+  vi.stubGlobal('requestAnimationFrame', raf);
+  vi.stubGlobal('cancelAnimationFrame', vi.fn());
+
+  const canvas = fakeCanvas(300, 150);
+  const host = createWebHost(canvas);
+  expect(canvas.width).toBe(600); // dpr 2
+
+  // DPR jumps (browser zoom / monitor move) with NO resize or matchMedia event.
+  vi.stubGlobal('devicePixelRatio', 3);
+
+  // The next scheduled frame syncs the backing store before running the callback.
+  let painted = false;
+  host.scheduler.requestFrame(() => { painted = true; });
+  expect(painted).toBe(true);
+  expect(canvas.width).toBe(900); // 300 * 3 — crisp at the new DPR
+  expect(canvas.height).toBe(450);
+});
+
+test('renderer.resize is idempotent — an unchanged size does not rewrite the backing store', () => {
+  const canvas = fakeCanvas(300, 150);
+  let widthWrites = 0;
+  let backing = 600;
+  Object.defineProperty(canvas, 'width', {
+    get: () => backing,
+    set: (v: number) => { widthWrites++; backing = v; },
+  });
+
+  const host = createWebHost(canvas); // one write (initial sizing)
+  const afterInit = widthWrites;
+  expect(afterInit).toBeGreaterThan(0);
+
+  // Same logical size + dpr → backing must NOT be rewritten (rewriting clears the canvas).
+  host.renderer.resize(300, 150, 2);
+  expect(widthWrites).toBe(afterInit);
+});
+
 test('createWebHost keeps the backing store in sync on resize', () => {
   const canvas = fakeCanvas(300, 150);
   createWebHost(canvas);
