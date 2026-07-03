@@ -1,5 +1,5 @@
 import { createSignal, createEffect, untrack } from '@cairn/reactivity';
-import { animate } from '@cairn/runtime';
+import { animate, animateSpring, type SpringHandle } from '@cairn/runtime';
 import { interpolateValue, resolveEasing, type BaseStyle, type TransitionConfig } from '@cairn/style';
 
 const ANIMATABLE = [
@@ -37,6 +37,8 @@ export function createStyleTransitions(resolved: () => BaseStyle): () => BaseSty
     sigs[p] = [get, set];
   }
   const cancels: Partial<Record<Anim, () => void>> = {};
+  // Spring handles keyed by prop — tracks velocity for carry-over on retarget.
+  const springs: Partial<Record<Anim, SpringHandle>> = {};
 
   createEffect(() => {
     const r = resolved();
@@ -46,17 +48,43 @@ export function createStyleTransitions(resolved: () => BaseStyle): () => BaseSty
       const current = untrack(get);
       const cfg = configFor(r.transition, p);
       if (valuesEqual(target, current)) continue;
-      cancels[p]?.();
+
       if (cfg && current !== undefined && target !== undefined) {
-        const from = current, to = target;
-        const ease = resolveEasing(cfg.easing);
-        cancels[p] = animate({
-          from: 0, to: 1, duration: cfg.duration, easing: ease, delay: cfg.delay,
-          onUpdate: (t) => set(interpolateValue(from, to, t)),
-          onDone: () => set(to),
-        });
+        const fromVal = current, toVal = target;
+        if (cfg.spring) {
+          // Carry velocity from any in-progress spring (in progress-space 0→1).
+          const carry = springs[p]?.velocity() ?? 0;
+          springs[p]?.cancel();
+          cancels[p]?.();
+          springs[p] = animateSpring({
+            from: 0, to: 1,
+            stiffness: cfg.spring.stiffness,
+            damping: cfg.spring.damping,
+            mass: cfg.spring.mass,
+            initialVelocity: carry,
+            onUpdate: (prog) => set(interpolateValue(fromVal, toVal, prog)),
+            onDone: () => set(toVal),
+          });
+          cancels[p] = springs[p]!.cancel;
+        } else {
+          // Time-based tween — cancel any spring first.
+          springs[p]?.cancel();
+          springs[p] = undefined;
+          cancels[p]?.();
+          const ease = resolveEasing(cfg.easing);
+          cancels[p] = animate({
+            from: 0, to: 1, duration: cfg.duration!, easing: ease, delay: cfg.delay,
+            onUpdate: (t) => set(interpolateValue(fromVal, toVal, t)),
+            onDone: () => set(toVal),
+          });
+        }
       } else {
-        set(target); // snap
+        // Snap — cancel any running animation.
+        springs[p]?.cancel();
+        springs[p] = undefined;
+        cancels[p]?.();
+        cancels[p] = undefined;
+        set(target);
       }
     }
   });
