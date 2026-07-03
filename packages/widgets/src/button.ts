@@ -1,66 +1,171 @@
 import type { Instance } from '@cairn/runtime';
-import { Box, Text, applyLayoutChildProps, type StyleInput, type LayoutChildProps } from '@cairn/primitives';
+import { Box, Text, applyLayoutChildProps, mergeStyles, type StyleInput, type LayoutChildProps } from '@cairn/primitives';
+import { StyleSheet } from '@cairn/style';
 import type { Style } from '@cairn/style';
+import { useWidgetTheme } from './theme';
+import { createControl, type ControlState } from './control';
 
 export interface ButtonProps extends LayoutChildProps {
-  label?: string;
-  children?: Instance;
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: 'solid' | 'soft' | 'outline' | 'ghost' | 'link';
+  size?: 'sm' | 'md' | 'lg';
+  /** A key in WidgetTheme.colors (the "base" key, e.g. 'primary', 'secondary', 'danger'). Defaults to 'primary'. */
+  color?: string;
   disabled?: boolean;
+  fullWidth?: boolean;
   onClick?: () => void;
   style?: StyleInput;
+  label?: string;
+  children?: Instance | ((state: ControlState) => Instance);
 }
 
-const VARIANTS: Record<'primary' | 'secondary' | 'ghost', Style> = {
-  primary: {
-    backgroundColor: '#4577e6', color: '#fff',
-    hover: { backgroundColor: '#5482ea' }, pressed: { backgroundColor: '#3f6ad0' },
-    disabled: { backgroundColor: '#9db4e8', color: '#eef2ff' },
-  },
-  secondary: {
-    backgroundColor: '#2a2a2c', color: '#e5e7eb', border: { width: 1, color: '#3a3a3e' },
-    hover: { backgroundColor: '#333336' },
-    disabled: { backgroundColor: '#1f1f21', color: '#6b7280' },
-  },
-  ghost: {
-    backgroundColor: '#00000000', color: '#d1d5db',
-    hover: { backgroundColor: '#ffffff14' },
-    disabled: { color: '#6b7280' },
-  },
-};
+// Tiny local helper — keeps widgets independent of @cairn/material.
+function withAlpha(hex: string, alpha: number): string {
+  // Handle rgba() strings by injecting alpha
+  if (hex.startsWith('rgba(') || hex.startsWith('rgb(')) {
+    // Strip existing alpha and replace; simpler: convert to rgba with alpha
+    const inner = hex.replace(/^rgba?\(/, '').replace(/\)$/, '');
+    const parts = inner.split(',').map((p) => p.trim());
+    return `rgba(${parts[0]},${parts[1]},${parts[2]},${alpha})`;
+  }
+  // Handle #rrggbb or #rgb hex
+  let h = hex.replace('#', '');
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  if (isNaN(r) || isNaN(g) || isNaN(b)) return hex;
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
-const BASE: Style = {
-  padding: { top: 10, bottom: 10, left: 16, right: 16 },
-  borderRadius: 12,
-  alignX: 'center',
-  alignY: 'center',
-};
-
-function toStyleArray(s?: StyleInput): Style[] {
-  if (s == null) return [];
-  if (typeof s === 'function') return []; // function-form style merge deferred to a later phase (documented)
-  return Array.isArray(s) ? (s as Style[]) : [s as Style];
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 export function Button(props: ButtonProps): Instance {
-  const variant = VARIANTS[props.variant ?? 'primary'];
-  const styles: Style[] = [BASE, variant, ...toStyleArray(props.style)];
-  // Apply the disabled visual directly (createInteractive has no disabled signal).
-  if (props.disabled && variant.disabled) styles.push(variant.disabled);
+  const t = useWidgetTheme();
+  const { state, handlers } = createControl({
+    disabled: props.disabled,
+    onClick: props.onClick,
+    onPointerEnter: (props as any).onPointerEnter,
+    onPointerLeave: (props as any).onPointerLeave,
+    onPointerDown: (props as any).onPointerDown,
+    onPointerUp: (props as any).onPointerUp,
+    onFocus: (props as any).onFocus,
+    onBlur: (props as any).onBlur,
+    onKeyDown: (props as any).onKeyDown,
+    onKeyUp: (props as any).onKeyUp,
+  });
 
-  const activate = (): void => {
-    if (!props.disabled) props.onClick?.();
+  const size = props.size ?? 'md';
+  const colorKey = props.color ?? 'primary';
+  const variant = props.variant ?? 'solid';
+  const disabled = !!props.disabled;
+
+  // Resolve color tokens from theme. Fall back to primary if the key doesn't exist.
+  const baseColor = t.colors[colorKey] ?? t.colors.primary;
+  const hoverColor = t.colors[colorKey + 'Hover'] ?? t.colors[colorKey + 'Hover'] ?? t.colors.primaryHover;
+  const activeColor = t.colors[colorKey + 'Active'] ?? t.colors.primaryActive;
+  const onColor = t.colors['on' + capitalize(colorKey)] ?? t.colors.onPrimary;
+
+  const baseStyle: Style = {
+    borderRadius: t.radii.md,
+    alignX: 'center',
+    alignY: 'center',
+    padding: { left: t.control.padX[size], right: t.control.padX[size], top: 0, bottom: 0 },
+    height: t.control.height[size],
+    overflow: 'hidden',
+    cursor: disabled ? 'default' : 'pointer',
+    opacity: disabled ? 0.5 : 1,
   };
 
-  const labelColor = props.disabled ? variant.disabled?.color ?? variant.color : variant.color;
+  let variantStyle: Style;
+  switch (variant) {
+    case 'solid':
+      variantStyle = {
+        backgroundColor: baseColor,
+        hover: { backgroundColor: hoverColor },
+        pressed: { backgroundColor: activeColor },
+      };
+      break;
+    case 'soft':
+      variantStyle = {
+        backgroundColor: withAlpha(baseColor, 0.12),
+        hover: { backgroundColor: withAlpha(baseColor, 0.2) },
+        pressed: { backgroundColor: withAlpha(baseColor, 0.28) },
+      };
+      break;
+    case 'outline':
+      variantStyle = {
+        backgroundColor: 'transparent',
+        border: { width: 1, color: t.colors.border },
+        hover: { backgroundColor: withAlpha(baseColor, 0.08) },
+        pressed: { backgroundColor: withAlpha(baseColor, 0.16) },
+      };
+      break;
+    case 'ghost':
+      variantStyle = {
+        backgroundColor: 'transparent',
+        hover: { backgroundColor: withAlpha(baseColor, 0.08) },
+        pressed: { backgroundColor: withAlpha(baseColor, 0.16) },
+      };
+      break;
+    case 'link':
+      variantStyle = {
+        backgroundColor: 'transparent',
+        textDecoration: 'underline',
+      };
+      break;
+    default:
+      variantStyle = {};
+  }
+
+  // Resolve label text color by variant
+  const labelColor = variant === 'solid' ? onColor : baseColor;
+
+  if (typeof props.children === 'function') {
+    // Render-fn slot: no default visual — the fn owns the look.
+    const child = props.children(state);
+    const boxStyle = mergeStyles(
+      props.fullWidth ? { width: '100%' as any } : undefined,
+      props.style,
+    );
+    const instance = Box({
+      style: boxStyle,
+      focusable: true,
+      ...handlers,
+      children: child,
+    });
+    applyLayoutChildProps(instance, props);
+    return instance;
+  }
+
+  // Default visual path
+  const defaultVariantStyle: StyleInput = (th) => [
+    baseStyle,
+    variantStyle,
+    props.fullWidth ? ({ width: '100%' as any } as Style) : {},
+  ];
+
+  const composedStyle = mergeStyles(defaultVariantStyle, props.style);
+
+  const child: Instance = props.children
+    ? props.children
+    : Text({
+        style: (th) => ({
+          color: labelColor,
+          fontWeight: t.fontWeights.medium,
+          fontSize: size === 'sm' ? t.fontSizes.sm : t.fontSizes.md,
+        }),
+        children: props.label ?? '',
+      });
+
   const instance = Box({
-    style: styles,
+    style: composedStyle,
     focusable: true,
-    onClick: () => activate(),
-    onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') activate(); },
-    children: props.children ?? Text({ style: { color: labelColor }, children: props.label ?? '' }),
+    ...handlers,
+    children: child,
   });
-  // Forward layout child-props (flex/margin/alignSelf/…) so a Button composes in Flex/Stack.
+
   applyLayoutChildProps(instance, props);
   return instance;
 }
