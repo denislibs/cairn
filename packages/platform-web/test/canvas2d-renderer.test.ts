@@ -206,6 +206,31 @@ test('drawText sets font/color/align/baseline then fills text', () => {
   expect(ctx.calls).toContainEqual(['fillText', 'hi', 3, 4]);
 });
 
+test('drawText renders at device resolution under a scaled transform (crisp text)', () => {
+  const { surface, ctx } = createFakeSurface();
+  // Axis-aligned 2x transform (the frame's dpr base). Provide getTransform so the
+  // renderer takes the device-resolution path.
+  (ctx as unknown as { getTransform: () => DOMMatrix }).getTransform = () =>
+    ({ a: 2, b: 0, c: 0, d: 2, e: 0, f: 0 } as DOMMatrix);
+  const r = new Canvas2DRenderer(surface);
+  r.drawText('hi', { x: 3, y: 4 }, { font: '16px sans-serif', color: '#222' });
+
+  expect(ctx.calls).toContainEqual(['save']);
+  expect(ctx.calls).toContainEqual(['setTransform', 1, 0, 0, 1, 0, 0]); // identity
+  expect(ctx.calls).toContainEqual(['set:font', '32px sans-serif']);    // 16 * 2
+  expect(ctx.calls).toContainEqual(['fillText', 'hi', 6, 8]);           // device coords (x*2, y*2)
+  expect(ctx.calls).toContainEqual(['restore']);
+});
+
+test('drawText scales letterSpacing to device pixels on the device path', () => {
+  const { surface, ctx } = createFakeSurface();
+  (ctx as unknown as { getTransform: () => DOMMatrix }).getTransform = () =>
+    ({ a: 2, b: 0, c: 0, d: 2, e: 0, f: 0 } as DOMMatrix);
+  const r = new Canvas2DRenderer(surface);
+  r.drawText('x', { x: 0, y: 0 }, { font: '16px sans-serif', letterSpacing: 3 });
+  expect(ctx.calls).toContainEqual(['set:letterSpacing', '6px']); // 3 * 2
+});
+
 test('measureText sets the font and returns the measured width', () => {
   const { surface, ctx } = createFakeSurface();
   const r = new Canvas2DRenderer(surface);
