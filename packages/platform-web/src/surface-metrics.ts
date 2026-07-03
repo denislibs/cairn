@@ -12,6 +12,7 @@ export class WebSurfaceMetrics implements SurfaceMetrics {
   private disposed = false;
   private currentMql?: MediaQueryList;
   private currentHandler?: () => void;
+  private vvScheduled = false;
 
   constructor(private element: HTMLElement) {
     this.width = element.clientWidth;
@@ -21,6 +22,28 @@ export class WebSurfaceMetrics implements SurfaceMetrics {
     this.observer = new ResizeObserver(() => this.update());
     this.observer.observe(element);
     this.watchDprChanges();
+    this.watchVisualViewport();
+  }
+
+  // Pinch-zoom changes visualViewport.scale without touching clientWidth/DPR, so
+  // update()'s guard would swallow it. Notify subscribers directly (rAF-coalesced)
+  // so the host re-syncs the backing to the pinch scale and repaints — crisp text
+  // while pinched instead of a magnified (blurry) raster.
+  private onVisualViewport = (): void => {
+    if (this.vvScheduled || this.disposed) return;
+    this.vvScheduled = true;
+    requestAnimationFrame(() => {
+      this.vvScheduled = false;
+      if (this.disposed) return;
+      for (const cb of this.subscribers) cb(this);
+    });
+  };
+
+  private watchVisualViewport(): void {
+    const vv = globalThis.visualViewport;
+    if (!vv) return;
+    vv.addEventListener('resize', this.onVisualViewport);
+    vv.addEventListener('scroll', this.onVisualViewport);
   }
 
   onResize(cb: (m: SurfaceMetrics) => void): () => void {
@@ -36,6 +59,11 @@ export class WebSurfaceMetrics implements SurfaceMetrics {
     this.observer.disconnect();
     if (this.currentMql && this.currentHandler) {
       this.currentMql.removeEventListener('change', this.currentHandler);
+    }
+    const vv = globalThis.visualViewport;
+    if (vv) {
+      vv.removeEventListener('resize', this.onVisualViewport);
+      vv.removeEventListener('scroll', this.onVisualViewport);
     }
     this.subscribers.clear();
   }

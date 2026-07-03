@@ -12,13 +12,24 @@ export function createWebHost(canvas: HTMLCanvasElement): Host {
   const baseScheduler = new WebFrameScheduler();
   const metrics = new WebSurfaceMetrics(canvas);
 
-  // Self-healing size sync. Reads the LIVE CSS size + devicePixelRatio (not the
-  // cached metrics, which can lag behind a DPR change from zoom or moving the
-  // window between monitors) and re-sizes the backing store. renderer.resize is
-  // idempotent, so this is a cheap no-op when nothing changed.
+  // Self-healing size sync. Reads the LIVE CSS size + devicePixelRatio + pinch-zoom
+  // scale (not the cached metrics, which can lag behind a DPR change from browser
+  // zoom or moving the window between monitors) and re-sizes the backing store.
+  // renderer.resize is idempotent, so this is a cheap no-op when nothing changed.
+  //
+  // pinch-zoom (trackpad gesture) changes visualViewport.scale but NOT
+  // devicePixelRatio — the compositor just magnifies the existing raster, which
+  // blurs a canvas. Folding scale into the backing resolution keeps text crisp
+  // while pinched. Capped so the backing never exceeds the GPU's max texture size.
+  const MAX_BACKING_DIM = 8192;
+  const MAX_SCALE = 3;
   const syncSize = (): void => {
     const dpr = globalThis.devicePixelRatio ?? 1;
-    renderer.resize(canvas.clientWidth, canvas.clientHeight, dpr);
+    const scale = globalThis.visualViewport?.scale ?? 1;
+    let ratio = dpr * Math.min(scale, MAX_SCALE);
+    const longest = Math.max(canvas.clientWidth, canvas.clientHeight) * ratio;
+    if (longest > MAX_BACKING_DIM) ratio *= MAX_BACKING_DIM / longest;
+    renderer.resize(canvas.clientWidth, canvas.clientHeight, ratio);
   };
   syncSize(); // initial sizing
   metrics.onResize(syncSize); // sync immediately on a detected surface change

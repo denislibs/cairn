@@ -74,6 +74,27 @@ test('frame scheduler self-heals the backing to the live DPR before each frame',
   expect(canvas.height).toBe(450);
 });
 
+test('backing store folds in visualViewport.scale (crisp under pinch-zoom)', () => {
+  vi.stubGlobal('visualViewport', { scale: 2, addEventListener() {}, removeEventListener() {} });
+  const raf = vi.fn((cb: (t: number) => void) => { cb(0); return 1; });
+  vi.stubGlobal('requestAnimationFrame', raf);
+  vi.stubGlobal('cancelAnimationFrame', vi.fn());
+
+  const canvas = fakeCanvas(300, 150);
+  createWebHost(canvas);
+  // dpr(2) * pinch scale(2) = 4×
+  expect(canvas.width).toBe(1200);
+  expect(canvas.height).toBe(600);
+});
+
+test('backing store is capped at the max texture dimension', () => {
+  // dpr 2 * scale 3 = 6× → 5000*6 = 30000 would exceed 8192; must clamp.
+  vi.stubGlobal('visualViewport', { scale: 3, addEventListener() {}, removeEventListener() {} });
+  const canvas = fakeCanvas(5000, 100);
+  createWebHost(canvas);
+  expect(canvas.width).toBeLessThanOrEqual(8192);
+});
+
 test('renderer.resize is idempotent — an unchanged size does not rewrite the backing store', () => {
   const canvas = fakeCanvas(300, 150);
   let widthWrites = 0;
