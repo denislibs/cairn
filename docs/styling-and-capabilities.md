@@ -36,7 +36,7 @@
 - ✅ `mainAxisSize: 'min' | 'max'` (shrink-wrap vs fill)
 - ✅ `position` (`Stack` + `left`/`top`/`right`/`bottom`/`inset`)
 - ✅ `zIndex`
-- ❌ `Grid` (columns / rows / areas)
+- ✅ `Grid` (columns / rows / areas) — v1 подмножество: `gridTemplateColumns`/`gridTemplateRows` (px/fr/auto/repeat), `gridTemplateAreas`, `rowGap`/`columnGap`/`gap`, `justifyItems`/`alignItems`, размещение ячеек через `gridColumn`/`gridRow` (line/span) и `gridArea`, row-major auto-flow; отложено: `minmax()`, `auto-fill`/`auto-fit`, `justifyContent`/`alignContent` (распределение дорожек), `justifySelf`/`alignSelf` на ячейке, subgrid, dense packing
 
 ## 3. Фон и заливки
 - ✅ `backgroundColor`
@@ -139,14 +139,14 @@
 8. ✅ `min` / `max` размеры (есть у `BoxNode`)
 
 ## «Дорого» (нужен и движок, и большая фича)
-`flexWrap`, `Grid`, `ScrollView`, `Portal` / оверлеи,
+`flexWrap`, `ScrollView`, `Portal` / оверлеи,
 анимации (Фаза 13), полный SVG-парсер, жесты + pointer-capture, dirty-region (Фаза 12),
 a11y (Фаза 14), роутинг (Фаза 15/16).
 
 ---
 
 ## Текущий набор (для ориентира)
-- **Примитивы:** `Box`, `Text`, `Row`, `Column`, `Stack`, `Input`, `Image`, `Icon`, `Path`, `Svg`
+- **Примитивы:** `Box`, `Text`, `Row`, `Column`, `Stack`, `Grid`, `Input`, `Image`, `Icon`, `Path`, `Svg`
   (+ control-flow `Show`/`For`/`Index`/`Switch`, `ThemeProvider`, сырой `Instance` как escape-hatch).
 - **Виджеты (`@cairn/widgets`):** `Button` (primary / secondary / ghost), `Slider`, `Checkbox`, `Switch`, `Divider`.
 - **`BaseStyle` сейчас:** `width`, `height`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`,
@@ -169,6 +169,9 @@ a11y (Фаза 14), роутинг (Фаза 15/16).
   `letterSpacing`, `textTransform`, `textDecoration`,
   `maxLines`, `ellipsis`,
   `overflow`,
+  `gridTemplateColumns`, `gridTemplateRows`, `gridTemplateAreas`,
+  `justifyItems`, `alignItems`
+  (дочерние grid-пропсы: `gridColumn`, `gridRow`, `gridArea`),
   `transform` (translate / scale / rotate / skew — один объект или массив), `transformOrigin`.
 - **Состояния:** `hover`, `focus`, `active`, `pressed`, `disabled` (вложенные варианты, live).
 - **Стилизация:** инлайн `Style`, массив `Style[]` (каскад), функция `(theme) => Style`, `StyleSheet.create`.

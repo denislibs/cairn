@@ -16,6 +16,15 @@ export abstract class LayoutNode {
   margin: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 }; // parent-data: margin around this node
   alignSelf?: 'start' | 'center' | 'end' | 'stretch'; // parent-data: per-child cross-axis alignment override
 
+  // grid item placement (1-based lines; span counts)
+  gridColumnStart?: number;
+  gridColumnEnd?: number;
+  gridColumnSpan?: number;
+  gridRowStart?: number;
+  gridRowEnd?: number;
+  gridRowSpan?: number;
+  gridArea?: string;
+
   // constraints down / size up: returns own size, sets children's offsets.
   abstract layout(c: Constraints, ctx: LayoutContext): Size;
 }
