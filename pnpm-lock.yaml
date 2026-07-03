@@ -76,6 +76,9 @@ importers:
       '@cairn/reactivity':
         specifier: workspace:*
         version: link:../reactivity
+      '@cairn/style':
+        specifier: workspace:*
+        version: link:../style
 
   packages/style:
     dependencies:
