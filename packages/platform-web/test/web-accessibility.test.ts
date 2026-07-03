@@ -262,3 +262,24 @@ test('onActivate callback updates when re-synced without recreating the element'
 
   bridge.dispose();
 });
+
+test('re-syncing the same nodes does not move elements — focus is preserved', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  const nodes: SemanticsNodeData[] = [
+    { id: 1, role: 'button', label: 'A', rect: makeRect(), focusable: true },
+    { id: 2, role: 'button', label: 'B', rect: makeRect(100), focusable: true },
+  ];
+  bridge.sync(nodes);
+  const a = canvas.parentElement!.querySelector('[aria-label="A"]') as HTMLElement;
+  a.focus();
+  expect(document.activeElement).toBe(a);
+
+  // A re-sync with the same nodes (same order) must NOT re-append/move elements,
+  // which would blur the focused one. Sync several times (as the frame loop does).
+  bridge.sync(nodes);
+  bridge.sync(nodes);
+  expect(document.activeElement).toBe(a); // still focused
+
+  bridge.dispose();
+});

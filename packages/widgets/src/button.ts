@@ -162,15 +162,10 @@ export function Button(props: ButtonProps): Instance {
   }
 
   // Default visual path — the focus ring is only painted on keyboard focus.
+  // A real outline (stroked OUTSIDE the box with a gap) — the native focus-ring
+  // look; renders cleanly on any variant/colour (unlike a same-colour boxShadow).
   const focusRingStyle: Style = {
-    boxShadow: {
-      color: t.colors.focusRing,
-      blur: 0,
-      offsetX: 0,
-      offsetY: 0,
-      spread: 2,
-      inset: false,
-    },
+    outline: { width: 2, color: t.colors.focusRing, offset: 2 },
   };
 
   const defaultVariantStyle: StyleInput = (_th) => [

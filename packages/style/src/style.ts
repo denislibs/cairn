@@ -80,6 +80,9 @@ export interface BaseStyle {
   borderRight?: BorderSide;
   borderBottom?: BorderSide;
   borderLeft?: BorderSide;
+  // A ring stroked OUTSIDE the box (like a CSS outline). Unlike border it does not
+  // affect layout and sits `offset` px beyond the edge — the standard focus ring.
+  outline?: { width: number; color: string; offset?: number };
   backgroundGradient?: StyleGradient;
   boxShadow?: Shadow | Shadow[];
   elevation?: number;

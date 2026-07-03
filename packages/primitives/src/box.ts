@@ -149,6 +149,17 @@ function paintBox(r: Renderer, s: BaseStyle, w: number, h: number): void {
   paintSide(r, s.borderBottom, [0, h], [w, h]);
   paintSide(r, s.borderLeft, [0, 0], [0, h]);
 
+  // Outline: a ring stroked OUTSIDE the box (CSS-outline-like). Drawn last so it
+  // sits over neighbours; `offset` is the gap between the edge and the ring.
+  if (s.outline && s.outline.width > 0) {
+    const off = (s.outline.offset ?? 0) + s.outline.width / 2;
+    r.strokeRoundRect(
+      { x: -off, y: -off, width: w + 2 * off, height: h + 2 * off },
+      inflateRadii(s.borderRadius, off),
+      { color: s.outline.color, width: s.outline.width },
+    );
+  }
+
   if (hasFilter) { r.setFilter(null); r.restore(); }
 }
 

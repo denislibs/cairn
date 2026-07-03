@@ -51,7 +51,8 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
   sync(nodes: SemanticsNodeData[]): void {
     if (!this.container) return;
 
-    const incoming = new Set(nodes.map((n) => n.id));
+    const visible = nodes.filter((n) => n.role !== 'textbox'); // SA3: text input owns its own hidden input
+    const incoming = new Set(visible.map((n) => n.id));
 
     // Remove stale elements
     for (const [id, state] of this.elementMap) {
@@ -61,26 +62,40 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
       }
     }
 
-    // Create or update elements
-    for (const node of nodes) {
-      if (node.role === 'textbox') continue; // SA3: text input owns its own hidden input
-
+    // Create or update elements (attributes only — do NOT move them in the DOM here)
+    for (const node of visible) {
       const existing = this.elementMap.get(node.id);
       let el: HTMLElement;
-
       if (existing) {
         el = existing.el;
-        // Update the node reference so listeners use latest callbacks
-        existing.node = node;
+        existing.node = node; // keep listeners' callbacks fresh
       } else {
         el = this.createElement(node.role);
         this.attachListeners(el, node);
         this.elementMap.set(node.id, { el, node });
       }
-
       this.updateAttributes(el, node);
-      // Re-append to keep DOM order matching nodes order (= tab order)
-      this.container.appendChild(el);
+    }
+
+    // Reconcile DOM order to match `nodes` (= tab order) ONLY when it actually
+    // differs. Re-appending an element moves it in the DOM, which BLURS it if it
+    // is focused — and we sync every frame, so an unconditional re-append would
+    // steal focus/keyboard from the user constantly. Preserve focus across a reorder.
+    const desired = visible.map((n) => this.elementMap.get(n.id)!.el);
+    const current = Array.from(this.container.children);
+    let ordered = desired.length === current.length;
+    if (ordered) {
+      for (let i = 0; i < desired.length; i++) {
+        if (desired[i] !== current[i]) { ordered = false; break; }
+      }
+    }
+    if (!ordered) {
+      const doc = this.getDoc();
+      const active = doc.activeElement as HTMLElement | null;
+      for (const el of desired) this.container.appendChild(el);
+      if (active && active !== doc.body && this.container.contains(active) && active.focus) {
+        active.focus();
+      }
     }
   }
 
