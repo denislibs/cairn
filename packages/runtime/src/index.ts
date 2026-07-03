@@ -18,3 +18,5 @@ export { Switch, Match } from './switch';
 export type { SwitchProps, MatchProps, MatchDescriptor } from './switch';
 export { animate } from './animate';
 export type { AnimateOptions } from './animate';
+export { animateKeyframes } from './keyframes';
+export type { Keyframe, KeyframesOptions } from './keyframes';
