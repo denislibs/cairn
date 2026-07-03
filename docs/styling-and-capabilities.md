@@ -109,6 +109,10 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
 
 ## 10. Изображения и векторы (SVG)
 - ✅ `Image`-примитив (+ `objectFit`: `fill` / `contain` / `cover` / `none`)
+  - **P10-2 — async URL `src`:** `Image` принимает `src` как строку-URL (в т.ч. `data:`-URI).
+    Загрузка через `Host.loadImage` (предоставляется `createWebHost`); результат кэшируется на уровне хоста.
+    Пока идёт загрузка — показывается `Spinner` (дочерний примитив); при ошибке — серый прямоугольник-заглушка.
+    `ImageHandle` по-прежнему поддерживается (путь без async).
 - **Векторы / SVG:**
   - ✅ `Icon`-примитив (path-данные, как в Lucide)
   - ✅ `Svg` / `Path`-примитив (произвольные пути, заливка / обводка / градиент)
@@ -165,7 +169,7 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
 ---
 
 ## Текущий набор (для ориентира)
-- **Примитивы:** `Box`, `Text`, `Row`, `Column`, `Stack`, `Grid`, `ScrollView`, `Spacer`, `Input` (алиас `TextInput`), `Image`, `Icon`, `Path`, `Svg`, `Portal`
+- **Примитивы:** `Box`, `Text`, `Row`, `Column`, `Stack`, `Grid`, `ScrollView`, `Spacer`, `Input` (алиас `TextInput`), `Image`, `Spinner`, `Icon`, `Path`, `Svg`, `Portal`
   (+ control-flow `Show`/`For`/`Index`/`Switch`, `Presence` (enter/exit — AN3), `ThemeProvider` (принимает `Theme | () => Theme` — реактивная смена темы), сырой `Instance` как escape-hatch;
   позиционирование оверлеев: `computePlacement`, `getAbsRect`).
 - **Виджеты (`@cairn/widgets`):** `Button` (primary / secondary / ghost), `Slider`, `Checkbox`, `Switch`, `Divider`, `Modal`, `Tooltip`, `Popover`.
