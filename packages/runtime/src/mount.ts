@@ -45,7 +45,13 @@ export function mount(component: () => Instance, host: Host): () => void {
       const list = overlays.list();
       for (const o of list) o.layout.layout({ minW: 0, maxW: w, minH: 0, maxH: h }, ctx);
       flushAfterLayout();
-      if (host.a11y) host.a11y.sync(collectSemantics(root));
+      if (host.a11y) {
+        // Collect from the app root AND every overlay (Portal content — Select
+        // listboxes, Menus, Dialogs — lives in the overlay layer, not under root).
+        const nodes = collectSemantics(root);
+        for (const o of list) nodes.push(...collectSemantics(o));
+        host.a11y.sync(nodes);
+      }
       host.renderer.beginFrame();
       host.renderer.clear();
       paint(root, host.renderer);
