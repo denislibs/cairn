@@ -29,3 +29,7 @@ export type { ImageProps, ObjectFit } from './image';
 export { pickBreakpoint, responsive, useViewport, useBreakpoint } from './responsive';
 export { ScrollView } from './scroll-view';
 export type { ScrollViewProps } from './scroll-view';
+export { Portal } from './portal';
+export type { PortalProps } from './portal';
+export { computePlacement, getAbsRect } from './placement';
+export type { Side, PlaceAlign, Rect } from './placement';
