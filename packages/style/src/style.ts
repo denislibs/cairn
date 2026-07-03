@@ -66,6 +66,10 @@ export interface BaseStyle {
   aspectRatio?: number;
   color?: string;
   font?: string;
+  fontFamily?: string;
+  fontSize?: number;
+  fontWeight?: number | 'normal' | 'bold';
+  fontStyle?: 'normal' | 'italic';
   overflow?: 'visible' | 'hidden' | 'clip';
 }
 

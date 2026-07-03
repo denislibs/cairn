@@ -1,7 +1,7 @@
 import type { Renderer } from '@cairn/host';
 import { TextNode } from '@cairn/layout';
 import { type Instance, bind, type MaybeReactive } from '@cairn/runtime';
-import { type BaseStyle } from '@cairn/style';
+import { type BaseStyle, composeFont } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
 import type { EventProps } from './events';
@@ -36,7 +36,7 @@ export function Text(props: TextProps = {}): Instance {
       const y = useLine ? h / 2 : 0;
       if (s.textShadow) { r.save(); r.setShadow(s.textShadow); }
       r.drawText(layout.text, { x, y }, {
-        font: s.font ?? '16px sans-serif',
+        font: composeFont(s),
         color: s.color ?? '#000',
         align,
         baseline: useLine ? 'middle' : 'top',
@@ -48,7 +48,7 @@ export function Text(props: TextProps = {}): Instance {
   // Reactive style: font drives both layout (measure) and paint; color is paint-only.
   bind(resolved, (s) => {
     current = s;
-    layout.style = { ...layout.style, font: s.font ?? '16px sans-serif' };
+    layout.style = { ...layout.style, font: composeFont(s) };
     applyLayoutStyle(layout, s);
     instance.paintOpacity = s.opacity;
   });

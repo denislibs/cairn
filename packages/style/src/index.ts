@@ -4,3 +4,4 @@ export { StyleSheet } from './stylesheet';
 export { resolveStyle } from './resolve';
 export { createTheme, themeContext, useTheme } from './theme';
 export type { Theme } from './theme';
+export { composeFont } from './font';
