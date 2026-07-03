@@ -186,6 +186,9 @@ export function Box(props: BoxProps = {}): Instance {
       s.overflow === 'hidden' || s.overflow === 'clip' ? s.borderRadius ?? 0 : undefined;
     instance.transform = s.transform;
     instance.transformOrigin = s.transformOrigin;
+    instance.cursor = s.cursor;
+    instance.pointerEvents = s.pointerEvents;
+    instance.userSelect = s.userSelect;
   });
 
   applyLayoutChildProps(instance, props);

@@ -99,6 +99,9 @@ export interface BaseStyle {
   backdropFilter?: string;
   backgroundImage?: ImageHandle;
   backgroundSize?: 'cover' | 'contain' | 'fill';
+  cursor?: string;
+  pointerEvents?: 'auto' | 'none';
+  userSelect?: 'auto' | 'none' | 'text';
 }
 
 export type Style = BaseStyle & Partial<Record<StateName, BaseStyle>>;

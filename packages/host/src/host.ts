@@ -11,4 +11,5 @@ export interface Host {
   metrics: SurfaceMetrics;
   input: InputSource;
   textInput: TextInputService;
+  setCursor?(cursor: string): void;
 }

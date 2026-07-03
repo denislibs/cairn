@@ -14,6 +14,9 @@ export interface Instance {
   children: Instance[];
   handlers?: EventHandlers;
   focusable?: boolean;
+  cursor?: string;
+  pointerEvents?: 'auto' | 'none';
+  userSelect?: 'auto' | 'none' | 'text';
   paintOpacity?: number;
   clipChildren?: Radii | null;
   transform?: TransformSpec | null;

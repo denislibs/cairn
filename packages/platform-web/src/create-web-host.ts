@@ -19,5 +19,12 @@ export function createWebHost(canvas: HTMLCanvasElement): Host {
 
   const textInput = new WebTextInputService();
 
-  return { renderer, scheduler, metrics, input, textInput };
+  return {
+    renderer,
+    scheduler,
+    metrics,
+    input,
+    textInput,
+    setCursor: (cursor: string) => { canvas.style.cursor = cursor; },
+  };
 }

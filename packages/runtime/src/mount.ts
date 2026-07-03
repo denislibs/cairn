@@ -6,6 +6,12 @@ import { type Instance, paint } from './instance';
 import { setFrameRequester } from './scheduler';
 import { hostContext } from './host-context';
 
+// Returns the topmost cursor in a target-first path, falling back to 'default'.
+export function cursorOf(path: { cursor?: string }[]): string {
+  for (const node of path) if (node.cursor) return node.cursor;
+  return 'default';
+}
+
 // Mount a component tree into a Host. Full-frame model: any change schedules one
 // coalesced frame that re-lays-out from the root and repaints the whole surface.
 export function mount(component: () => Instance, host: Host): () => void {
@@ -48,6 +54,7 @@ export function mount(component: () => Instance, host: Host): () => void {
     const focus = createFocusManager(() => root);
     const dispatcher = createPointerDispatcher(() => root, {
       onPointerDown: (path) => focus.focusFromPointer(path),
+      onHoverChange: (path) => host.setCursor?.(cursorOf(path)),
     });
     const unsubscribePointer = host.input.onPointer((e) => dispatcher.handlePointer(e));
     const unsubscribeWheel = host.input.onWheel((e) => dispatcher.handleWheel(e));

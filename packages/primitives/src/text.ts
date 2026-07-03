@@ -91,6 +91,9 @@ export function Text(props: TextProps = {}): Instance {
     layout.ellipsis = s.ellipsis;
     applyLayoutStyle(layout, s);
     instance.paintOpacity = s.opacity;
+    instance.cursor = s.cursor;
+    instance.pointerEvents = s.pointerEvents;
+    instance.userSelect = s.userSelect;
   });
 
   bind(content, (v) => {

@@ -17,7 +17,6 @@ export interface Interactive {
 // style, and returns handlers that toggle those signals while still calling the
 // user's own handlers. pressed is derived locally from bubbled down/up + leave.
 export function createInteractive(props: InteractiveProps): Interactive {
-  const theme = useTheme();
   const [hovered, setHovered] = createSignal(false);
   const [pressed, setPressed] = createSignal(false);
   const [focused, setFocused] = createSignal(false);
@@ -27,7 +26,7 @@ export function createInteractive(props: InteractiveProps): Interactive {
     if (hovered()) states.push('hover');
     if (pressed()) states.push('pressed');
     if (focused()) states.push('focus');
-    return resolveStyleInput(props.style, theme, states);
+    return resolveStyleInput(props.style, useTheme(), states);
   };
 
   const handlers: EventHandlers = {
