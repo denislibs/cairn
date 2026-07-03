@@ -30,3 +30,5 @@ export { Popover } from './popover';
 export type { PopoverProps } from './popover';
 export { Menu, MenuItem, menuContext } from './menu';
 export type { MenuProps, MenuItemProps, MenuContextValue, MenuItemRecord } from './menu';
+export { Select, Option, selectContext } from './select';
+export type { SelectProps, OptionProps, SelectContextValue } from './select';
