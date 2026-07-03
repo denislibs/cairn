@@ -84,8 +84,15 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
 - ✅ `transformOrigin`
 - ❌ 3D-трансформации (perspective / rotateX / rotateY)
 
-## 8. Анимации и переходы (Фаза 13)
-- ✅ `transition` (свойство / длительность / easing / delay) — декларативно для `opacity` / `color` / `backgroundColor` через `TransitionConfig` на `BaseStyle`; остальные свойства — императивно через `animate`
+## 8. Анимации и переходы (Фаза 13 + AN1)
+- ✅ `transition` (свойство / длительность / easing / delay) — декларативно через `TransitionConfig` на `BaseStyle`; поддерживаемые свойства (Box / Text / Flex / Grid; ScrollView маршрутизирован; Image отложен — leaf-примитив):
+  `opacity`, `color`, `backgroundColor`,
+  `width`, `height`, `minWidth`, `maxWidth`, `minHeight`, `maxHeight`,
+  `padding`, `margin`, `gap`,
+  `borderRadius`, `border`, `boxShadow`,
+  `transform` (структурная интерполяция: `translateX`/`translateY`/`scale`/`scaleX`/`scaleY`/`rotate`/`skewX`/`skewY`),
+  `letterSpacing`, `lineHeight`.
+  Структурная интерполяция реализована через `lerpLength`, `lerpTransform`, `lerpShadow`, `lerpRadii`, `lerpInsets` (AN1).
 - ✅ keyframes-анимации — императивно через `animateKeyframes`; полный CSS `@keyframes`-синтаксис отложен
 - ✅ spring-физика — аппроксимация через `spring()`
 - ❌ анимация появления / удаления списков (FLIP) — отложено (нужен захват layout до/после в control-flow)
@@ -192,3 +199,5 @@ a11y, перформанс, роутинг, i18n) и точечные дыры (
 - **Стилизация:** инлайн `Style`, массив `Style[]` (каскад), функция `(theme) => Style`, `StyleSheet.create`.
 - **Тема (`@cairn/style`):** `createTheme`, `useTheme`, `ThemeTokens` (`colors`/`spacing`/`radii`/`fontSizes`), `resolveVariant(map, selected, fallback?)` (хелпер вариантов компонентов).
 - **Анимации (`@cairn/style` + `@cairn/runtime`):** `animate`, `animateKeyframes`, `easings` (linear/ease/ease-in/ease-out/ease-in-out), `cubicBezier`, `spring`, `resolveEasing`, `lerp`, `lerpColor`, `interpolateValue`, `transition` / `TransitionConfig` (декларативные переходы на `BaseStyle`).
+  AN1 — структурная интерполяция: `lerpLength` (px/% / rem / vw / vh / auto / calc), `lerpTransform` (translateX/Y, scale/X/Y, rotate, skewX/Y), `lerpShadow` (blur / offset / color), `lerpRadii` (per-corner), `lerpInsets` (padding/margin по сторонам).
+  Переходы охватывают все структурные пропсы: `opacity`, `color`, `backgroundColor`, `width`/`height`/`min*`/`max*`, `padding`, `margin`, `gap`, `borderRadius`, `border`, `boxShadow`, `transform`, `letterSpacing`, `lineHeight` — на Box / Text / Flex / Grid.

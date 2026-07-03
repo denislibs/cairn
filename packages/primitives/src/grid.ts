@@ -5,6 +5,7 @@ import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
 import type { EventProps } from './events';
 import { applyLayoutChildProps, applyLayoutStyle, type LayoutChildProps } from './layout-child';
+import { createStyleTransitions } from './transitions';
 
 export interface GridProps extends EventProps, LayoutChildProps {
   style?: StyleInput;
@@ -14,6 +15,7 @@ export interface GridProps extends EventProps, LayoutChildProps {
 
 export function Grid(props: GridProps = {}): Instance {
   const { resolved, handlers } = createInteractive(props);
+  const styleSource = createStyleTransitions(resolved);
   const children =
     props.children == null ? [] : Array.isArray(props.children) ? props.children : [props.children];
   const layout = new GridNode({ children: children.map((c) => c.layout) });
@@ -28,7 +30,7 @@ export function Grid(props: GridProps = {}): Instance {
     },
   };
 
-  bind(resolved, (s: BaseStyle) => {
+  bind(styleSource, (s: BaseStyle) => {
     if (s.gridTemplateColumns !== undefined) layout.templateColumns = parseTracks(s.gridTemplateColumns);
     if (s.gridTemplateRows !== undefined) layout.templateRows = parseTracks(s.gridTemplateRows);
     if (s.gridTemplateAreas !== undefined)

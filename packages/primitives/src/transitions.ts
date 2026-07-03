@@ -2,8 +2,24 @@ import { createSignal, createEffect, untrack } from '@cairn/reactivity';
 import { animate } from '@cairn/runtime';
 import { interpolateValue, resolveEasing, type BaseStyle, type TransitionConfig } from '@cairn/style';
 
-const ANIMATABLE = ['opacity', 'backgroundColor', 'color'] as const;
+const ANIMATABLE = [
+  'opacity', 'backgroundColor', 'color',
+  'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight',
+  'padding', 'margin', 'gap',
+  'borderRadius', 'border', 'boxShadow',
+  'transform',
+  'letterSpacing', 'lineHeight',
+] as const;
 type Anim = (typeof ANIMATABLE)[number];
+
+function valuesEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (typeof a === 'object' && typeof b === 'object') {
+    try { return JSON.stringify(a) === JSON.stringify(b); } catch { return false; }
+  }
+  return false;
+}
 
 function configFor(transition: BaseStyle['transition'], prop: string): TransitionConfig | undefined {
   if (!transition) return undefined;
@@ -29,7 +45,7 @@ export function createStyleTransitions(resolved: () => BaseStyle): () => BaseSty
       const [get, set] = sigs[p];
       const current = untrack(get);
       const cfg = configFor(r.transition, p);
-      if (target === current) continue;
+      if (valuesEqual(target, current)) continue;
       cancels[p]?.();
       if (cfg && current !== undefined && target !== undefined) {
         const from = current, to = target;
