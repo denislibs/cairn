@@ -64,6 +64,7 @@ export function createControl(props: ControlProps): ControlResult {
     },
     onClick(e) {
       // Guard: non-primary button clicks (e.g. right-click) must not activate.
+      // Use optional access: test harnesses may pass a partial event without button.
       if ((e as any)?.button !== undefined && (e as any).button !== 0) return;
       if (!disabled) props.onClick?.();
     },
@@ -74,7 +75,8 @@ export function createControl(props: ControlProps): ControlResult {
         if (e.key === 'Enter') {
           props.onClick?.();
         } else if (e.key === ' ') {
-          // Prevent scroll on Space; activation fires on keyup
+          // Prevent scroll on Space; activation fires on keyup.
+          // Optional call: test harnesses may pass partial events without preventDefault.
           (e as any).preventDefault?.();
         }
       }
