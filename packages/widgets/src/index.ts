@@ -28,3 +28,5 @@ export { Tooltip } from './tooltip';
 export type { TooltipProps } from './tooltip';
 export { Popover } from './popover';
 export type { PopoverProps } from './popover';
+export { Menu, MenuItem, menuContext } from './menu';
+export type { MenuProps, MenuItemProps, MenuContextValue, MenuItemRecord } from './menu';
