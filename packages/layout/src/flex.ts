@@ -1,5 +1,6 @@
 import { LayoutNode } from './node';
 import { type Constraints, type Size, type LayoutContext, clamp } from './types';
+import { resolveLength, type Length } from './length';
 
 export type FlexDirection = 'row' | 'column';
 export type Justify = 'start' | 'center' | 'end' | 'space-between' | 'space-around';
@@ -13,8 +14,8 @@ export interface FlexNodeProps {
   justify?: Justify;
   align?: Align;
   mainAxisSize?: 'min' | 'max';
-  width?: number;
-  height?: number;
+  width?: Length;
+  height?: Length;
   wrap?: 'nowrap' | 'wrap';
   children?: LayoutNode[];
 }
@@ -27,8 +28,8 @@ export class FlexNode extends LayoutNode {
   justify: Justify;
   align: Align;
   mainAxisSize: 'min' | 'max';
-  width?: number;
-  height?: number;
+  width?: Length;
+  height?: Length;
   /** Controls multi-line wrapping. 'wrap' is only active when the main constraint is finite.
    *  Note: grow/shrink inside wrapped lines is deferred to v2 — in wrap mode children are
    *  positioned at their natural/basis size without flex grow or shrink adjustments. */
@@ -51,11 +52,19 @@ export class FlexNode extends LayoutNode {
 
   layout(c: Constraints, ctx: LayoutContext): Size {
     const isRow = this.direction === 'row';
+    const vp = ctx.viewport ?? { w: 0, h: 0 };
+    const rfs = ctx.rootFontSize ?? 16;
+    const resolveLen = (len: Length | undefined, basis: number): number | undefined => {
+      const r = resolveLength(len, { basis, viewportW: vp.w, viewportH: vp.h, rootFontSize: rfs });
+      return r === 'auto' || r === undefined ? undefined : r;
+    };
+    const explicitWidth = resolveLen(this.width, c.maxW);
+    const explicitHeight = resolveLen(this.height, c.maxH);
     const gap = (isRow ? this.columnGap : this.rowGap) ?? this.gap;
     const mainMax = isRow ? c.maxW : c.maxH;
 
     if (this.wrap === 'wrap' && isFinite(mainMax)) {
-      return this.layoutWrapped(c, ctx);
+      return this.layoutWrapped(c, ctx, explicitWidth, explicitHeight);
     }
     const crossMax = isRow ? c.maxH : c.maxW;
     const n = this.children.length;
@@ -98,7 +107,7 @@ export class FlexNode extends LayoutNode {
     }
 
     // Phase 2: flex children split the remaining main-axis space (tight main extent).
-    const explicitMain = isRow ? this.width : this.height;
+    const explicitMain = isRow ? explicitWidth : explicitHeight;
     // Reserve flex children's margins before computing free space.
     for (const ch of flexChildren) usedMain += marginMain(ch);
     const availMain = explicitMain != null ? explicitMain : isFinite(mainMax) ? mainMax : usedMain;
@@ -141,7 +150,7 @@ export class FlexNode extends LayoutNode {
           : isFinite(mainMax)
             ? mainMax
             : contentMain;
-    const explicitCross = isRow ? this.height : this.width;
+    const explicitCross = isRow ? explicitHeight : explicitWidth;
     const minCross = isRow ? c.minH : c.minW;
     const ownCross =
       explicitCross != null
@@ -205,7 +214,7 @@ export class FlexNode extends LayoutNode {
 
   /** Multi-line layout. Only called when wrap==='wrap' and the main constraint is finite.
    *  Grow/shrink inside wrapped lines is deferred to v2 — children lay out at natural size. */
-  private layoutWrapped(c: Constraints, ctx: LayoutContext): Size {
+  private layoutWrapped(c: Constraints, ctx: LayoutContext, explicitWidth?: number, explicitHeight?: number): Size {
     const isRow = this.direction === 'row';
     const gap = (isRow ? this.columnGap : this.rowGap) ?? this.gap;
     const mainMax = isRow ? c.maxW : c.maxH;
@@ -293,8 +302,8 @@ export class FlexNode extends LayoutNode {
     // extent on its axis (matching the nowrap path). NOTE: `justify` and grow/shrink
     // are not applied per line in wrap mode (v1 limitation — wrapped lines are
     // start-packed at their natural size).
-    const explicitMain = isRow ? this.width : this.height;
-    const explicitCross = isRow ? this.height : this.width;
+    const explicitMain = isRow ? explicitWidth : explicitHeight;
+    const explicitCross = isRow ? explicitHeight : explicitWidth;
     const contentMain = lines.reduce((m, l) => Math.max(m, l.usedMain), 0);
     // crossCursor has an extra trailing gap; remove it.
     const contentCross = lines.length > 0 ? crossCursor - gap : 0;

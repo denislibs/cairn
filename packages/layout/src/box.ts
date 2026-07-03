@@ -1,16 +1,24 @@
 import { LayoutNode } from './node';
 import { type Constraints, type Size, type LayoutContext, type EdgeInsets, clamp, resolveAxis } from './types';
+import { resolveLength, type Length } from './length';
 
 export type { EdgeInsets };
 
+export interface LengthEdgeInsets {
+  top: Length;
+  right: Length;
+  bottom: Length;
+  left: Length;
+}
+
 export interface BoxNodeProps {
-  padding?: number | Partial<EdgeInsets>;
-  width?: number;
-  height?: number;
-  minWidth?: number;
-  maxWidth?: number;
-  minHeight?: number;
-  maxHeight?: number;
+  padding?: Length | Partial<LengthEdgeInsets>;
+  width?: Length;
+  height?: Length;
+  minWidth?: Length;
+  maxWidth?: Length;
+  minHeight?: Length;
+  maxHeight?: Length;
   child?: LayoutNode;
   alignX?: 'start' | 'center' | 'end';
   alignY?: 'start' | 'center' | 'end';
@@ -23,21 +31,27 @@ export function toEdgeInsets(p?: number | Partial<EdgeInsets>): EdgeInsets {
   return { top: p.top ?? 0, right: p.right ?? 0, bottom: p.bottom ?? 0, left: p.left ?? 0 };
 }
 
+function toLengthInsets(p?: Length | Partial<LengthEdgeInsets>): LengthEdgeInsets {
+  if (p == null) return { top: 0, right: 0, bottom: 0, left: 0 };
+  if (typeof p === 'number' || typeof p === 'string') return { top: p, right: p, bottom: p, left: p };
+  return { top: p.top ?? 0, right: p.right ?? 0, bottom: p.bottom ?? 0, left: p.left ?? 0 };
+}
+
 export class BoxNode extends LayoutNode {
-  padding: EdgeInsets;
-  width?: number;
-  height?: number;
-  minWidth?: number;
-  maxWidth?: number;
-  minHeight?: number;
-  maxHeight?: number;
+  padding: Length | Partial<LengthEdgeInsets>;
+  width?: Length;
+  height?: Length;
+  minWidth?: Length;
+  maxWidth?: Length;
+  minHeight?: Length;
+  maxHeight?: Length;
   alignX: 'start' | 'center' | 'end';
   alignY: 'start' | 'center' | 'end';
   aspectRatio?: number;
 
   constructor(props: BoxNodeProps = {}) {
     super();
-    this.padding = toEdgeInsets(props.padding);
+    this.padding = props.padding ?? 0;
     this.width = props.width;
     this.height = props.height;
     this.minWidth = props.minWidth;
@@ -51,9 +65,29 @@ export class BoxNode extends LayoutNode {
   }
 
   layout(c: Constraints, ctx: LayoutContext): Size {
-    const [selfMinW, selfMaxW] = resolveAxis(c.minW, c.maxW, this.width, this.minWidth, this.maxWidth);
-    const [selfMinH, selfMaxH] = resolveAxis(c.minH, c.maxH, this.height, this.minHeight, this.maxHeight);
-    const p = this.padding;
+    const vp = ctx.viewport ?? { w: 0, h: 0 };
+    const rfs = ctx.rootFontSize ?? 16;
+    const resolveAxisLen = (len: Length | undefined, basis: number): number | undefined => {
+      const r = resolveLength(len, { basis, viewportW: vp.w, viewportH: vp.h, rootFontSize: rfs });
+      return r === 'auto' || r === undefined ? undefined : r;
+    };
+    const width = resolveAxisLen(this.width, c.maxW);
+    const height = resolveAxisLen(this.height, c.maxH);
+    const minWidth = resolveAxisLen(this.minWidth, c.maxW);
+    const maxWidth = resolveAxisLen(this.maxWidth, c.maxW);
+    const minHeight = resolveAxisLen(this.minHeight, c.maxH);
+    const maxHeight = resolveAxisLen(this.maxHeight, c.maxH);
+    // padding: resolve each inset against c.maxW (CSS inline-size basis)
+    const rawPad = toLengthInsets(this.padding);
+    const p = {
+      top: resolveAxisLen(rawPad.top, c.maxW) ?? 0,
+      right: resolveAxisLen(rawPad.right, c.maxW) ?? 0,
+      bottom: resolveAxisLen(rawPad.bottom, c.maxW) ?? 0,
+      left: resolveAxisLen(rawPad.left, c.maxW) ?? 0,
+    };
+
+    const [selfMinW, selfMaxW] = resolveAxis(c.minW, c.maxW, width, minWidth, maxWidth);
+    const [selfMinH, selfMaxH] = resolveAxis(c.minH, c.maxH, height, minHeight, maxHeight);
     const child = this.children[0];
 
     let w: number;
@@ -76,8 +110,8 @@ export class BoxNode extends LayoutNode {
       h = selfMinH;
     }
     if (this.aspectRatio && this.aspectRatio > 0) {
-      const widthKnown = this.width != null;
-      const heightKnown = this.height != null;
+      const widthKnown = width != null;
+      const heightKnown = height != null;
       if (widthKnown && !heightKnown) h = clamp(w / this.aspectRatio, selfMinH, selfMaxH);
       else if (heightKnown && !widthKnown) w = clamp(h * this.aspectRatio, selfMinW, selfMaxW);
       else if (!widthKnown && !heightKnown) h = clamp(w / this.aspectRatio, selfMinH, selfMaxH);

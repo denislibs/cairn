@@ -21,6 +21,8 @@ export interface Size {
 
 export interface LayoutContext {
   measureText(text: string, style: TextStyle): TextMeasurement;
+  viewport?: { w: number; h: number };
+  rootFontSize?: number;
 }
 
 export function clamp(value: number, min: number, max: number): number {

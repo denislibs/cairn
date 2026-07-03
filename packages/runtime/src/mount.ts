@@ -12,12 +12,15 @@ export function mount(component: () => Instance, host: Host): () => void {
   return createRoot((dispose) => {
     const ctx: LayoutContext = {
       measureText: (t, s) => host.renderer.measureText(t, s),
+      viewport: { w: 0, h: 0 },
+      rootFontSize: 16,
     };
     let root: Instance;
 
     const renderFrame = (): void => {
       const w = host.metrics.width;
       const h = host.metrics.height;
+      ctx.viewport = { w, h };
       root.layout.layout({ minW: w, maxW: w, minH: h, maxH: h }, ctx); // tight = surface
       host.renderer.beginFrame();
       host.renderer.clear();
