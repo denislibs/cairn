@@ -4,6 +4,7 @@ import { createSignal, type Accessor } from '@cairn/reactivity';
 import type { MaybeReactive } from '@cairn/runtime';
 import { useWidgetTheme } from './theme';
 import { useFieldOptional } from './field';
+import { useFormOptional } from './form';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -22,6 +23,8 @@ export interface InputProps extends LayoutChildProps {
   style?: StyleInput;
   /** Style applied to the inner TextField. */
   inputStyle?: StyleInput;
+  /** When set and placed inside a Form, binds this input to the named form field. */
+  name?: string;
 }
 
 // ─── Input ────────────────────────────────────────────────────────────────────
@@ -31,6 +34,10 @@ export function Input(props: InputProps): Instance {
 
   // Optional field context for invalid/disabled defaults
   const field = useFieldOptional();
+
+  // Optional form context for name-bound field integration
+  const form = useFormOptional();
+  const formBound = form !== null && props.name !== undefined;
 
   const size = props.size ?? 'md';
 
@@ -97,13 +104,17 @@ export function Input(props: InputProps): Instance {
   );
 
   // Resolve value prop for inner TextField
-  const innerValue = props.value;
+  // When form-bound: use form's value; otherwise fall back to props.value
+  const innerValue: MaybeReactive<string> | undefined = formBound
+    ? () => form!.getValue(props.name!) ?? ''
+    : props.value;
 
   const innerTextField = TextField({
     value: innerValue,
     onInput: (text) => {
       props.onInput?.(text);
       props.onChange?.(text);
+      if (formBound) form!.setValue(props.name!, text);
     },
     onSubmit: props.onSubmit,
     placeholder: props.placeholder,
@@ -113,6 +124,7 @@ export function Input(props: InputProps): Instance {
     },
     onBlur: () => {
       setFocused(false);
+      if (formBound) form!.markTouched(props.name!);
     },
   });
 
