@@ -118,15 +118,15 @@ Status: ✅ stable · 🧪 in progress · ⏳ planned
 ### Data display
 | Component | Kind | Status |
 | --- | --- | --- |
-| `Card` | flat | ⏳ |
-| `List` / `ListItem` | compound | ⏳ |
-| `Table` | compound | ⏳ |
-| `Avatar` | flat | ⏳ |
-| `Badge` | flat | ⏳ |
-| `Chip` | flat | ⏳ |
+| `Card` | flat | ✅ |
+| `List` / `ListItem` | compound | ✅ |
+| `Table` | flat (data-driven) | ✅ |
+| `Avatar` | flat | ✅ |
+| `Badge` | flat | ✅ |
+| `Chip` | flat | ✅ |
 | `Divider` | flat | ✅ |
-| `Progress` | flat | ⏳ |
-| `Skeleton` | flat | ⏳ |
+| `Progress` | flat | ✅ |
+| `Skeleton` | flat | ✅ |
 
 ## `Button`
 

@@ -208,7 +208,9 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
       return input;
     }
     const el = doc.createElement('div');
-    el.setAttribute('role', role);
+    // Map our semantic role names to valid ARIA role tokens where they differ
+    // ('image' is not a valid ARIA role — the ARIA token is 'img').
+    el.setAttribute('role', role === 'image' ? 'img' : role);
     return el;
   }
 
