@@ -122,6 +122,7 @@ function handleCommand(cmd: PanelCommand): void {
       const snapshot = state.last ?? (state.lastRoot ? serialize(state.lastRoot) : null);
       if (snapshot) {
         state.last = snapshot;
+        state.pick?.update(snapshot);
         emit({ type: 'commit', snapshot, changed: [], meta: state.lastMeta ?? { frame: state.frame, signalWrites: 0, effectRuns: 0 } });
       }
       break;

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, afterEach } from 'vitest';
 import { mount, setRuntimeDevHooks } from '@cairn/runtime';
 import type { Instance } from '@cairn/runtime';
@@ -15,7 +16,7 @@ afterEach(() => {
 
 function appRoot(): Instance {
   return {
-    layout: { offsetX: 0, offsetY: 0, size: { w: 0, h: 0 }, flex: 0, zIndex: 0,
+    layout: { offsetX: 0, offsetY: 0, size: { w: 200, h: 100 }, flex: 0, zIndex: 0,
       margin: { top: 0, right: 0, bottom: 0, left: 0 },
       layout: () => ({ w: 200, h: 100 }), constructor: { name: 'BoxNode' } } as any,
     children: [], paintSelf() {},
@@ -77,6 +78,35 @@ describe('installDevtools', () => {
     if (commit && commit.type === 'commit') {
       expect(commit.snapshot.name).toBe('Box');
     }
+  });
+
+  it('inspect mode can pick after get-snapshot even when the commit predated subscribe', () => {
+    const listeners: Record<string, (e: any) => void> = {};
+    const canvas = {
+      addEventListener: (t: string, h: (e: any) => void, _capture?: boolean) => { listeners[t] = h; },
+      removeEventListener: (t: string, _h: (e: any) => void, _capture?: boolean) => { delete listeners[t]; },
+      getBoundingClientRect: () => ({ left: 0, top: 0, width: 200, height: 100 }),
+    } as any;
+
+    installDevtools({ canvas });
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+
+    // Mount with NO subscriber yet — the initial commit is lazily skipped.
+    const { host } = createFakeHost();
+    const dispose = mount(() => appRoot(), host);
+
+    // Panel attaches after the commit has already happened.
+    const events: AgentEvent[] = [];
+    hook.subscribe((e: AgentEvent) => events.push(e));
+    hook.send({ type: 'get-snapshot' });
+    hook.send({ type: 'inspect-start' });
+
+    // Fire a pointerdown inside the root node bounds (0,0)-(200,100).
+    listeners['pointerdown']?.({ clientX: 20, clientY: 20, preventDefault() {}, stopPropagation() {} });
+
+    dispose();
+    const sel = events.find((e) => e.type === 'selection');
+    expect(sel).toBeTruthy();
   });
 
   it('get-snapshot reply carries the real last-frame meta, not hardcoded zeros', () => {
