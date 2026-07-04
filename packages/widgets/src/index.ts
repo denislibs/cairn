@@ -44,3 +44,5 @@ export type { TypeaheadOptions, TypeaheadResult } from './native/typeahead';
 export { useAnnounce } from './native/announce';
 export { Form, useForm, useFormOptional, useFormField, formContext } from './form';
 export type { FormProps, FormContextValue } from './form';
+export { Combobox, ComboboxOption, comboboxContext } from './combobox';
+export type { ComboboxProps, ComboboxOptionProps, ComboboxContextValue } from './combobox';
