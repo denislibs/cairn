@@ -304,8 +304,8 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
     this.setOrRemoveAttr(el, 'aria-disabled', node.disabled ? 'true' : undefined);
     this.setOrRemoveAttr(el, 'aria-readonly', node.readonly !== undefined ? String(node.readonly) : undefined);
 
-    // Slider range values
-    if (node.role === 'slider') {
+    // Slider / progressbar range values
+    if (node.role === 'slider' || node.role === 'progressbar') {
       this.setOrRemoveAttr(el, 'aria-valuemin', node.min !== undefined ? String(node.min) : undefined);
       this.setOrRemoveAttr(el, 'aria-valuemax', node.max !== undefined ? String(node.max) : undefined);
       this.setOrRemoveAttr(el, 'aria-valuenow', node.now !== undefined ? String(node.now) : undefined);
