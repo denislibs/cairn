@@ -31,6 +31,7 @@ export interface SemanticsNode {
   autoFocus?: boolean;
   /** True if this node is a modal overlay (dialog/drawer) — traps focus. */
   modal?: boolean;
+  current?: boolean | 'page' | 'step';
 }
 
 // Stable id assignment: WeakMap so Instance keys are not retained beyond their
@@ -106,6 +107,7 @@ function walk(
     if (sem.onKeyDown !== undefined) data.onKeyDown = sem.onKeyDown;
     if (sem.autoFocus !== undefined) data.autoFocus = sem.autoFocus;
     if (sem.modal) data.modal = sem.modal;
+    if (sem.current !== undefined) data.current = sem.current;
     // Tag with modalGroup if we are inside (or are) a modal node.
     if (nextModalId !== undefined) data.modalGroup = nextModalId;
     out.push(data);

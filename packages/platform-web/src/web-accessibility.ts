@@ -289,6 +289,14 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
     this.setOrRemoveAttr(el, 'aria-checked', node.checked !== undefined ? String(node.checked) : undefined);
     this.setOrRemoveAttr(el, 'aria-selected', node.selected !== undefined ? String(node.selected) : undefined);
     this.setOrRemoveAttr(el, 'aria-expanded', node.expanded !== undefined ? String(node.expanded) : undefined);
+
+    // aria-current
+    const currentVal = node.current;
+    if (currentVal !== undefined && currentVal !== false) {
+      el.setAttribute('aria-current', currentVal === true ? 'true' : currentVal);
+    } else {
+      el.removeAttribute('aria-current');
+    }
     this.setOrRemoveAttr(el, 'aria-disabled', node.disabled ? 'true' : undefined);
     this.setOrRemoveAttr(el, 'aria-readonly', node.readonly !== undefined ? String(node.readonly) : undefined);
 
