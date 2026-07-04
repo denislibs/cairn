@@ -118,10 +118,13 @@ function handleCommand(cmd: PanelCommand): void {
     case 'inspect-stop': state.pick?.stop(); break;
     case 'highlight': highlight(cmd.id); break;
     case 'select': highlight(cmd.id); emit({ type: 'selection', id: cmd.id }); break;
-    case 'get-snapshot':
-      if (state.last) {
-        emit({ type: 'commit', snapshot: state.last, changed: [], meta: state.lastMeta ?? { frame: state.frame, signalWrites: 0, effectRuns: 0 } });
+    case 'get-snapshot': {
+      const snapshot = state.last ?? (state.lastRoot ? serialize(state.lastRoot) : null);
+      if (snapshot) {
+        state.last = snapshot;
+        emit({ type: 'commit', snapshot, changed: [], meta: state.lastMeta ?? { frame: state.frame, signalWrites: 0, effectRuns: 0 } });
       }
       break;
+    }
   }
 }

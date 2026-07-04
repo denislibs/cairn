@@ -57,6 +57,28 @@ describe('installDevtools', () => {
     expect((globalThis as any).__CAIRN_DEVTOOLS_HOOK__).toBe(first);
   });
 
+  it('get-snapshot serializes the last root even if the only commit happened before subscribe', () => {
+    installDevtools();
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+
+    // Mount with NO subscriber yet — the initial commit is lazily skipped.
+    const { host } = createFakeHost();
+    const dispose = mount(() => appRoot(), host);
+
+    // Now a panel attaches and asks for the current tree.
+    const events: AgentEvent[] = [];
+    hook.subscribe((e: AgentEvent) => events.push(e));
+    hook.send({ type: 'get-snapshot' });
+
+    dispose();
+
+    const commit = events.find((e) => e.type === 'commit');
+    expect(commit).toBeTruthy();
+    if (commit && commit.type === 'commit') {
+      expect(commit.snapshot.name).toBe('Box');
+    }
+  });
+
   it('get-snapshot reply carries the real last-frame meta, not hardcoded zeros', () => {
     installDevtools();
     const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
