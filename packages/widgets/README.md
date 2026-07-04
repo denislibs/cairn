@@ -91,9 +91,9 @@ Status: ✅ stable · 🧪 in progress · ⏳ planned
 | `Switch` | flat | ✅ |
 | `Field` | compound | ✅ |
 | `Select` / `Option` | compound | ✅ (see Overlays) |
-| `Combobox` | compound | ⏳ |
-| `Slider` | flat | ⏳ |
-| `Form` | compound | ⏳ |
+| `Combobox` | compound | ✅ |
+| `Slider` | flat | ✅ |
+| `Form` | compound | ✅ |
 
 ### Overlays
 | Component | Kind | Status |

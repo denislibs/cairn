@@ -3,6 +3,7 @@ import { useOverlays, hostContext, Provider, Show } from '@cairn/runtime';
 import { createSignal, createEffect, useContext, type Accessor } from '@cairn/reactivity';
 import {
   Box,
+  Text,
   Stack,
   Column,
   Portal,
@@ -102,25 +103,23 @@ export function ComboboxOption(props: ComboboxOptionProps): Instance {
     const row = Box({
       style: mergeStyles(rowStyle),
       focusable: false,
-      children: props.children,
+      // Render the label as text when no custom children are provided.
+      children: props.children ?? Text({
+        style: (th) => ({ color: (th as any).colors?.text ?? '#111', fontSize: theme.fontSizes.sm }),
+        children: optLabel,
+      }),
       onClick: (e) => {
         e.stopPropagation?.();
         select();
       },
     });
-    row.semantics = optionSemantics;
+    row.semantics = optionSemantics; // only the RENDERED row (visible = matches filter) is in the a11y tree
     return row;
   };
 
-  const instance = Show({
-    when: isVisible,
-    children: buildRow,
-  });
-
-  // Attach semantics to the Show wrapper so tests can find it
-  (instance as any).semantics = optionSemantics;
-
-  return instance;
+  // Show only when the option matches the current filter — filtered-out options
+  // render nothing, so they are absent from BOTH the canvas and the a11y tree.
+  return Show({ when: isVisible, children: buildRow });
 }
 
 // ─── Combobox ─────────────────────────────────────────────────────────────────
@@ -228,65 +227,53 @@ function _Combobox(props: ComboboxProps): Instance {
     height: theme.control.height.md,
   });
 
-  // ── Primitive input ──
+  // Combobox keyboard: the input IS the combobox (role=combobox), so these keys
+  // are handled on the primitive Input's semantics via `onKey`.
+  const comboKeyDown = (key: string): boolean => {
+    if (key === ARROW_DOWN) {
+      if (!open()) setOpen(true);
+      roving.handleKey(key);
+      return true;
+    }
+    if (key === ARROW_UP) {
+      roving.handleKey(key);
+      return true;
+    }
+    if (key === ENTER) {
+      const idx = roving.active();
+      if (open() && idx >= 0 && idx < optionRegistry.length) {
+        selectOption(optionRegistry[idx]);
+        return true;
+      }
+      return false;
+    }
+    if (key === ESCAPE) {
+      if (open()) {
+        close();
+        return true;
+      }
+      return false;
+    }
+    return false;
+  };
+
+  // ── Primitive input — carries the combobox semantics itself (one node, editable) ──
   const primitiveInput = PrimitiveInput({
     value: inputText,
     onInput: handleInput,
     placeholder: props.placeholder,
     style: inputFieldStyle,
+    role: 'combobox',
+    label: props.placeholder,
+    expanded: open,
+    onKey: comboKeyDown,
   });
 
-  // ── Wrapper (declared before portalContent so portalContent can close over it) ──
+  // ── Wrapper (styling only; the input owns the a11y node) ──
   const wrapper = Box({
     style: mergeStyles(triggerFrameStyle, props.style),
-    focusable: !props.disabled,
+    focusable: false,
     children: primitiveInput,
-  });
-
-  // ── Semantics on wrapper ──
-  const inputSemantics: SemanticsNode = {
-    role: 'combobox',
-    label: props.placeholder ?? '',
-    expanded: false,
-    disabled: props.disabled,
-    focusable: !props.disabled,
-    value: '',
-    onInput: handleInput,
-    onKeyDown: (key: string, _mods: any) => {
-      if (key === ARROW_DOWN) {
-        if (!open()) setOpen(true);
-        roving.handleKey(key);
-        return true;
-      }
-      if (key === ARROW_UP) {
-        roving.handleKey(key);
-        return true;
-      }
-      if (key === ENTER) {
-        const idx = roving.active();
-        if (open() && idx >= 0 && idx < optionRegistry.length) {
-          selectOption(optionRegistry[idx]);
-          return true;
-        }
-        return false;
-      }
-      if (key === ESCAPE) {
-        if (open()) {
-          close();
-          return true;
-        }
-        return false;
-      }
-      return false;
-    },
-  };
-
-  wrapper.semantics = inputSemantics;
-
-  // Keep expanded/value reactive
-  createEffect(() => {
-    inputSemantics.expanded = open();
-    inputSemantics.value = inputText();
   });
 
   // ── Listbox portal ──

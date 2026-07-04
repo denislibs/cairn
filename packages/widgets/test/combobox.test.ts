@@ -7,18 +7,23 @@ import { createFakeHost } from '../../primitives/test/fake-host';
 import { Combobox, ComboboxOption, comboboxContext } from '../src/combobox';
 import { defaultTheme } from '../src/theme';
 
+const sem = (o: any) => o.semantics ?? o.children?.[0]?.semantics;
+
 function withReg(fn: (reg: ReturnType<typeof createOverlayRegistry>) => void) {
   setFrameRequester(() => {});
   const fh = createFakeHost();
   createRoot(() => {
     const reg = createOverlayRegistry();
-    runWithContext(hostContext, fh.host, () =>
-      runWithContext(overlayContext, reg, () =>
-        runWithContext(themeContext, () => defaultTheme, () => fn(reg)),
-      ),
-    );
+    try {
+      runWithContext(hostContext, fh.host, () =>
+        runWithContext(overlayContext, reg, () =>
+          runWithContext(themeContext, () => defaultTheme, () => fn(reg)),
+        ),
+      );
+    } finally {
+      setFrameRequester(null);
+    }
   });
-  setFrameRequester(null);
 }
 
 // ─── Basic render ─────────────────────────────────────────────────────────────
@@ -55,7 +60,7 @@ describe('Combobox — semantics', () => {
         placeholder: 'Pick one',
         children: () => Box({ style: { width: 10, height: 10 } }),
       });
-      expect((inst as any).semantics?.role).toBe('combobox');
+      expect(((inst as any).children[0].semantics)?.role).toBe('combobox');
     });
   });
 
@@ -65,7 +70,7 @@ describe('Combobox — semantics', () => {
         placeholder: 'Pick one',
         children: () => Box({ style: { width: 10, height: 10 } }),
       });
-      expect((inst as any).semantics?.expanded).toBe(false);
+      expect(((inst as any).children[0].semantics)?.expanded).toBe(false);
     });
   });
 
@@ -76,7 +81,7 @@ describe('Combobox — semantics', () => {
         children: () => Box({ style: { width: 10, height: 10 } }),
       });
       reg.setAppRoot(inst);
-      const sem = (inst as any).semantics;
+      const sem = ((inst as any).children[0].semantics);
       const noMods = { shift: false, ctrl: false, alt: false, meta: false };
       sem.onKeyDown('ArrowDown', noMods);
       expect(sem.expanded).toBe(true);
@@ -89,7 +94,7 @@ describe('Combobox — semantics', () => {
         placeholder: 'Find fruit',
         children: () => Box({ style: { width: 10, height: 10 } }),
       });
-      expect((inst as any).semantics?.label).toBe('Find fruit');
+      expect(((inst as any).children[0].semantics)?.label).toBe('Find fruit');
     });
   });
 });
@@ -104,7 +109,7 @@ describe('Combobox — keyboard ArrowDown opens', () => {
         children: () => Box({ style: { width: 10, height: 10 } }),
       });
       reg.setAppRoot(inst);
-      const sem = (inst as any).semantics;
+      const sem = ((inst as any).children[0].semantics);
       const noMods = { shift: false, ctrl: false, alt: false, meta: false };
       sem.onKeyDown('ArrowDown', noMods);
       expect(reg.list().length).toBe(1);
@@ -118,7 +123,7 @@ describe('Combobox — keyboard ArrowDown opens', () => {
         children: () => Box({ style: { width: 10, height: 10 } }),
       });
       reg.setAppRoot(inst);
-      const sem = (inst as any).semantics;
+      const sem = ((inst as any).children[0].semantics);
       const noMods = { shift: false, ctrl: false, alt: false, meta: false };
       // Open first
       sem.onKeyDown('ArrowDown', noMods);
@@ -139,7 +144,7 @@ describe('Combobox — Enter selects active option', () => {
         children: () => Box({ style: { width: 0, height: 0 } }),
       });
       reg.setAppRoot(inst);
-      const sem = (inst as any).semantics;
+      const sem = ((inst as any).children[0].semantics);
       const noMods = { shift: false, ctrl: false, alt: false, meta: false };
       sem.onKeyDown('ArrowDown', noMods);
       expect(sem.expanded).toBe(true);
@@ -165,7 +170,7 @@ describe('Combobox — Enter selects active option', () => {
         runWithContext(comboboxContext.context, ctx, () => {
           optInst = ComboboxOption({ value: 'apple', label: 'Apple' });
         });
-        optInst.semantics?.onActivate?.();
+        sem(optInst)?.onActivate?.();
         expect(selectOption).toHaveBeenCalledWith({ value: 'apple', label: 'Apple' });
       });
     });
@@ -211,7 +216,7 @@ describe('Combobox — filtering', () => {
       });
       reg.setAppRoot(inst);
 
-      const sem = (inst as any).semantics;
+      const sem = ((inst as any).children[0].semantics);
       sem.onInput?.('app');
       expect(onInputChange).toHaveBeenCalledWith('app');
       expect(sem.expanded).toBe(true);
@@ -240,7 +245,7 @@ describe('ComboboxOption — semantics', () => {
         runWithContext(comboboxContext.context, ctx, () => {
           optInst = ComboboxOption({ value: 'apple', label: 'Apple' });
         });
-        expect(optInst.semantics?.role).toBe('option');
+        expect(sem(optInst)?.role).toBe('option');
       });
     });
   });
@@ -264,8 +269,8 @@ describe('ComboboxOption — semantics', () => {
           optApple = ComboboxOption({ value: 'apple', label: 'Apple' });
           optBanana = ComboboxOption({ value: 'banana', label: 'Banana' });
         });
-        expect(optApple.semantics?.selected).toBe(true);
-        expect(optBanana.semantics?.selected).toBe(false);
+        expect(sem(optApple)?.selected).toBe(true);
+        expect(sem(optBanana)?.selected).toBe(false);
       });
     });
   });
@@ -288,7 +293,7 @@ describe('ComboboxOption — semantics', () => {
         runWithContext(comboboxContext.context, ctx, () => {
           optInst = ComboboxOption({ value: 'banana', label: 'Banana' });
         });
-        expect(optInst.semantics?.label).toBe('Banana');
+        expect(sem(optInst)?.label).toBe('Banana');
       });
     });
   });
@@ -312,7 +317,7 @@ describe('ComboboxOption — semantics', () => {
         runWithContext(comboboxContext.context, ctx, () => {
           optInst = ComboboxOption({ value: 'cherry', label: 'Cherry' });
         });
-        optInst.semantics?.onActivate?.();
+        sem(optInst)?.onActivate?.();
         expect(selectOption).toHaveBeenCalledWith({ value: 'cherry', label: 'Cherry' });
       });
     });
@@ -343,12 +348,11 @@ describe('Combobox — filtering (option visibility)', () => {
           bananaOpt = ComboboxOption({ value: 'banana', label: 'Banana' });
         });
 
-        // Both options are always created in the tree (Show controls layout visibility)
-        expect(appleOpt).toBeDefined();
-        expect(bananaOpt).toBeDefined();
-        // Both carry semantics with correct roles
-        expect(appleOpt.semantics?.role).toBe('option');
-        expect(bananaOpt.semantics?.role).toBe('option');
+        // Filter is 'app': the matching option renders a row (with option semantics
+        // in the a11y tree); the non-matching one renders nothing (absent from the
+        // a11y tree — Show hides it entirely).
+        expect(sem(appleOpt)?.role).toBe('option');
+        expect(sem(bananaOpt)).toBeUndefined();
       });
     });
   });
@@ -363,7 +367,7 @@ describe('Combobox — filtering (option visibility)', () => {
         children: () => Box({ style: { width: 0, height: 0 } }),
       });
       reg.setAppRoot(inst);
-      const sem = (inst as any).semantics;
+      const sem = ((inst as any).children[0].semantics);
       sem.onInput?.('app');
       expect(onInputChange).toHaveBeenCalledWith('app');
       expect(sem.expanded).toBe(true);

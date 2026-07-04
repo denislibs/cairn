@@ -26,6 +26,12 @@ export interface InputProps extends EventProps {
   /** Accessible label for the field (aria-label). Falls back to placeholder when omitted. */
   label?: string;
   style?: StyleInput;
+  /** Override the a11y role (default 'textbox'). e.g. 'combobox' for autocomplete. */
+  role?: SemanticsNode['role'];
+  /** Reactive aria-expanded (for combobox). */
+  expanded?: MaybeReactive<boolean>;
+  /** Semantics keydown override (return true if handled). Replaces the default Enter→submit. */
+  onKey?: (key: string, mods: { shift: boolean; ctrl: boolean; alt: boolean; meta: boolean }) => boolean;
 }
 
 /** A single-line text input backed by the host's platform text-input seam. */
@@ -123,23 +129,28 @@ export function Input(props: InputProps = {}): Instance {
 
   // ── A11y: textbox semantics ────────────────────────────────────────────────
   // Build a mutable SemanticsNode; createEffect keeps reactive fields in sync.
+  const readExpanded = (): boolean | undefined => {
+    const e = props.expanded;
+    return e === undefined ? undefined : typeof e === 'function' ? (e as () => boolean)() : (e as boolean);
+  };
   const semantics: SemanticsNode = {
-    role: 'textbox',
+    role: props.role ?? 'textbox',
     label: props.label ?? (typeof props.placeholder === 'string' ? props.placeholder : undefined),
     value: seed,
     placeholder: typeof props.placeholder === 'string' ? props.placeholder : undefined,
+    expanded: readExpanded(),
     onInput: (v: string) => {
       setText(v);
       setCaret(v.length);
       props.onInput?.(v);
     },
-    onKeyDown: (key: string) => {
+    onKeyDown: props.onKey ?? ((key: string) => {
       if (key === 'Enter') {
         props.onSubmit?.(untrack(text));
         return true;
       }
       return false;
-    },
+    }),
     onFocus: (_kb: boolean) => {
       setFocused(true);
     },
@@ -152,6 +163,7 @@ export function Input(props: InputProps = {}): Instance {
   createEffect(() => {
     semantics.value = text();
     semantics.placeholder = placeholder || undefined;
+    semantics.expanded = readExpanded();
     // label: explicit prop takes priority; else re-read reactive placeholder
     if (!props.label) {
       semantics.label = placeholder || undefined;
