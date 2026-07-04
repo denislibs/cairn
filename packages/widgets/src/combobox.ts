@@ -164,6 +164,7 @@ function _Combobox(props: ComboboxProps): Instance {
 
   const setValue = (v: any): void => {
     if (!isControlled) setInternalValue(v);
+    props.onChange?.(v);
   };
 
   // Option registry
@@ -176,7 +177,6 @@ function _Combobox(props: ComboboxProps): Instance {
   const selectOption = (opt: { value: any; label: string }): void => {
     setInputText(opt.label);
     setValue(opt.value);
-    props.onChange?.(opt.value);
     close();
   };
 
@@ -197,6 +197,13 @@ function _Combobox(props: ComboboxProps): Instance {
     activeIndex: roving.active,
     handleRovingKey: roving.handleKey,
     selectOption,
+  };
+
+  // ── Shared input handler (avoids double-firing onInputChange) ──
+  const handleInput = (text: string): void => {
+    setInputText(text);
+    props.onInputChange?.(text);
+    if (!open()) setOpen(true);
   };
 
   // ── Trigger / input frame style ──
@@ -221,6 +228,21 @@ function _Combobox(props: ComboboxProps): Instance {
     height: theme.control.height.md,
   });
 
+  // ── Primitive input ──
+  const primitiveInput = PrimitiveInput({
+    value: inputText,
+    onInput: handleInput,
+    placeholder: props.placeholder,
+    style: inputFieldStyle,
+  });
+
+  // ── Wrapper (declared before portalContent so portalContent can close over it) ──
+  const wrapper = Box({
+    style: mergeStyles(triggerFrameStyle, props.style),
+    focusable: !props.disabled,
+    children: primitiveInput,
+  });
+
   // ── Semantics on wrapper ──
   const inputSemantics: SemanticsNode = {
     role: 'combobox',
@@ -229,11 +251,7 @@ function _Combobox(props: ComboboxProps): Instance {
     disabled: props.disabled,
     focusable: !props.disabled,
     value: '',
-    onInput: (text: string) => {
-      setInputText(text);
-      props.onInputChange?.(text);
-      if (!open()) setOpen(true);
-    },
+    onInput: handleInput,
     onKeyDown: (key: string, _mods: any) => {
       if (key === ARROW_DOWN) {
         if (!open()) setOpen(true);
@@ -261,26 +279,14 @@ function _Combobox(props: ComboboxProps): Instance {
       }
       return false;
     },
-    onFocus: (_kb: boolean) => { /* focus managed by primitive input */ },
-    onBlur: () => { /* blur managed by primitive input */ },
   };
+
+  wrapper.semantics = inputSemantics;
 
   // Keep expanded/value reactive
   createEffect(() => {
     inputSemantics.expanded = open();
     inputSemantics.value = inputText();
-  });
-
-  // ── Primitive input ──
-  const primitiveInput = PrimitiveInput({
-    value: inputText,
-    onInput: (text) => {
-      setInputText(text);
-      props.onInputChange?.(text);
-      if (!open()) setOpen(true);
-    },
-    placeholder: props.placeholder,
-    style: inputFieldStyle,
   });
 
   // ── Listbox portal ──
@@ -348,15 +354,6 @@ function _Combobox(props: ComboboxProps): Instance {
   createEffect(() => {
     if (open()) portalContent();
   });
-
-  // ── Wrapper ──
-  const wrapper = Box({
-    style: mergeStyles(triggerFrameStyle, props.style),
-    focusable: !props.disabled,
-    children: primitiveInput,
-  });
-
-  wrapper.semantics = inputSemantics;
 
   return wrapper;
 }
