@@ -187,22 +187,27 @@ export function Input(props: InputProps = {}): Instance {
       if (s.backgroundColor) {
         r.fillRoundRect({ x: 0, y: 0, width: w, height: h }, s.borderRadius ?? 0, { color: s.backgroundColor });
       }
+      // Single-line: vertically centre the text within the content box so glyph
+      // ascenders/descenders are never clipped by a tight content height.
+      const fs = fontSizeOf(font);
+      const contentH = Math.max(0, h - pad.top - pad.bottom);
+      const textY = pad.top + Math.max(0, (contentH - fs) / 2);
       r.save();
       r.clipRect({
         x: pad.left,
-        y: pad.top,
+        y: 0,
         width: Math.max(0, w - pad.left - pad.right),
-        height: Math.max(0, h - pad.top - pad.bottom),
+        height: h,
       });
       if (displayText.length === 0 && placeholder) {
-        r.drawText(placeholder, { x: pad.left, y: pad.top }, { font, color: PLACEHOLDER_COLOR, baseline: 'top' });
+        r.drawText(placeholder, { x: pad.left, y: textY }, { font, color: PLACEHOLDER_COLOR, baseline: 'top' });
       } else {
-        r.drawText(displayText, { x: pad.left, y: pad.top }, { font, color, baseline: 'top' });
+        r.drawText(displayText, { x: pad.left, y: textY }, { font, color, baseline: 'top' });
       }
       if (isFocused) {
         const prefixWidth = host.renderer.measureText(displayText.slice(0, caretIndex), { font }).width;
         r.fillRect(
-          { x: pad.left + prefixWidth, y: pad.top, width: 1, height: fontSizeOf(font) },
+          { x: pad.left + prefixWidth, y: textY, width: 1, height: fs },
           { color },
         );
       }
