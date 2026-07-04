@@ -121,12 +121,15 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
     if (role === 'link') {
       return doc.createElement('a');
     }
-    if (role === 'textbox') {
+    if (role === 'textbox' || role === 'combobox') {
       if (node?.multiline) {
         return doc.createElement('textarea');
       }
       const input = doc.createElement('input');
       input.setAttribute('type', 'text');
+      // A combobox is an <input role="combobox"> (editable + a popup); textbox is
+      // the implicit input role.
+      if (role === 'combobox') input.setAttribute('role', 'combobox');
       return input;
     }
     const el = doc.createElement('div');
@@ -151,8 +154,8 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
       getState()?.node.onBlur?.();
     });
 
-    // Textbox: wire the native input event to onInput.
-    if (nodeRef.role === 'textbox') {
+    // Editable roles (textbox/combobox): wire the native input event to onInput.
+    if (isEditableRole(nodeRef.role)) {
       el.addEventListener('input', () => {
         const node = getState()?.node;
         if (!node) return;
@@ -182,9 +185,9 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
           return; // skip Enter/Space activation
         }
 
-        // Textbox elements handle typing natively — do not synthesize activation
-        // on Enter/Space (those are editing keys in a text field).
-        if (nodeRef.role === 'textbox') return;
+        // Editable elements (textbox/combobox) handle typing natively — do not
+        // synthesize activation on Enter/Space (those are editing keys).
+        if (isEditableRole(nodeRef.role)) return;
 
         // Synthesize activation for Enter and Space (screen-reader convention).
         // Only prevent Space's default scroll when there is an activate handler.
@@ -230,8 +233,8 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
       el.setAttribute('aria-level', String(node.level));
     }
 
-    // Textbox: sync native input properties
-    if (node.role === 'textbox') {
+    // Editable roles: sync native input properties
+    if (isEditableRole(node.role)) {
       const inputEl = el as HTMLInputElement | HTMLTextAreaElement;
 
       // Placeholder
@@ -261,8 +264,8 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
     // Make the element visually transparent but present in the a11y tree
     el.style.opacity = '0';
 
-    // Restore pointer-events:none for non-textbox elements (canvas handles those)
-    if (node.role !== 'textbox') {
+    // Restore pointer-events:none for non-editable elements (canvas handles those)
+    if (!isEditableRole(node.role)) {
       el.style.pointerEvents = 'none';
     }
   }
@@ -331,4 +334,9 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
     this.liveAssertive = null;
     this.lastAutoFocusId = null;
   }
+}
+
+// Roles backed by a real editable <input>/<textarea> (native typing/IME/selection).
+function isEditableRole(role: string): boolean {
+  return role === 'textbox' || role === 'combobox';
 }
