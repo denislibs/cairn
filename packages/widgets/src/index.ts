@@ -46,3 +46,13 @@ export { Form, useForm, useFormOptional, useFormField, formContext } from './for
 export type { FormProps, FormContextValue } from './form';
 export { Combobox, ComboboxOption, comboboxContext } from './combobox';
 export type { ComboboxProps, ComboboxOptionProps, ComboboxContextValue } from './combobox';
+export { Dialog, dialogContext } from './dialog';
+export type {
+  DialogProps,
+  DialogContextValue,
+  DialogTriggerProps,
+  DialogContentProps,
+  DialogTitleProps,
+  DialogDescriptionProps,
+  DialogCloseProps,
+} from './dialog';
