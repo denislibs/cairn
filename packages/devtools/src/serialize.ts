@@ -21,7 +21,7 @@ function build(inst: Instance, absX: number, absY: number): SnapshotNode {
     layout: {
       flex: l.flex,
       zIndex: l.zIndex,
-      margin: l.margin,
+      margin: { ...l.margin },
       left: l.left, top: l.top, right: l.right, bottom: l.bottom,
     },
     flags: {

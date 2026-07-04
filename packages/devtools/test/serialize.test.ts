@@ -49,4 +49,11 @@ describe('serialize', () => {
     inst.semantics = { role: 'none' } as any;
     expect(serialize(inst).semantics).toBeUndefined();
   });
+
+  it('copies margin instead of aliasing the layout node', () => {
+    const inst = node('BoxNode', { w: 1, h: 1 });
+    const snap = serialize(inst);
+    (inst.layout as any).margin.top = 99;
+    expect(snap.layout.margin.top).toBe(0);
+  });
 });

@@ -38,4 +38,10 @@ describe('diffSnapshots', () => {
     const next = n(1, { x: 0, y: 0, w: 10, h: 10 });
     expect(diffSnapshots(null, next)).toEqual([{ id: 1, fields: ['added'] }]);
   });
+
+  it('flags removed nodes', () => {
+    const prev = n(1, { x: 0, y: 0, w: 10, h: 10 }, [n(2, { x: 1, y: 1, w: 2, h: 2 })]);
+    const next = n(1, { x: 0, y: 0, w: 10, h: 10 });
+    expect(diffSnapshots(prev, next)).toEqual([{ id: 2, fields: ['removed'] }]);
+  });
 });

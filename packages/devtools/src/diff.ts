@@ -9,11 +9,16 @@ export function diffSnapshots(prev: SnapshotNode | null, next: SnapshotNode): Ch
   const prevMap = new Map<number, SnapshotNode>();
   if (prev) flatten(prev, prevMap);
   const out: ChangedNode[] = [];
-  walk(next, prevMap, out);
+  const visited = new Set<number>();
+  walk(next, prevMap, out, visited);
+  for (const id of prevMap.keys()) {
+    if (!visited.has(id)) out.push({ id, fields: ['removed'] });
+  }
   return out;
 }
 
-function walk(node: SnapshotNode, prevMap: Map<number, SnapshotNode>, out: ChangedNode[]): void {
+function walk(node: SnapshotNode, prevMap: Map<number, SnapshotNode>, out: ChangedNode[], visited: Set<number>): void {
+  visited.add(node.id);
   const before = prevMap.get(node.id);
   if (!before) {
     out.push({ id: node.id, fields: ['added'] });
@@ -25,7 +30,7 @@ function walk(node: SnapshotNode, prevMap: Map<number, SnapshotNode>, out: Chang
     if (before.layout.zIndex !== node.layout.zIndex) fields.push('zIndex');
     if (fields.length) out.push({ id: node.id, fields });
   }
-  for (const c of node.children) walk(c, prevMap, out);
+  for (const c of node.children) walk(c, prevMap, out, visited);
 }
 
 function rectEq(a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }): boolean {
