@@ -28,6 +28,7 @@ export interface ComboboxContextValue {
   register: (opt: { value: any; label: string }) => number;
   activeIndex: Accessor<number>;
   handleRovingKey: (key: string) => boolean;
+  selectOption: (opt: { value: any; label: string }) => void;
 }
 
 export const comboboxContext = createCompoundContext<ComboboxContextValue>('Combobox');
@@ -68,8 +69,7 @@ export function ComboboxOption(props: ComboboxOptionProps): Instance {
   };
 
   const select = (): void => {
-    ctx.setValue(props.value);
-    ctx.close();
+    ctx.selectOption({ value: props.value, label: optLabel });
   };
 
   // ── Semantics ──
@@ -196,6 +196,7 @@ function _Combobox(props: ComboboxProps): Instance {
     },
     activeIndex: roving.active,
     handleRovingKey: roving.handleKey,
+    selectOption,
   };
 
   // ── Trigger / input frame style ──

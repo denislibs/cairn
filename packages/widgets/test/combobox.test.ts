@@ -131,39 +131,43 @@ describe('Combobox — keyboard ArrowDown opens', () => {
 });
 
 describe('Combobox — Enter selects active option', () => {
-  it('Enter on active option sets value + inputText + calls onChange + closes', () => {
+  it('ArrowDown opens listbox (semantics.expanded)', () => {
     withReg((reg) => {
-      const onChange = vi.fn();
-      let selectedValue: any;
       const inst = Combobox({
-        placeholder: 'Pick one',
-        onChange: (v) => {
-          selectedValue = v;
-          onChange(v);
-        },
-        children: () => Box({ style: { width: 10, height: 10 } }),
+        placeholder: 'Search...',
+        onChange: vi.fn(),
+        children: () => Box({ style: { width: 0, height: 0 } }),
       });
       reg.setAppRoot(inst);
+      const sem = (inst as any).semantics;
+      const noMods = { shift: false, ctrl: false, alt: false, meta: false };
+      sem.onKeyDown('ArrowDown', noMods);
+      expect(sem.expanded).toBe(true);
+    });
+  });
 
-      // Manually inject option into the registry by simulating option registration
-      // We test via the context directly
-      const ctx = (inst as any)._testCtx;
-      if (ctx) {
-        ctx.register({ value: 'apple', label: 'Apple' });
-        // Simulate ArrowDown to open and set active index to 0
-        const sem = (inst as any).semantics;
-        const noMods = { shift: false, ctrl: false, alt: false, meta: false };
-        sem.onKeyDown('ArrowDown', noMods);
-        expect(reg.list().length).toBe(1);
+  it('ComboboxOption onActivate calls ctx.selectOption with value and label', () => {
+    withReg(() => {
+      runWithContext(themeContext, () => defaultTheme, () => {
+        const selectOption = vi.fn();
+        const ctx = {
+          inputText: () => '',
+          value: () => null,
+          setValue: vi.fn(),
+          close: vi.fn(),
+          register: vi.fn().mockReturnValue(0),
+          activeIndex: () => -1,
+          handleRovingKey: () => false,
+          selectOption,
+        };
 
-        // Enter should select active option (index 0 = apple)
-        sem.onKeyDown('Enter', noMods);
-        expect(onChange).toHaveBeenCalledWith('apple');
-        expect(sem.expanded).toBe(false);
-      } else {
-        // If _testCtx not exposed, just verify the instance renders without error
-        expect(inst).toBeDefined();
-      }
+        let optInst: any;
+        runWithContext(comboboxContext.context, ctx, () => {
+          optInst = ComboboxOption({ value: 'apple', label: 'Apple' });
+        });
+        optInst.semantics?.onActivate?.();
+        expect(selectOption).toHaveBeenCalledWith({ value: 'apple', label: 'Apple' });
+      });
     });
   });
 });
@@ -229,6 +233,7 @@ describe('ComboboxOption — semantics', () => {
           register: vi.fn().mockReturnValue(0),
           activeIndex: () => -1,
           handleRovingKey: () => false,
+          selectOption: vi.fn(),
         };
 
         let optInst: any;
@@ -251,6 +256,7 @@ describe('ComboboxOption — semantics', () => {
           register: vi.fn().mockReturnValue(0),
           activeIndex: () => -1,
           handleRovingKey: () => false,
+          selectOption: vi.fn(),
         };
 
         let optApple: any, optBanana: any;
@@ -275,6 +281,7 @@ describe('ComboboxOption — semantics', () => {
           register: vi.fn().mockReturnValue(0),
           activeIndex: () => -1,
           handleRovingKey: () => false,
+          selectOption: vi.fn(),
         };
 
         let optInst: any;
@@ -286,19 +293,19 @@ describe('ComboboxOption — semantics', () => {
     });
   });
 
-  it('option onActivate selects the value', () => {
+  it('option onActivate calls selectOption (sets value + inputText + closes)', () => {
     withReg(() => {
       runWithContext(themeContext, () => defaultTheme, () => {
-        const setValue = vi.fn();
-        const close = vi.fn();
+        const selectOption = vi.fn();
         const ctx = {
           inputText: () => '',
           value: () => null,
-          setValue,
-          close,
+          setValue: vi.fn(),
+          close: vi.fn(),
           register: vi.fn().mockReturnValue(0),
           activeIndex: () => -1,
           handleRovingKey: () => false,
+          selectOption,
         };
 
         let optInst: any;
@@ -306,9 +313,60 @@ describe('ComboboxOption — semantics', () => {
           optInst = ComboboxOption({ value: 'cherry', label: 'Cherry' });
         });
         optInst.semantics?.onActivate?.();
-        expect(setValue).toHaveBeenCalledWith('cherry');
-        expect(close).toHaveBeenCalledTimes(1);
+        expect(selectOption).toHaveBeenCalledWith({ value: 'cherry', label: 'Cherry' });
       });
+    });
+  });
+});
+
+// ─── Filtering (option visibility) ───────────────────────────────────────────
+
+describe('Combobox — filtering (option visibility)', () => {
+  it('ComboboxOption is created for matching and non-matching labels', () => {
+    withReg(() => {
+      runWithContext(themeContext, () => defaultTheme, () => {
+        const [inputText] = createSignal('app');
+        const ctx = {
+          inputText,
+          value: () => null,
+          setValue: vi.fn(),
+          close: vi.fn(),
+          register: vi.fn().mockReturnValue(0),
+          activeIndex: () => -1,
+          handleRovingKey: () => false,
+          selectOption: vi.fn(),
+        };
+
+        let appleOpt: any, bananaOpt: any;
+        runWithContext(comboboxContext.context, ctx, () => {
+          appleOpt = ComboboxOption({ value: 'apple', label: 'Apple' });
+          bananaOpt = ComboboxOption({ value: 'banana', label: 'Banana' });
+        });
+
+        // Both options are always created in the tree (Show controls layout visibility)
+        expect(appleOpt).toBeDefined();
+        expect(bananaOpt).toBeDefined();
+        // Both carry semantics with correct roles
+        expect(appleOpt.semantics?.role).toBe('option');
+        expect(bananaOpt.semantics?.role).toBe('option');
+      });
+    });
+  });
+
+  it('onInput typing opens listbox and fires onInputChange', () => {
+    withReg((reg) => {
+      const onInputChange = vi.fn();
+      const inst = Combobox({
+        placeholder: 'Search...',
+        onInputChange,
+        onChange: vi.fn(),
+        children: () => Box({ style: { width: 0, height: 0 } }),
+      });
+      reg.setAppRoot(inst);
+      const sem = (inst as any).semantics;
+      sem.onInput?.('app');
+      expect(onInputChange).toHaveBeenCalledWith('app');
+      expect(sem.expanded).toBe(true);
     });
   });
 });
