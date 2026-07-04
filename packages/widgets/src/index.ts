@@ -74,3 +74,28 @@ export type {
   ToastContextValue,
   ToastProviderProps,
 } from './toast';
+export { Tabs, tabsContext } from './tabs';
+export type {
+  TabsProps,
+  TabsInstance,
+  TabsContextValue,
+  TabsListProps,
+  TabProps,
+  TabsPanelProps,
+} from './tabs';
+export { Accordion, accordionContext, accordionItemContext } from './accordion';
+export type {
+  AccordionProps,
+  AccordionInstance,
+  AccordionContextValue,
+  AccordionItemContextValue,
+  AccordionItemProps,
+  AccordionTriggerProps,
+  AccordionContentProps,
+} from './accordion';
+export { Stepper } from './stepper';
+export type { StepperProps, StepperStep } from './stepper';
+export { Breadcrumbs } from './breadcrumbs';
+export type { BreadcrumbsProps, BreadcrumbItem } from './breadcrumbs';
+export { Pagination, paginationRange } from './pagination';
+export type { PaginationProps } from './pagination';
