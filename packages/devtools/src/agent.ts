@@ -83,7 +83,7 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
       return () => s.subscribers.delete(cb);
     },
     send: handleCommand,
-    getSnapshot: () => s.last,
+    getSnapshot: () => s.last ?? (s.lastRoot ? serialize(s.lastRoot) : null),
   };
   (globalThis as { __CAIRN_DEVTOOLS_HOOK__?: DevtoolsHook }).__CAIRN_DEVTOOLS_HOOK__ = hook;
 }

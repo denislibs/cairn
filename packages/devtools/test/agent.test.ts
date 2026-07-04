@@ -109,6 +109,22 @@ describe('installDevtools', () => {
     expect(sel).toBeTruthy();
   });
 
+  it('getSnapshot() returns a non-null snapshot when the only commit was lazily skipped (no subscriber at mount time)', () => {
+    installDevtools();
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+
+    // Mount with NO subscriber yet — the initial commit is lazily skipped,
+    // so s.last is null. getSnapshot() must still return a usable snapshot.
+    const { host } = createFakeHost();
+    const dispose = mount(() => appRoot(), host);
+
+    const snapshot = hook.getSnapshot();
+    dispose();
+
+    expect(snapshot).not.toBeNull();
+    expect(snapshot?.name).toBe('Box');
+  });
+
   it('get-snapshot reply carries the real last-frame meta, not hardcoded zeros', () => {
     installDevtools();
     const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
