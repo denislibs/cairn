@@ -29,6 +29,8 @@ export interface SemanticsNode {
   onBlur?: () => void;
   onKeyDown?: (key: string, mods: { shift: boolean; ctrl: boolean; alt: boolean; meta: boolean }) => boolean;
   autoFocus?: boolean;
+  /** True if this node is a modal overlay (dialog/drawer) — traps focus. */
+  modal?: boolean;
 }
 
 // Stable id assignment: WeakMap so Instance keys are not retained beyond their
@@ -54,18 +56,32 @@ function stableId(inst: Instance): number {
  */
 export function collectSemantics(root: Instance): SemanticsNodeData[] {
   const result: SemanticsNodeData[] = [];
-  walk(root, 0, 0, result);
+  walk(root, 0, 0, undefined, result);
   return result;
 }
 
-function walk(inst: Instance, absX: number, absY: number, out: SemanticsNodeData[]): void {
+function walk(
+  inst: Instance,
+  absX: number,
+  absY: number,
+  currentModalId: number | undefined,
+  out: SemanticsNodeData[],
+): void {
   const x = absX + inst.layout.offsetX;
   const y = absY + inst.layout.offsetY;
 
   const sem = (inst as { semantics?: SemanticsNode }).semantics;
+  let nextModalId = currentModalId;
+
   if (sem && sem.role !== 'none') {
+    const id = stableId(inst);
+
+    // If this node is a modal, it becomes the active modal group for itself and
+    // all descendants.
+    if (sem.modal) nextModalId = id;
+
     const data: SemanticsNodeData = {
-      id: stableId(inst),
+      id,
       role: sem.role,
       rect: { x, y, width: inst.layout.size.w, height: inst.layout.size.h },
     };
@@ -89,10 +105,13 @@ function walk(inst: Instance, absX: number, absY: number, out: SemanticsNodeData
     if (sem.onBlur !== undefined) data.onBlur = sem.onBlur;
     if (sem.onKeyDown !== undefined) data.onKeyDown = sem.onKeyDown;
     if (sem.autoFocus !== undefined) data.autoFocus = sem.autoFocus;
+    if (sem.modal) data.modal = sem.modal;
+    // Tag with modalGroup if we are inside (or are) a modal node.
+    if (nextModalId !== undefined) data.modalGroup = nextModalId;
     out.push(data);
   }
 
   for (const child of inst.children) {
-    walk(child, x, y, out);
+    walk(child, x, y, nextModalId, out);
   }
 }

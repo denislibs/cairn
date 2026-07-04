@@ -199,3 +199,41 @@ test('collectSemantics carries onInput, placeholder, multiline for textbox', () 
   expect(node.onInput).toBe(onInput);
   expect(node.multiline).toBe(true);
 });
+
+// ── H4 Task 1: modal / modalGroup propagation ─────────────────────────────────
+
+test('modal node itself gets modal:true and modalGroup set to its own id', () => {
+  const dialogContent = makeInstance(0, 0, 200, 200, { role: 'dialog', label: 'My dialog', modal: true });
+  const root = makeInstance(0, 0, 400, 400, undefined, [dialogContent]);
+
+  const nodes = collectSemantics(root);
+  expect(nodes).toHaveLength(1);
+  expect(nodes[0].modal).toBe(true);
+  expect(nodes[0].modalGroup).toBe(nodes[0].id);
+});
+
+test('descendants of a modal node inherit modalGroup equal to the modal node id', () => {
+  const btn = makeInstance(10, 10, 80, 30, { role: 'button', label: 'Close' });
+  const dialogContent = makeInstance(0, 0, 200, 200, { role: 'dialog', label: 'My dialog', modal: true }, [btn]);
+  const root = makeInstance(0, 0, 400, 400, undefined, [dialogContent]);
+
+  const nodes = collectSemantics(root);
+  expect(nodes).toHaveLength(2);
+  const dialogNode = nodes.find((n) => n.role === 'dialog')!;
+  const btnNode = nodes.find((n) => n.role === 'button')!;
+  expect(btnNode.modalGroup).toBe(dialogNode.id);
+  expect(btnNode.modalGroup).toBe(dialogNode.modalGroup);
+});
+
+test('siblings outside modal node do NOT get modalGroup', () => {
+  const outsideBtn = makeInstance(0, 0, 80, 30, { role: 'button', label: 'Outside' });
+  const btn = makeInstance(10, 10, 80, 30, { role: 'button', label: 'Inside' });
+  const dialogContent = makeInstance(200, 0, 200, 200, { role: 'dialog', label: 'D', modal: true }, [btn]);
+  const root = makeInstance(0, 0, 400, 400, undefined, [outsideBtn, dialogContent]);
+
+  const nodes = collectSemantics(root);
+  const outsideNode = nodes.find((n) => n.label === 'Outside')!;
+  const insideNode = nodes.find((n) => n.label === 'Inside')!;
+  expect(outsideNode.modalGroup).toBeUndefined();
+  expect(insideNode.modalGroup).toBeDefined();
+});
