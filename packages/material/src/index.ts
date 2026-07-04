@@ -29,3 +29,30 @@ export { TextField } from './textfield';
 export type { TextFieldProps, TextFieldVariant } from './textfield';
 export { Select, Option } from './select';
 export type { SelectProps, OptionProps, SelectOptionItem } from './select';
+
+// ─── MT5 — surfaces ─────────────────────────────────────────────────────────
+export { Paper } from './paper';
+export type { PaperProps } from './paper';
+export { Card } from './card';
+export type { CardProps, CardVariant, CardContentProps, CardActionsProps } from './card';
+export { AppBar } from './appbar';
+export type { AppBarProps, AppBarColor, AppBarTitleProps } from './appbar';
+export { List, listContext } from './list';
+export type { ListProps, ListItemProps, MaterialListInstance } from './list';
+
+// ─── MT6 — feedback + navigation ────────────────────────────────────────────
+export { Dialog } from './dialog';
+export type {
+  DialogProps, DialogTriggerProps, DialogContentProps, DialogTitleProps,
+  DialogDescriptionProps, DialogActionsProps, DialogCloseProps,
+} from './dialog';
+export { SnackbarProvider, SnackbarItem, useSnackbar } from './snackbar';
+export type { SnackbarProviderProps, SnackbarItemProps, SnackbarOptions } from './snackbar';
+export { Tabs } from './tabs';
+export type { TabsProps, TabsListProps, TabProps, TabsPanelProps, TabsInstance } from './tabs';
+export { Chip } from './chip';
+export type { ChipProps, ChipColor, ChipVariant, ChipSize } from './chip';
+export { Badge } from './badge';
+export type { BadgeProps } from './badge';
+export { LinearProgress, CircularProgress } from './progress';
+export type { LinearProgressProps, CircularProgressProps } from './progress';
