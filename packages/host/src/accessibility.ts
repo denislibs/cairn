@@ -47,6 +47,10 @@ export interface SemanticsNodeData {
   onBlur?: () => void;
   onKeyDown?: (key: string, mods: { shift: boolean; ctrl: boolean; alt: boolean; meta: boolean }) => boolean;
   autoFocus?: boolean;
+  /** True if this node is a modal dialog/drawer that traps focus. */
+  modal?: boolean;
+  /** The id of the nearest ancestor (or self) with modal:true; undefined for non-modal subtrees. */
+  modalGroup?: number;
 }
 
 export interface AccessibilityBridge {

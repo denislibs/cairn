@@ -20,9 +20,31 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
   private lastAutoFocusId: number | null = null;
   private livePolite: HTMLElement | null = null;
   private liveAssertive: HTMLElement | null = null;
+  /** The id of the currently active modal group, or null if no modal is open. */
+  private activeModalId: number | null = null;
+  /** Whether the focusin trap listener is currently attached. */
+  private trapActive = false;
 
   private onModalityKeyDown = (): void => { this.modality = 'keyboard'; };
   private onPointerDown = (): void => { this.modality = 'pointer'; };
+
+  private onFocusTrap = (e: FocusEvent): void => {
+    const target = e.target as HTMLElement | null;
+    if (!target || !this.container || this.activeModalId === null) return;
+    // Find the element state for this target
+    let targetId: number | null = null;
+    for (const [id, state] of this.elementMap) {
+      if (state.el === target) { targetId = id; break; }
+    }
+    // If focus landed outside the active modal group, redirect to the first
+    // focusable element in the group.
+    const targetNode = targetId !== null ? this.elementMap.get(targetId)?.node : undefined;
+    const inGroup = targetNode?.modalGroup === this.activeModalId ||
+      targetNode?.modal === true && targetNode?.modalGroup === this.activeModalId;
+    if (!inGroup) {
+      this.focusFirstInGroup(this.activeModalId);
+    }
+  };
 
   constructor(private canvas: HTMLCanvasElement, private doc?: Document) {
     const document = this.getDoc();
@@ -101,6 +123,45 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
       }
     }
 
+    // ── Modal focus-trap logic ──────────────────────────────────────────────
+    // Determine if there is an active modal. The last node with modal:true wins
+    // (in practice there is only one at a time).
+    const modalNode = [...visible].reverse().find((n) => n.modal === true);
+    const newModalId = modalNode ? modalNode.id : null;
+    this.activeModalId = newModalId;
+
+    if (newModalId !== null) {
+      // Apply inert to elements outside the modal group, and remove inert from
+      // elements that ARE inside the group.
+      for (const [id, state] of this.elementMap) {
+        const inGroup = state.node.modalGroup === newModalId;
+        if (inGroup) {
+          // Restore normal tabindex for group elements (updateAttributes already set it).
+          // Remove aria-hidden if present.
+          state.el.removeAttribute('aria-hidden');
+        } else {
+          // Background inert: tabindex=-1 + aria-hidden=true.
+          state.el.setAttribute('tabindex', '-1');
+          state.el.setAttribute('aria-hidden', 'true');
+        }
+      }
+      // Attach focusin trap if not already active.
+      if (!this.trapActive) {
+        this.getDoc().addEventListener('focusin', this.onFocusTrap, true);
+        this.trapActive = true;
+      }
+    } else {
+      // No modal: remove trap listener and restore normal state.
+      if (this.trapActive) {
+        this.getDoc().removeEventListener('focusin', this.onFocusTrap, true);
+        this.trapActive = false;
+      }
+      // Remove aria-hidden from all elements (updateAttributes restores tabindex).
+      for (const [, state] of this.elementMap) {
+        state.el.removeAttribute('aria-hidden');
+      }
+    }
+
     // autoFocus — edge-triggered: only focus when the autoFocus target changes
     const autoFocusNode = visible.find((n) => n.autoFocus === true);
     if (autoFocusNode) {
@@ -110,6 +171,16 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
       }
     } else {
       this.lastAutoFocusId = null;
+    }
+  }
+
+  /** Focus the first focusable element whose modalGroup === groupId. */
+  private focusFirstInGroup(groupId: number): void {
+    for (const [, state] of this.elementMap) {
+      if (state.node.modalGroup === groupId && state.node.focusable !== false && !state.node.disabled) {
+        state.el.focus();
+        return;
+      }
     }
   }
 
@@ -324,6 +395,11 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
     const win = this.getDoc().defaultView ?? globalThis;
     win.removeEventListener('keydown', this.onModalityKeyDown, true);
     win.removeEventListener('pointerdown', this.onPointerDown, true);
+    if (this.trapActive) {
+      this.getDoc().removeEventListener('focusin', this.onFocusTrap, true);
+      this.trapActive = false;
+    }
+    this.activeModalId = null;
 
     this.container.remove();
     this.container = null;

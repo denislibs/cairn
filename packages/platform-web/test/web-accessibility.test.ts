@@ -503,3 +503,106 @@ test('announce assertive sets assertive aria-live region text', async () => {
   expect(assertive!.textContent).toBe('Alert!');
   bridge.dispose();
 });
+
+// ── H4 Task 1: modal focus-trap bridge ───────────────────────────────────────
+
+test('modal present: non-group elements get tabindex=-1 and aria-hidden=true', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  // Node 10: modal dialog (modalGroup=10, modal=true)
+  // Node 11: button inside modal (modalGroup=10)
+  // Node 12: button outside modal (no modalGroup)
+  bridge.sync([
+    { id: 10, role: 'dialog', label: 'Dialog', rect: makeRect(), modal: true, modalGroup: 10, focusable: true },
+    { id: 11, role: 'button', label: 'Close', rect: makeRect(20, 20), modalGroup: 10, focusable: true },
+    { id: 12, role: 'button', label: 'Outside', rect: makeRect(200, 0), focusable: true },
+  ]);
+
+  const outsideEl = canvas.parentElement!.querySelector('[aria-label="Outside"]') as HTMLElement;
+  expect(outsideEl.getAttribute('tabindex')).toBe('-1');
+  expect(outsideEl.getAttribute('aria-hidden')).toBe('true');
+
+  bridge.dispose();
+});
+
+test('modal present: elements in the active modal group keep their normal tabindex', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  bridge.sync([
+    { id: 10, role: 'dialog', label: 'Dialog', rect: makeRect(), modal: true, modalGroup: 10, focusable: true },
+    { id: 11, role: 'button', label: 'Close', rect: makeRect(20, 20), modalGroup: 10, focusable: true },
+  ]);
+
+  const closeEl = canvas.parentElement!.querySelector('[aria-label="Close"]') as HTMLElement;
+  expect(closeEl.getAttribute('tabindex')).toBe('0');
+  expect(closeEl.getAttribute('aria-hidden')).toBeNull();
+
+  bridge.dispose();
+});
+
+test('when modal is removed, previously inert elements restore normal tabindex and lose aria-hidden', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+
+  // First sync: modal active, outsideBtn is inert
+  bridge.sync([
+    { id: 10, role: 'dialog', label: 'Dialog', rect: makeRect(), modal: true, modalGroup: 10, focusable: true },
+    { id: 12, role: 'button', label: 'Outside', rect: makeRect(200, 0), focusable: true },
+  ]);
+
+  const outsideEl = canvas.parentElement!.querySelector('[aria-label="Outside"]') as HTMLElement;
+  expect(outsideEl.getAttribute('aria-hidden')).toBe('true');
+
+  // Second sync: no modal
+  bridge.sync([
+    { id: 12, role: 'button', label: 'Outside', rect: makeRect(200, 0), focusable: true },
+  ]);
+
+  expect(outsideEl.getAttribute('aria-hidden')).toBeNull();
+  expect(outsideEl.getAttribute('tabindex')).toBe('0');
+
+  bridge.dispose();
+});
+
+test('focusin outside active modal group redirects focus into the group', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  bridge.sync([
+    { id: 10, role: 'dialog', label: 'Dialog', rect: makeRect(), modal: true, modalGroup: 10, focusable: true },
+    { id: 11, role: 'button', label: 'Close', rect: makeRect(20, 20), modalGroup: 10, focusable: true },
+    { id: 12, role: 'button', label: 'Outside', rect: makeRect(200, 0), focusable: true },
+  ]);
+
+  // Simulate focus landing on the outside (non-modal-group) button
+  const outsideEl = canvas.parentElement!.querySelector('[aria-label="Outside"]') as HTMLElement;
+  outsideEl.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+
+  // Focus should now be on the first focusable element in the modal group
+  const dialogEl = canvas.parentElement!.querySelector('[aria-label="Dialog"]') as HTMLElement;
+  expect(document.activeElement).toBe(dialogEl);
+
+  bridge.dispose();
+});
+
+test('when no modal is present, focusin trap listener is not active (no redirect)', () => {
+  const canvas = makeCanvas();
+  const bridge = new WebAccessibilityBridge(canvas);
+  bridge.sync([
+    { id: 12, role: 'button', label: 'A', rect: makeRect(), focusable: true },
+    { id: 13, role: 'button', label: 'B', rect: makeRect(100, 0), focusable: true },
+  ]);
+
+  const btnB = canvas.parentElement!.querySelector('[aria-label="B"]') as HTMLElement;
+  // Give focus to something outside
+  const external = document.createElement('button');
+  document.body.appendChild(external);
+  external.focus();
+  expect(document.activeElement).toBe(external);
+
+  // Dispatch focusin on btnB — with no modal active there is no trap listener,
+  // so no redirect should happen and external stays focused.
+  btnB.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+  expect(document.activeElement).toBe(external);
+
+  bridge.dispose();
+});
