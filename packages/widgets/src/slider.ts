@@ -146,6 +146,7 @@ export function Slider(props: SliderProps): Instance {
       borderRadius: THUMB_SIZE / 2,
       backgroundColor: t.colors.surface,
       border: { width: 2, color: isDisabled ? t.colors.textDisabled : t.colors.primary },
+      boxShadow: { color: 'rgba(0,0,0,0.15)', blur: 4, offsetX: 0, offsetY: 2 },
       left: -THUMB_SIZE / 2, // center on fill edge; will shift with fill
       top: -(THUMB_SIZE - TRACK_H) / 2,
     }),
@@ -157,7 +158,7 @@ export function Slider(props: SliderProps): Instance {
       width: '100%' as any,
       height: TRACK_H,
       borderRadius: TRACK_H / 2,
-      backgroundColor: t.colors.borderStrong,
+      backgroundColor: t.colors.surfaceAlt,
       overflow: 'visible' as any,
     }),
     children: fill,
@@ -185,17 +186,20 @@ export function Slider(props: SliderProps): Instance {
       ? { outline: { width: 2, color: t.colors.focusRing, offset: 2 } }
       : {};
 
-  const wrapperStyle = mergeStyles(
-    () => ({
-      width: '100%' as any,
-      height: THUMB_SIZE + 4,
-      alignY: 'center' as const,
-      cursor: isDisabled ? 'default' : 'pointer',
-      opacity: isDisabled ? 0.5 : 1,
-      ...focusRingStyle(),
-    }),
-    props.style,
-  );
+  // Layer 1: static structural defaults
+  const baseStyle: StyleInput = {
+    width: '100%' as any,
+    height: THUMB_SIZE + 4,
+    alignY: 'center' as const,
+    cursor: isDisabled ? 'default' : 'pointer',
+    opacity: isDisabled ? 0.5 : 1,
+  };
+
+  // Layer 2: theme/state-driven defaults (focus ring)
+  const themeStyle: StyleInput = () => focusRingStyle();
+
+  // Layer 3: consumer override via props.style
+  const wrapperStyle = mergeStyles(baseStyle, themeStyle, props.style);
 
   const wrapper = Box({
     style: wrapperStyle,
