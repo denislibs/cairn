@@ -37,8 +37,12 @@ export class PickController {
     if (!this.snapshot) return;
     const p = pagePointToCanvas(this.canvas, e.clientX, e.clientY, this.viewport());
     const hit = hitTest(this.snapshot, p.x, p.y);
-    if (hit) { this.cb.onSelect(hit.id); this.stop(); }
-    e.preventDefault(); e.stopPropagation();
+    if (hit) {
+      this.cb.onSelect(hit.id);
+      this.stop();
+      e.preventDefault();
+      e.stopPropagation();
+    }
   };
 
   constructor(

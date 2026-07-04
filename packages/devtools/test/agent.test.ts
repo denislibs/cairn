@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { mount, setRuntimeDevHooks } from '@cairn/runtime';
 import type { Instance } from '@cairn/runtime';
-import { setReactiveDevHooks } from '@cairn/reactivity';
+import { setReactiveDevHooks, createSignal } from '@cairn/reactivity';
 import { installDevtools, uninstallDevtools } from '../src/agent';
 import type { AgentEvent } from '../src/protocol';
 import { createFakeHost } from '../../runtime/test/fake-host';
@@ -55,5 +55,39 @@ describe('installDevtools', () => {
     const first = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
     installDevtools();
     expect((globalThis as any).__CAIRN_DEVTOOLS_HOOK__).toBe(first);
+  });
+
+  it('get-snapshot reply carries the real last-frame meta, not hardcoded zeros', () => {
+    installDevtools();
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+    const events: AgentEvent[] = [];
+    hook.subscribe((e: AgentEvent) => events.push(e));
+
+    // Write a signal AFTER the tracker is started so signalWrites > 0 in the commit meta.
+    const [, setVal] = createSignal(0);
+    setVal(1);
+
+    const { host } = createFakeHost();
+    const dispose = mount(() => appRoot(), host);
+
+    // Find the last real commit emitted during mount
+    const realCommit = [...events].reverse().find((e) => e.type === 'commit');
+    expect(realCommit).toBeTruthy();
+    if (!realCommit || realCommit.type !== 'commit') return;
+    const realMeta = realCommit.meta;
+    // Sanity: the signal write should have been counted
+    expect(realMeta.signalWrites).toBeGreaterThanOrEqual(1);
+
+    // Now ask for a snapshot replay — it must echo back the same meta (not zeros)
+    const beforeCount = events.length;
+    hook.send({ type: 'get-snapshot' });
+    const replayCommit = events[beforeCount];
+    expect(replayCommit).toBeTruthy();
+    expect(replayCommit.type).toBe('commit');
+    if (replayCommit.type === 'commit') {
+      expect(replayCommit.meta).toEqual(realMeta);
+    }
+
+    dispose();
   });
 });

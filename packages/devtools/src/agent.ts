@@ -1,6 +1,6 @@
 import type { Instance } from '@cairn/runtime';
 import { setRuntimeDevHooks } from '@cairn/runtime';
-import type { AgentEvent, PanelCommand, DevtoolsHook, SnapshotNode } from './protocol';
+import type { AgentEvent, PanelCommand, DevtoolsHook, SnapshotNode, CommitMeta } from './protocol';
 import { DEVTOOLS_VERSION } from './protocol';
 import { serialize } from './serialize';
 import { diffSnapshots } from './diff';
@@ -21,6 +21,7 @@ interface AgentState {
   why: WhyFrameTracker;
   last: SnapshotNode | null;
   lastRoot: Instance | null;
+  lastMeta: CommitMeta | null;
   viewport: { w: number; h: number };
   frame: number;
   highlighter: Highlighter | null;
@@ -39,6 +40,7 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
     why,
     last: null,
     lastRoot: null,
+    lastMeta: null,
     viewport: { w: 0, h: 0 },
     frame: 0,
     highlighter: opts.canvas ? new Highlighter(opts.canvas) : null,
@@ -67,8 +69,9 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
       s.frame++;
       s.log.push({ frame: s.frame, changedIds: changed.map((c) => c.id), ...counts });
       s.last = snapshot;
+      s.lastMeta = { frame: s.frame, ...counts };
       if (s.pick) s.pick.update(snapshot);
-      emit({ type: 'commit', snapshot, changed, meta: { frame: s.frame, ...counts } });
+      emit({ type: 'commit', snapshot, changed, meta: s.lastMeta });
     },
   });
 
@@ -117,7 +120,7 @@ function handleCommand(cmd: PanelCommand): void {
     case 'select': highlight(cmd.id); emit({ type: 'selection', id: cmd.id }); break;
     case 'get-snapshot':
       if (state.last) {
-        emit({ type: 'commit', snapshot: state.last, changed: [], meta: { frame: state.frame, signalWrites: 0, effectRuns: 0 } });
+        emit({ type: 'commit', snapshot: state.last, changed: [], meta: state.lastMeta ?? { frame: state.frame, signalWrites: 0, effectRuns: 0 } });
       }
       break;
   }
