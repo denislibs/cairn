@@ -57,8 +57,10 @@ export function Slider(props: SliderProps): Instance {
     props.onChange?.(next);
   };
 
-  // ─── Focus-visible state via createControl ────────────────────────────────
-  const [focusVisible, setFV] = createSignal(false);
+  // ─── Interaction state via createControl ──────────────────────────────────
+  const { state, handlers, setFocusVisible } = createControl({
+    disabled: props.disabled,
+  });
 
   // ─── Native semantics ─────────────────────────────────────────────────────
   const semantics: SemanticsNode = {
@@ -97,15 +99,13 @@ export function Slider(props: SliderProps): Instance {
           return false;
       }
     },
-    onFocus: (kb: boolean) => setFV(kb),
-    onBlur: () => setFV(false),
+    onFocus: (kb: boolean) => setFocusVisible(kb),
+    onBlur: () => setFocusVisible(false),
   };
 
-  // Reactively sync semantics fields
+  // Reactively sync semantics.now
   createEffect(() => {
     semantics.now = read();
-    semantics.disabled = isDisabled;
-    semantics.focusable = !isDisabled;
   });
 
   // ─── Drag state ───────────────────────────────────────────────────────────
@@ -128,17 +128,7 @@ export function Slider(props: SliderProps): Instance {
     return Math.max(0, Math.min(1, (read() - resolvedMin) / span));
   };
 
-  // Fill box (grows reactively to show progress)
-  const fill = Box({
-    style: () => ({
-      width: `${fillFrac() * 100}%` as any,
-      height: TRACK_H,
-      borderRadius: TRACK_H / 2,
-      backgroundColor: isDisabled ? t.colors.textDisabled : t.colors.primary,
-    }),
-  });
-
-  // Thumb box (positioned via left, absolute within track)
+  // Thumb box (sits at the right edge of the fill box)
   const thumb = Box({
     style: () => ({
       width: THUMB_SIZE,
@@ -150,6 +140,17 @@ export function Slider(props: SliderProps): Instance {
       left: -THUMB_SIZE / 2, // center on fill edge; will shift with fill
       top: -(THUMB_SIZE - TRACK_H) / 2,
     }),
+  });
+
+  // Fill box (grows reactively to show progress; thumb is its child)
+  const fill = Box({
+    style: () => ({
+      width: `${fillFrac() * 100}%` as any,
+      height: TRACK_H,
+      borderRadius: TRACK_H / 2,
+      backgroundColor: isDisabled ? t.colors.textDisabled : t.colors.primary,
+    }),
+    children: thumb,
   });
 
   // Track box — contains fill
@@ -164,8 +165,26 @@ export function Slider(props: SliderProps): Instance {
     children: fill,
   });
 
-  // Wrapper box — the interactive/focusable root
-  const wrapperHandlers = {
+  const focusRingStyle: StyleInput = (_th) =>
+    state.focusVisible()
+      ? { outline: { width: 2, color: t.colors.focusRing, offset: 2 } }
+      : {};
+
+  // Layer 1: static structural defaults
+  const baseStyle: StyleInput = {
+    width: '100%' as any,
+    height: THUMB_SIZE + 4,
+    alignY: 'center' as const,
+    cursor: isDisabled ? 'default' : 'pointer',
+    opacity: isDisabled ? 0.5 : 1,
+  };
+
+  // Layer 3: consumer override via props.style
+  const wrapperStyle = mergeStyles(baseStyle, focusRingStyle, props.style);
+
+  // Drag handlers — these override the pointer handlers from createControl for
+  // pointer down/move/up/leave so we can track drag state.
+  const dragHandlers = {
     onPointerDown: (e: { localX?: number }) => {
       if (isDisabled) return;
       dragging = true;
@@ -181,30 +200,13 @@ export function Slider(props: SliderProps): Instance {
     onPointerLeave: () => { dragging = false; },
   };
 
-  const focusRingStyle = (): object =>
-    focusVisible()
-      ? { outline: { width: 2, color: t.colors.focusRing, offset: 2 } }
-      : {};
-
-  // Layer 1: static structural defaults
-  const baseStyle: StyleInput = {
-    width: '100%' as any,
-    height: THUMB_SIZE + 4,
-    alignY: 'center' as const,
-    cursor: isDisabled ? 'default' : 'pointer',
-    opacity: isDisabled ? 0.5 : 1,
-  };
-
-  // Layer 2: theme/state-driven defaults (focus ring)
-  const themeStyle: StyleInput = () => focusRingStyle();
-
-  // Layer 3: consumer override via props.style
-  const wrapperStyle = mergeStyles(baseStyle, themeStyle, props.style);
-
   const wrapper = Box({
     style: wrapperStyle,
     focusable: !isDisabled,
-    ...wrapperHandlers,
+    // Spread createControl handlers first (hover/pressed/focused state), then
+    // override pointer drag events so drag behaviour takes priority.
+    ...handlers,
+    ...dragHandlers,
     children: track,
   });
 
