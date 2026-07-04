@@ -27,7 +27,12 @@ export type SemanticsRole =
   | 'navigation'
   | 'list'
   | 'listitem'
-  | 'separator';
+  | 'separator'
+  | 'progressbar'
+  | 'table'
+  | 'row'
+  | 'cell'
+  | 'columnheader';
 
 export interface SemanticsNodeData {
   id: number;

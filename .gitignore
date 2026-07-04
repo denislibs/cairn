@@ -4,3 +4,4 @@ dist/
 
 .idea/
 .playwright-mcp/
+.claude/worktrees/
