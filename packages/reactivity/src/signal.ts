@@ -4,6 +4,7 @@ import {
   readSource,
   writeSignal,
   defaultEquals,
+  runSignalCreateHook,
 } from './core';
 
 export type Accessor<T> = () => T;
@@ -22,6 +23,7 @@ export function createSignal<T>(
     observers: null,
     equals: options?.equals ?? defaultEquals,
   };
+  runSignalCreateHook(node as SignalState<unknown>);
   const read: Accessor<T> = () => readSource(node);
   const write: Setter<T> = (next) =>
     writeSignal(
