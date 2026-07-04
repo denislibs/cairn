@@ -88,9 +88,9 @@ describe('Dialog — uncontrolled open/close', () => {
         children: () => Dialog.Content({ children: Dialog.Title({ children: 'D' }) }),
       });
       const overlay = reg.list()[0];
-      // The backdrop is the full-surface catcher (first child of the stack)
-      const catcher = overlay.children?.[0] ?? overlay;
-      catcher.handlers?.onClick?.({ stopPropagation() {} } as any);
+      // The overlay IS the full-surface dim backdrop (centers the surface); clicking
+      // it (outside the surface) closes.
+      overlay.handlers?.onClick?.({ stopPropagation() {} } as any);
       expect(closed).toBe(true);
     });
   });

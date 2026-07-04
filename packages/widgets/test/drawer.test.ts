@@ -84,8 +84,7 @@ describe('Drawer — open/close', () => {
         children: () => Drawer.Content({ children: Drawer.Title({ children: 'D' }) }),
       });
       const overlay = reg.list()[0];
-      const catcher = overlay.children?.[0] ?? overlay;
-      catcher.handlers?.onClick?.({ stopPropagation() {} } as any);
+      overlay.handlers?.onClick?.({ stopPropagation() {} } as any);
       expect(closed).toBe(true);
     });
   });

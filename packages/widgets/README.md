@@ -102,9 +102,9 @@ Status: ✅ stable · 🧪 in progress · ⏳ planned
 | `Tooltip` | flat | ✅ |
 | `Menu` / `MenuItem` | compound | ✅ |
 | `Select` / `Option` | compound | ✅ |
-| `Dialog` / `AlertDialog` | compound | ⏳ |
-| `Drawer` | compound | ⏳ |
-| `Toast` | compound | ⏳ |
+| `Dialog` | compound | ✅ |
+| `Drawer` | compound | ✅ |
+| `Toast` | compound | ✅ |
 
 ### Navigation
 | Component | Kind | Status |

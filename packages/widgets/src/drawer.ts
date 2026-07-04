@@ -1,7 +1,7 @@
 import type { Instance, SemanticsNode } from '@cairn/runtime';
 import { useOverlays, Provider } from '@cairn/runtime';
 import { createSignal, createEffect, type Accessor } from '@cairn/reactivity';
-import { Box, Stack, Column, Text, Portal, mergeStyles, type StyleInput } from '@cairn/primitives';
+import { Box, Column, Text, Portal, mergeStyles, type StyleInput } from '@cairn/primitives';
 import { createCompoundContext } from './context';
 import { useWidgetTheme } from './theme';
 import { ESCAPE } from './native/keys';
@@ -12,6 +12,8 @@ export interface DrawerContextValue {
   open: Accessor<boolean>;
   close: () => void;
   setTitle: (title: string) => void;
+  /** Drawer.Content registers its body here; it renders ONLY in the portal (not inline). */
+  registerContent: (build: () => Instance) => void;
 }
 
 export const drawerContext = createCompoundContext<DrawerContextValue>('Drawer');
@@ -62,10 +64,12 @@ function DrawerRoot(props: DrawerProps): Instance {
     }
   };
 
+  let contentBuilder: (() => Instance) | null = null;
   const ctx: DrawerContextValue = {
     open,
     close,
     setTitle,
+    registerContent: (build) => { contentBuilder = build; },
   };
   (ctx as any)._openDrawer = openDrawer;
 
@@ -76,39 +80,26 @@ function DrawerRoot(props: DrawerProps): Instance {
       boxShadow: { color: 'rgba(0,0,0,0.24)', blur: 24, offsetX: 0, offsetY: 0 },
       padding: theme.spacing.lg,
     };
-    if (side === 'right') {
+    if (side === 'right' || side === 'left') {
       base.width = 320;
       base.height = '100%';
-      base.alignSelf = 'flex-end';
-    } else if (side === 'left') {
-      base.width = 320;
-      base.height = '100%';
-    } else if (side === 'bottom') {
-      base.width = '100%';
-      base.minHeight = 200;
-      base.alignSelf = 'flex-end';
     } else {
-      // top
+      // top / bottom
       base.width = '100%';
       base.minHeight = 200;
     }
     return () => base;
   };
 
-  const portalContent = (): Instance => {
-    const backdrop = Box({
-      style: {
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-      },
-      focusable: true,
-      onClick: (e) => {
-        e.stopPropagation?.();
-        close();
-      },
-    });
+  // Where the panel sits within the full-surface backdrop, per side.
+  const containerAlign = (): { alignX: 'start' | 'center' | 'end'; alignY: 'start' | 'center' | 'end' } => {
+    if (side === 'right') return { alignX: 'end', alignY: 'start' };
+    if (side === 'left') return { alignX: 'start', alignY: 'start' };
+    if (side === 'bottom') return { alignX: 'start', alignY: 'end' };
+    return { alignX: 'start', alignY: 'start' }; // top
+  };
 
+  const portalContent = (): Instance => {
     const drawerSemantics: SemanticsNode = {
       role: 'dialog',
       modal: true,
@@ -131,7 +122,7 @@ function DrawerRoot(props: DrawerProps): Instance {
     const contentChildren = Provider({
       context: drawerContext.context,
       value: ctx,
-      children: props.children,
+      children: () => (contentBuilder ? contentBuilder() : Box({ style: { width: 0, height: 0 } })),
     });
 
     const contentCol = Column({
@@ -147,22 +138,37 @@ function DrawerRoot(props: DrawerProps): Instance {
 
     panel.semantics = drawerSemantics;
 
+    // Full-surface dim backdrop that anchors the panel to `side`; backdrop click closes.
+    const align = containerAlign();
     return Portal({
-      children: Stack({
-        children: [backdrop, panel],
+      children: Box({
+        style: {
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          alignX: align.alignX,
+          alignY: align.alignY,
+        },
+        focusable: true,
+        onClick: (e) => { e.stopPropagation?.(); close(); },
+        children: panel,
       }),
     });
   };
+
+  // Build the inline tree first (registers Drawer.Content's portal builder), then
+  // wire the portal effect — so a Drawer that starts open renders its content.
+  const inline = Provider({
+    context: drawerContext.context,
+    value: ctx,
+    children: props.children,
+  }) as unknown as Instance;
 
   createEffect(() => {
     if (open()) portalContent();
   });
 
-  return Provider({
-    context: drawerContext.context,
-    value: ctx,
-    children: props.children,
-  }) as unknown as Instance;
+  return inline;
 }
 
 // ─── Drawer.Trigger ───────────────────────────────────────────────────────────
@@ -227,12 +233,16 @@ export interface DrawerContentProps {
 
 function DrawerContent(props: DrawerContentProps): Instance {
   const theme = useWidgetTheme();
-  const child = typeof props.children === 'function' ? props.children() : props.children;
-  return Column({
-    mainAxisSize: 'min',
-    style: mergeStyles(() => ({ gap: theme.spacing.sm }), props.style),
-    children: [child],
+  const ctx = drawerContext.use();
+  ctx.registerContent(() => {
+    const child = typeof props.children === 'function' ? props.children() : props.children;
+    return Column({
+      mainAxisSize: 'min',
+      style: mergeStyles(() => ({ gap: theme.spacing.sm }), props.style),
+      children: [child],
+    });
   });
+  return Box({ style: { width: 0, height: 0 } });
 }
 
 // ─── Drawer.Title ─────────────────────────────────────────────────────────────

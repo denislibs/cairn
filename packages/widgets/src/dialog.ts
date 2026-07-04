@@ -1,7 +1,7 @@
 import type { Instance, SemanticsNode } from '@cairn/runtime';
 import { useOverlays, Provider } from '@cairn/runtime';
 import { createSignal, createEffect, type Accessor } from '@cairn/reactivity';
-import { Box, Stack, Column, Text, Portal, mergeStyles, type StyleInput } from '@cairn/primitives';
+import { Box, Column, Text, Portal, mergeStyles, type StyleInput } from '@cairn/primitives';
 import { createCompoundContext } from './context';
 import { useWidgetTheme } from './theme';
 import { ESCAPE } from './native/keys';
@@ -12,6 +12,8 @@ export interface DialogContextValue {
   open: Accessor<boolean>;
   close: () => void;
   setTitle: (title: string) => void;
+  /** Dialog.Content registers its body here; it renders ONLY in the portal (not inline). */
+  registerContent: (build: () => Instance) => void;
 }
 
 export const dialogContext = createCompoundContext<DialogContextValue>('Dialog');
@@ -58,10 +60,15 @@ function DialogRoot(props: DialogProps): Instance {
     }
   };
 
+  // Dialog.Content registers its body here; it is rendered ONLY inside the portal,
+  // never inline in the app tree.
+  let contentBuilder: (() => Instance) | null = null;
+
   const ctx: DialogContextValue = {
     open,
     close,
     setTitle,
+    registerContent: (build) => { contentBuilder = build; },
   };
 
   // Build a trigger placeholder — the real tree is built by children() which
@@ -70,20 +77,6 @@ function DialogRoot(props: DialogProps): Instance {
 
   // ── Portal overlay (content) ──
   const portalContent = (): Instance => {
-    // Backdrop (full-surface catcher)
-    const backdrop = Box({
-      style: {
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-      },
-      focusable: true,
-      onClick: (e) => {
-        e.stopPropagation?.();
-        close();
-      },
-    });
-
     // Dialog surface
     const surfaceStyle: StyleInput = () => ({
       backgroundColor: theme.colors.surface,
@@ -116,7 +109,7 @@ function DialogRoot(props: DialogProps): Instance {
     const contentChildren = Provider({
       context: dialogContext.context,
       value: ctx,
-      children: props.children,
+      children: () => (contentBuilder ? contentBuilder() : Box({ style: { width: 0, height: 0 } })),
     });
 
     const contentCol = Column({
@@ -132,9 +125,20 @@ function DialogRoot(props: DialogProps): Instance {
 
     surface.semantics = dialogSemantics;
 
+    // Full-surface dim backdrop that CENTERS the dialog surface; clicking the
+    // backdrop (outside the surface) closes, clicking the surface does not.
     return Portal({
-      children: Stack({
-        children: [backdrop, surface],
+      children: Box({
+        style: {
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          alignX: 'center',
+          alignY: 'center',
+        },
+        focusable: true,
+        onClick: (e) => { e.stopPropagation?.(); close(); },
+        children: surface,
       }),
     });
   };
@@ -146,15 +150,20 @@ function DialogRoot(props: DialogProps): Instance {
   (ctx as any).open = open;
   (ctx as any)._openDialog = openDialog;
 
-  createEffect(() => {
-    if (open()) portalContent();
-  });
-
-  return Provider({
+  // Build the inline tree FIRST (Provider renders children eagerly → Dialog.Content
+  // registers its portal builder). Only then wire the portal effect, so a Dialog that
+  // starts open has its content builder available on the first render.
+  const inline = Provider({
     context: dialogContext.context,
     value: ctx,
     children: props.children,
   }) as unknown as Instance;
+
+  createEffect(() => {
+    if (open()) portalContent();
+  });
+
+  return inline;
 }
 
 // ─── Dialog.Trigger ───────────────────────────────────────────────────────────
@@ -219,12 +228,18 @@ export interface DialogContentProps {
 
 function DialogContent(props: DialogContentProps): Instance {
   const theme = useWidgetTheme();
-  const child = typeof props.children === 'function' ? props.children() : props.children;
-  return Column({
-    mainAxisSize: 'min',
-    style: mergeStyles(() => ({ gap: theme.spacing.sm }), props.style),
-    children: [child],
+  const ctx = dialogContext.use();
+  // Register the body — it is rendered by the root INSIDE the portal (when open),
+  // not inline here. Inline we return a zero-size placeholder.
+  ctx.registerContent(() => {
+    const child = typeof props.children === 'function' ? props.children() : props.children;
+    return Column({
+      mainAxisSize: 'min',
+      style: mergeStyles(() => ({ gap: theme.spacing.sm }), props.style),
+      children: [child],
+    });
   });
+  return Box({ style: { width: 0, height: 0 } });
 }
 
 // ─── Dialog.Title ─────────────────────────────────────────────────────────────
