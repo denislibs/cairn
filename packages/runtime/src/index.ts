@@ -26,3 +26,5 @@ export { animateSpring } from './spring';
 export type { SpringOptions, SpringHandle } from './spring';
 export { createOverlayRegistry, overlayContext, useOverlays } from './overlays';
 export type { OverlayRegistry } from './overlays';
+export { setRuntimeDevHooks } from './devtools-hook';
+export type { RuntimeDevHooks } from './devtools-hook';
