@@ -56,3 +56,13 @@ export type {
   DialogDescriptionProps,
   DialogCloseProps,
 } from './dialog';
+export { Drawer, drawerContext } from './drawer';
+export type {
+  DrawerProps,
+  DrawerContextValue,
+  DrawerSide,
+  DrawerTriggerProps,
+  DrawerContentProps,
+  DrawerTitleProps,
+  DrawerCloseProps,
+} from './drawer';
