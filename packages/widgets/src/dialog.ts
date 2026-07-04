@@ -331,10 +331,3 @@ export const Dialog = Object.assign(DialogRoot, {
   Close: DialogClose,
 });
 
-export type {
-  DialogTriggerProps,
-  DialogContentProps,
-  DialogTitleProps,
-  DialogDescriptionProps,
-  DialogCloseProps,
-};

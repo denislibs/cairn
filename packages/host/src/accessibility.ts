@@ -18,6 +18,8 @@ export type SemanticsRole =
   | 'heading'
   | 'image'
   | 'tooltip'
+  | 'status'
+  | 'alert'
   | 'none';
 
 export interface SemanticsNodeData {

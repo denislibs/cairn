@@ -319,9 +319,3 @@ export const Drawer = Object.assign(DrawerRoot, {
   Close: DrawerClose,
 });
 
-export type {
-  DrawerTriggerProps,
-  DrawerContentProps,
-  DrawerTitleProps,
-  DrawerCloseProps,
-};
