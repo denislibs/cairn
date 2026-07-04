@@ -20,7 +20,14 @@ export type SemanticsRole =
   | 'tooltip'
   | 'status'
   | 'alert'
-  | 'none';
+  | 'none'
+  | 'tablist'
+  | 'tabpanel'
+  | 'region'
+  | 'navigation'
+  | 'list'
+  | 'listitem'
+  | 'separator';
 
 export interface SemanticsNodeData {
   id: number;
@@ -51,6 +58,7 @@ export interface SemanticsNodeData {
   autoFocus?: boolean;
   /** True if this node is a modal dialog/drawer that traps focus. */
   modal?: boolean;
+  current?: boolean | 'page' | 'step';
   /** The id of the nearest ancestor (or self) with modal:true; undefined for non-modal subtrees. */
   modalGroup?: number;
 }

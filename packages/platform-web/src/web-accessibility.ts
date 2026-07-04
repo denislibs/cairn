@@ -190,7 +190,11 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
       return doc.createElement('button');
     }
     if (role === 'link') {
-      return doc.createElement('a');
+      // An <a> without href is exposed as generic, not link — set the role
+      // explicitly so AT (and the a11y tree) treats it as an activatable link.
+      const a = doc.createElement('a');
+      a.setAttribute('role', 'link');
+      return a;
     }
     if (role === 'textbox' || role === 'combobox') {
       if (node?.multiline) {
@@ -289,6 +293,14 @@ export class WebAccessibilityBridge implements AccessibilityBridge {
     this.setOrRemoveAttr(el, 'aria-checked', node.checked !== undefined ? String(node.checked) : undefined);
     this.setOrRemoveAttr(el, 'aria-selected', node.selected !== undefined ? String(node.selected) : undefined);
     this.setOrRemoveAttr(el, 'aria-expanded', node.expanded !== undefined ? String(node.expanded) : undefined);
+
+    // aria-current
+    const currentVal = node.current;
+    if (currentVal !== undefined && currentVal !== false) {
+      el.setAttribute('aria-current', currentVal === true ? 'true' : currentVal);
+    } else {
+      el.removeAttribute('aria-current');
+    }
     this.setOrRemoveAttr(el, 'aria-disabled', node.disabled ? 'true' : undefined);
     this.setOrRemoveAttr(el, 'aria-readonly', node.readonly !== undefined ? String(node.readonly) : undefined);
 
