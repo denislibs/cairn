@@ -8,11 +8,15 @@ import { Form, useForm, useFormOptional, useFormField, formContext } from '../sr
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const announced: string[] = [];
+const announceArgs: Array<[string, boolean | undefined]> = [];
 const mockHost = {
   renderer: {} as any,
   textInput: {} as any,
   a11y: {
-    announce: (msg: string) => announced.push(msg),
+    announce: (msg: string, assertive?: boolean) => {
+      announced.push(msg);
+      announceArgs.push([msg, assertive]);
+    },
     sync: () => {},
     focus: () => {},
     dispose: () => {},
@@ -226,6 +230,15 @@ describe('useForm — throws outside', () => {
       expect(() => useForm()).toThrow();
     });
   });
+
+  it('useFormOptional returns null outside Form', () => {
+    createRoot(() => {
+      runWithContext(themeContext, () => defaultTheme, () => {
+        const result = useFormOptional();
+        expect(result).toBeNull();
+      });
+    });
+  });
 });
 
 // ─── useFormField ─────────────────────────────────────────────────────────────
@@ -272,6 +285,7 @@ describe('Form — announce first error', () => {
   it('submit with errors announces the first error message', () => {
     withThemeAndHost(() => {
       announced.length = 0;
+      announceArgs.length = 0;
       let formCtx: ReturnType<typeof useForm> | null = null;
       Form({
         initialValues: { name: '' },
@@ -287,6 +301,7 @@ describe('Form — announce first error', () => {
       formCtx!.submit();
       expect(announced.length).toBeGreaterThan(0);
       expect(announced[announced.length - 1]).toBe('Name is required');
+      expect(announceArgs[0][1]).toBe(true);
     });
   });
 });
