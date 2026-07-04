@@ -109,11 +109,11 @@ Status: ✅ stable · 🧪 in progress · ⏳ planned
 ### Navigation
 | Component | Kind | Status |
 | --- | --- | --- |
-| `Tabs` | compound | ⏳ |
-| `Accordion` | compound | ⏳ |
-| `Stepper` | compound | ⏳ |
-| `Breadcrumbs` | flat | ⏳ |
-| `Pagination` | flat | ⏳ |
+| `Tabs` | compound | ✅ |
+| `Accordion` | compound | ✅ |
+| `Stepper` | flat | ✅ |
+| `Breadcrumbs` | flat | ✅ |
+| `Pagination` | flat | ✅ |
 
 ### Data display
 | Component | Kind | Status |

@@ -116,13 +116,13 @@ export interface TabsListProps extends LayoutChildProps {
 export interface TabProps extends LayoutChildProps {
   value: any;
   disabled?: boolean;
-  children: Instance | (() => Instance);
+  children: Instance | string | (() => Instance);
   style?: StyleInput;
 }
 
 export interface TabsPanelProps extends LayoutChildProps {
   value: any;
-  children: () => Instance;
+  children: Instance | (() => Instance);
   style?: StyleInput;
 }
 
@@ -185,7 +185,12 @@ Tabs.Tab = function Tab(props: TabProps): Instance {
     backgroundColor: isSelected() ? t.colors.surface : 'transparent',
   });
 
-  const child = typeof props.children === 'function' ? props.children() : props.children;
+  const labelText = typeof props.children === 'string' ? props.children : undefined;
+  const child: Instance = typeof props.children === 'string'
+    ? Text({ children: props.children })
+    : typeof props.children === 'function'
+      ? props.children()
+      : props.children;
 
   const instance = Box({
     style: mergeStyles(tabStyle, props.style),
@@ -196,6 +201,7 @@ Tabs.Tab = function Tab(props: TabProps): Instance {
 
   const sem: SemanticsNode = {
     role: 'tab',
+    label: labelText,
     selected: isSelected(),
     disabled: isDisabled,
     focusable: isActive(),
@@ -219,12 +225,17 @@ Tabs.Tab = function Tab(props: TabProps): Instance {
 Tabs.Panel = function TabsPanel(props: TabsPanelProps): Instance {
   const ctx = tabsContext.use();
 
+  const build = typeof props.children === 'function' ? props.children : () => props.children as Instance;
+  const isShown = () => ctx.value() === props.value;
   const shown = Show({
-    when: () => ctx.value() === props.value,
-    children: props.children,
+    when: isShown,
+    children: build,
   });
 
+  // Only emit the tabpanel node while visible — hidden panels contribute no
+  // content, so exposing an empty tabpanel to AT would be misleading.
   const sem: SemanticsNode = { role: 'tabpanel' };
+  createEffect(() => { sem.role = isShown() ? 'tabpanel' : 'none'; });
   shown.semantics = sem;
   applyLayoutChildProps(shown, props);
   return shown;

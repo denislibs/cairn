@@ -119,7 +119,7 @@ export interface AccordionTriggerProps extends LayoutChildProps {
 }
 
 export interface AccordionContentProps extends LayoutChildProps {
-  children: () => Instance;
+  children: Instance | (() => Instance);
   style?: StyleInput;
 }
 
@@ -168,6 +168,7 @@ Accordion.Trigger = function AccordionTrigger(props: AccordionTriggerProps): Ins
     backgroundColor: 'transparent',
   });
 
+  const labelText = typeof props.children === 'string' ? props.children : undefined;
   const child: Instance = typeof props.children === 'string'
     ? Text({ children: props.children })
     : props.children;
@@ -181,6 +182,7 @@ Accordion.Trigger = function AccordionTrigger(props: AccordionTriggerProps): Ins
 
   const sem: SemanticsNode = {
     role: 'button',
+    label: labelText,
     expanded: open(),
     focusable: true,
     onActivate: () => ctx.toggle(itemCtx.value),
@@ -201,12 +203,17 @@ Accordion.Content = function AccordionContent(props: AccordionContentProps): Ins
   const ctx = accordionContext.use();
   const itemCtx = accordionItemContext.use();
 
+  const build = typeof props.children === 'function' ? props.children : () => props.children as Instance;
+  const isShown = () => ctx.isOpen(itemCtx.value);
   const shown = Show({
-    when: () => ctx.isOpen(itemCtx.value),
-    children: props.children,
+    when: isShown,
+    children: build,
   });
 
+  // Only expose the region while the item is open — a collapsed item has no
+  // content, so an empty region would be misleading to AT.
   const sem: SemanticsNode = { role: 'region' };
+  createEffect(() => { sem.role = isShown() ? 'region' : 'none'; });
   shown.semantics = sem;
   applyLayoutChildProps(shown, props);
   return shown;
