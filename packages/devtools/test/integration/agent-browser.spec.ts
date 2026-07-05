@@ -115,3 +115,26 @@ test('get-signals lists the named count signal; set-signal updates the app', asy
   expect(res.before).toBe('0');
   expect(res.after).toBe('9');
 });
+
+test('commit meta carries per-phase timing that sums to durationMs', async ({ page }) => {
+  await page.goto('/');
+  const res = await page.evaluate(async () => {
+    const hook = (window as any).__CAIRN_DEVTOOLS_HOOK__;
+    const events: any[] = []; hook.subscribe((e: any) => events.push(e));
+    hook.send({ type: 'get-signals' });
+    const sig = [...events].reverse().find((e: any) => e.type === 'signals');
+    const count = sig?.list?.find((s: any) => s.name === 'count');
+    if (!count) return { ok: false };
+    hook.send({ type: 'set-signal', id: count.id, value: '3' });
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const commit = [...events].reverse().find((e: any) => e.type === 'commit');
+    if (!commit) return { ok: false };
+    const p = commit.meta.phases;
+    return { ok: true, p, total: commit.meta.durationMs, sum: p.layout + p.a11y + p.paint };
+  });
+  expect(res.ok).toBe(true);
+  expect(typeof res.p.layout).toBe('number');
+  expect(typeof res.p.a11y).toBe('number');
+  expect(typeof res.p.paint).toBe('number');
+  expect(res.total).toBeGreaterThanOrEqual(res.sum - 0.001);
+});
