@@ -87,6 +87,11 @@ export function writeSignal<T>(node: SignalState<T>, value: T): T {
   return value;
 }
 
+/** Dev-only: write a raw SignalState (used by @cairn/devtools to set a signal's value). */
+export function devWriteSignal(node: SignalState<unknown>, value: unknown): void {
+  writeSignal(node, value);
+}
+
 // ---- dirty propagation ----
 function markDirty(node: Computation<any>, state: State): void {
   if (node.state >= state) return;
