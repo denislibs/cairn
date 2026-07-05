@@ -35,6 +35,7 @@ export interface SignalState<T> {
   value: T;
   observers: Computation<any>[] | null;
   equals: EqualsFn<T> | false;
+  name?: string;
 }
 
 export interface Owner {
