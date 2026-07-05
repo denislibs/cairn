@@ -22,4 +22,15 @@ describe('runtime commit hook', () => {
     expect(calls[0].viewport).toEqual({ w: 200, h: 100 });
     dispose();
   });
+
+  it('passes a numeric durationMs to onCommit', () => {
+    let dur = -1;
+    setRuntimeDevHooks({ onCommit: (_r, _v, d) => { dur = d; } });
+    const { host } = createFakeHost();
+    const app: Instance = { layout: { offsetX: 0, offsetY: 0, size: { w: 0, h: 0 }, layout: () => ({ w: 200, h: 100 }) } as any, children: [], paintSelf() {} };
+    const dispose = mount(() => app, host);
+    expect(typeof dur).toBe('number');
+    expect(dur).toBeGreaterThanOrEqual(0);
+    dispose();
+  });
 });

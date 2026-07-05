@@ -58,7 +58,7 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
   }
 
   setRuntimeDevHooks({
-    onCommit: (root, viewport) => {
+    onCommit: (root, viewport, durationMs) => {
       s.viewport = viewport;
       s.lastRoot = root;
       // Lazy: build snapshots only when someone is watching.
@@ -67,10 +67,10 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
       const changed = diffSnapshots(s.last, snapshot);
       const counts = why.take();
       s.frame++;
-      s.log.push({ frame: s.frame, changedIds: changed.map((c) => c.id), ...counts, durationMs: 0 });
+      s.log.push({ frame: s.frame, changedIds: changed.map((c) => c.id), ...counts, durationMs });
       s.last = snapshot;
       if (s.pick) s.pick.update(snapshot);
-      s.lastMeta = { frame: s.frame, ...counts, durationMs: 0 };
+      s.lastMeta = { frame: s.frame, ...counts, durationMs };
       emit({ type: 'commit', snapshot, changed, meta: s.lastMeta });
     },
   });
