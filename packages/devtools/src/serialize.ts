@@ -3,6 +3,22 @@ import type { SnapshotNode } from './protocol';
 import { idOf } from './ids';
 import { inferName } from './name';
 
+const STYLE_KEYS = [
+  'backgroundColor', 'color', 'padding', 'border', 'borderRadius',
+  'opacity', 'font', 'gap', 'boxShadow',
+] as const;
+
+function extractStyle(debugStyle: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
+  if (!debugStyle) return undefined;
+  const out: Record<string, unknown> = {};
+  for (const k of STYLE_KEYS) {
+    const v = debugStyle[k];
+    if (v === undefined || typeof v === 'function') continue;
+    out[k] = v;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 export function serialize(root: Instance): SnapshotNode {
   return build(root, 0, 0);
 }
@@ -38,5 +54,7 @@ function build(inst: Instance, absX: number, absY: number): SnapshotNode {
   if (sem && sem.role && sem.role !== 'none') {
     snap.semantics = { role: sem.role, label: sem.label };
   }
+  const style = extractStyle((inst as { debugStyle?: Record<string, unknown> }).debugStyle);
+  if (style) snap.style = style;
   return snap;
 }

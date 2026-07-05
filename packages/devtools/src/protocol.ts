@@ -20,6 +20,7 @@ export interface SnapshotNode {
     pointerEvents: 'auto' | 'none';
   };
   semantics?: { role: string; label?: string };
+  style?: Record<string, unknown>;
   children: SnapshotNode[];
 }
 

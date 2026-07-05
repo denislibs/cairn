@@ -56,4 +56,33 @@ describe('serialize', () => {
     (inst.layout as any).margin.top = 99;
     expect(snap.layout.margin.top).toBe(0);
   });
+
+  it('extracts a whitelist of debugStyle into style', () => {
+    const inst = node('BoxNode', { w: 1, h: 1 });
+    (inst as any).debugStyle = {
+      backgroundColor: '#f00',
+      padding: { top: 1, right: 2, bottom: 3, left: 4 },
+      border: { width: 1, color: '#000' },
+      borderRadius: 6,
+      opacity: 0.5,
+      font: '16px sans-serif',
+      gap: 8,
+      // non-whitelisted key must be dropped:
+      transform: { translateX: 5 },
+    };
+    const snap = serialize(inst);
+    expect(snap.style).toEqual({
+      backgroundColor: '#f00',
+      padding: { top: 1, right: 2, bottom: 3, left: 4 },
+      border: { width: 1, color: '#000' },
+      borderRadius: 6,
+      opacity: 0.5,
+      font: '16px sans-serif',
+      gap: 8,
+    });
+  });
+
+  it('omits style when debugStyle is absent', () => {
+    expect(serialize(node('BoxNode')).style).toBeUndefined();
+  });
 });
