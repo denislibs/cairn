@@ -28,3 +28,8 @@ export { createOverlayRegistry, overlayContext, useOverlays } from './overlays';
 export type { OverlayRegistry } from './overlays';
 export { setRuntimeDevHooks } from './devtools-hook';
 export type { RuntimeDevHooks } from './devtools-hook';
+export {
+  activateStyleOverrides, deactivateStyleOverrides, readStyleOverride, applyStyleOverride,
+  setStyleProp, toggleStyleProp, removeStyleProp, clearStyleOverride,
+} from './dev-style-override';
+export type { StyleOverride } from './dev-style-override';

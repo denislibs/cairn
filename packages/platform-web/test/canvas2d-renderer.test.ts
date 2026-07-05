@@ -334,3 +334,14 @@ test('setFilter(null) sets ctx.filter to "none"', () => {
   r.setFilter(null);
   expect(ctx.calls).toContainEqual(['set:filter', 'none']);
 });
+
+test('fillRoundRect clamps negative radii to 0 (no RangeError)', () => {
+  const { surface, ctx } = createFakeSurface();
+  const r = new Canvas2DRenderer(surface);
+  // A box shadow inflate may produce a negative radius (e.g. borderRadius:0 + spread:-1)
+  expect(() => r.fillRoundRect({ x: 0, y: 0, width: 10, height: 10 }, -1, { color: '#000' })).not.toThrow();
+  const call = ctx.calls.find((c) => c[0] === 'roundRect') as unknown[];
+  // All four radius values must be >= 0
+  const radii = call[5] as number[];
+  expect(radii.every((n) => n >= 0)).toBe(true);
+});

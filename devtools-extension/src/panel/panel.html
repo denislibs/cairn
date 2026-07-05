@@ -1,19 +1,75 @@
 <!doctype html>
-<html>
-  <head><meta charset="utf-8" /><link rel="stylesheet" href="panel.css" /></head>
-  <body>
-    <div id="toolbar">
-      <button id="inspect">Inspect</button>
-      <span id="status">Cairn: connecting…</span>
-    </div>
-    <div id="main">
-      <div id="tree"></div>
-      <div id="side">
-        <div id="props"></div>
-        <div id="profiler"></div>
-        <div id="log"></div>
+<html><head><meta charset="utf-8" /><link rel="stylesheet" href="panel.css" /></head>
+<body>
+<div class="app">
+  <div class="toolbar">
+    <button class="tbtn" id="inspectBtn" title="Select an element to inspect">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l7 18 2-8 8-2z"/></svg>
+    </button>
+    <div class="sep"></div>
+    <span style="font-weight:500">Cairn</span>
+    <div class="agent"><span class="live"></span>agent 0.0.0</div>
+  </div>
+
+  <div class="maintabs">
+    <div class="maintab on" data-panel="elements">Elements</div>
+    <div class="maintab" style="opacity:.55;cursor:not-allowed">Console</div>
+    <div class="maintab" data-panel="perf">Performance</div>
+  </div>
+
+  <div class="content">
+   <!-- ELEMENTS PANEL -->
+   <div class="panel elements on" data-panel="elements">
+    <div class="tree" id="tree"></div>
+
+    <div class="side">
+      <div class="subtabs">
+        <div class="subtab on" data-tab="styles">Styles</div>
+        <div class="subtab" data-tab="computed">Computed</div>
+        <div class="subtab" data-tab="signals">Signals<span class="n" id="sigN"></span></div>
+      </div>
+
+      <div class="tabpane on" data-pane="styles" id="stylesPane"></div>
+
+      <div class="tabpane" data-pane="computed" id="computedPane"></div>
+
+      <div class="tabpane" data-pane="signals">
+        <div class="siglist" id="sigList"></div>
+        <div class="dep" id="dep"><h4>Dependency graph</h4><div class="empty">Select a signal to see what it updates.</div></div>
+        <div class="commits">
+          <h4>Recent commits
+            <span class="legend"><span><i style="background:var(--signal)"></i>signals</span><span><i style="background:var(--effect)"></i>effects</span></span>
+          </h4>
+          <div class="spark" id="spark"></div>
+        </div>
       </div>
     </div>
-    <script src="panel.js"></script>
-  </body>
-</html>
+   </div>
+
+   <!-- PERFORMANCE PANEL -->
+   <div class="panel perf" data-panel="perf">
+    <div class="perf-toolbar">
+      <button class="rec" id="recBtn"><span class="cd"></span> Record</button>
+      <button class="rec" id="reloadBtn" title="Re-run the last profile"><span style="color:var(--ink-dim)">&#8635;</span> Reload &amp; profile</button>
+      <span class="perf-hint" id="perfRange">last 60 frames &middot; 1.02s</span>
+    </div>
+
+    <div class="perf-stats" id="perfStats"></div>
+
+    <div class="perf-sec">
+      <h4>Frames &middot; target 16.7ms / 60fps</h4>
+      <div class="fps" id="fps"></div>
+      <div class="fps-axis"><span>-1.0s</span><span>16.7ms budget</span><span>now</span></div>
+    </div>
+
+    <div class="perf-sec" style="border-bottom:none">
+      <h4>Commit flame chart &middot; slowest frame</h4>
+      <div class="flame" id="flame"></div>
+      <div class="flame-scale" id="flameScale"></div>
+      <div class="tip">Click a span to open the effect's target node in Elements.</div>
+    </div>
+   </div>
+  </div>
+</div>
+<script src="panel.js"></script>
+</body></html>

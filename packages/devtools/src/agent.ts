@@ -1,5 +1,7 @@
 import type { Instance } from '@cairn/runtime';
-import { setRuntimeDevHooks } from '@cairn/runtime';
+import { setRuntimeDevHooks, activateStyleOverrides, deactivateStyleOverrides, setStyleProp, toggleStyleProp, removeStyleProp } from '@cairn/runtime';
+import { instanceById } from './ids';
+import { parseStyleValue, isEditableProp } from './parse-style';
 import type { AgentEvent, PanelCommand, DevtoolsHook, SnapshotNode, CommitMeta } from './protocol';
 import { DEVTOOLS_VERSION } from './protocol';
 import { serialize } from './serialize';
@@ -49,6 +51,7 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
   state = s;
 
   why.start();
+  activateStyleOverrides();
 
   if (opts.canvas) {
     s.pick = new PickController(opts.canvas, () => s.viewport, {
@@ -92,6 +95,7 @@ export function uninstallDevtools(): void {
   if (!state) return;
   state.why.stop();
   setRuntimeDevHooks(null);
+  deactivateStyleOverrides();
   if (state.pick) state.pick.stop();
   if (state.highlighter) state.highlighter.dispose();
   delete (globalThis as { __CAIRN_DEVTOOLS_HOOK__?: DevtoolsHook }).__CAIRN_DEVTOOLS_HOOK__;
@@ -125,6 +129,21 @@ function handleCommand(cmd: PanelCommand): void {
         state.pick?.update(snapshot);
         emit({ type: 'commit', snapshot, changed: [], meta: state.lastMeta ?? { frame: state.frame, signalWrites: 0, effectRuns: 0, signals: [], durationMs: 0 } });
       }
+      break;
+    }
+    case 'set-style': {
+      const inst = instanceById(cmd.id);
+      if (inst) { const r = parseStyleValue(cmd.prop, cmd.value); if (r.ok) setStyleProp(inst, cmd.prop, r.value); }
+      break;
+    }
+    case 'toggle-style': {
+      const inst = instanceById(cmd.id);
+      if (inst && isEditableProp(cmd.prop)) toggleStyleProp(inst, cmd.prop, cmd.enabled);
+      break;
+    }
+    case 'remove-style': {
+      const inst = instanceById(cmd.id);
+      if (inst && isEditableProp(cmd.prop)) removeStyleProp(inst, cmd.prop);
       break;
     }
   }

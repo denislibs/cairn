@@ -1,6 +1,6 @@
 import type { Renderer } from '@cairn/host';
 import { TextNode } from '@cairn/layout';
-import { type Instance, bind, type MaybeReactive } from '@cairn/runtime';
+import { type Instance, bind, type MaybeReactive, applyStyleOverride, readStyleOverride } from '@cairn/runtime';
 import { type BaseStyle, composeFont, applyTextTransform } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
@@ -85,7 +85,8 @@ export function Text(props: TextProps = {}): Instance {
   };
 
   // Reactive style: font drives both layout (measure) and paint; color is paint-only.
-  bind(styleSource, (s) => {
+  bind(styleSource, (raw) => {
+    const s = applyStyleOverride(raw, readStyleOverride(instance));
     current = s;
     instance.debugStyle = s;
     layout.style = { ...layout.style, font: composeFont(s), letterSpacing: s.letterSpacing };

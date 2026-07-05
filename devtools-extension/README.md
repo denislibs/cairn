@@ -29,3 +29,8 @@ Inspector panel for Cairn canvas apps.
 - [ ] Selecting a node shows a Style section (backgroundColor/padding/…).
 - [ ] Commit log lines show changed signal names (e.g. `signals:[count]`) and frame duration.
 - [ ] Profiler strip shows a bar per commit; taller = slower frame.
+- [ ] Panel matches the dark mockup (toolbar, Elements/Performance tabs, Styles/Computed/Signals).
+- [ ] Selecting a node shows its Styles; editing a value (e.g. backgroundColor) repaints the canvas.
+- [ ] The checkbox toggles a property off/on on the live canvas.
+- [ ] "+ add property" adds a style that appears on the canvas.
+- [ ] Signals tab lists signals seen in recent commits; Performance shows frame durations + stats.
