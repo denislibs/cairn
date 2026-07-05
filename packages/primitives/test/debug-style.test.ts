@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { createRoot } from '@cairn/reactivity';
 import { Box } from '../src/box';
 import { Text } from '../src/text';
+import { Row } from '../src/flex';
 
 describe('debugStyle', () => {
   it('Box exposes its resolved style', () => {
@@ -15,6 +16,12 @@ describe('debugStyle', () => {
     createRoot(() => {
       const t = Text({ style: { color: '#123456', font: '16px sans-serif' }, children: 'hi' });
       expect(t.debugStyle?.color).toBe('#123456');
+    });
+  });
+  it('Row exposes its resolved style via debugStyle', () => {
+    createRoot(() => {
+      const r = Row({ style: { gap: 12 } });
+      expect(r.debugStyle?.gap).toBe(12);
     });
   });
 });

@@ -61,24 +61,28 @@ describe('serialize', () => {
     const inst = node('BoxNode', { w: 1, h: 1 });
     (inst as any).debugStyle = {
       backgroundColor: '#f00',
+      color: '#00f',
       padding: { top: 1, right: 2, bottom: 3, left: 4 },
       border: { width: 1, color: '#000' },
       borderRadius: 6,
       opacity: 0.5,
       font: '16px sans-serif',
       gap: 8,
+      boxShadow: { color: '#000', blur: 4, offsetX: 0, offsetY: 2 },
       // non-whitelisted key must be dropped:
       transform: { translateX: 5 },
     };
     const snap = serialize(inst);
     expect(snap.style).toEqual({
       backgroundColor: '#f00',
+      color: '#00f',
       padding: { top: 1, right: 2, bottom: 3, left: 4 },
       border: { width: 1, color: '#000' },
       borderRadius: 6,
       opacity: 0.5,
       font: '16px sans-serif',
       gap: 8,
+      boxShadow: { color: '#000', blur: 4, offsetX: 0, offsetY: 2 },
     });
   });
 

@@ -10,6 +10,7 @@
   "dependencies": {
     "@cairn/runtime": "workspace:*",
     "@cairn/reactivity": "workspace:*",
-    "@cairn/layout": "workspace:*"
+    "@cairn/layout": "workspace:*",
+    "@cairn/style": "workspace:*"
   }
 }

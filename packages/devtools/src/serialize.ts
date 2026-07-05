@@ -1,4 +1,5 @@
 import type { Instance } from '@cairn/runtime';
+import type { BaseStyle } from '@cairn/style';
 import type { SnapshotNode } from './protocol';
 import { idOf } from './ids';
 import { inferName } from './name';
@@ -7,6 +8,9 @@ const STYLE_KEYS = [
   'backgroundColor', 'color', 'padding', 'border', 'borderRadius',
   'opacity', 'font', 'gap', 'boxShadow',
 ] as const;
+type _StyleKeysAreValid = (typeof STYLE_KEYS)[number] extends keyof BaseStyle ? true : never;
+const _styleKeysCheck: _StyleKeysAreValid = true;
+void _styleKeysCheck;
 
 function extractStyle(debugStyle: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
   if (!debugStyle) return undefined;
@@ -54,7 +58,7 @@ function build(inst: Instance, absX: number, absY: number): SnapshotNode {
   if (sem && sem.role && sem.role !== 'none') {
     snap.semantics = { role: sem.role, label: sem.label };
   }
-  const style = extractStyle((inst as { debugStyle?: Record<string, unknown> }).debugStyle);
+  const style = extractStyle(inst.debugStyle as Record<string, unknown> | undefined);
   if (style) snap.style = style;
   return snap;
 }

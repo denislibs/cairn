@@ -113,6 +113,7 @@ export function ScrollView(props: ScrollViewProps = {}): Instance {
     viewportInst.transform = s.transform;
     viewportInst.transformOrigin = s.transformOrigin;
     viewportInst.paintOpacity = s.opacity;
+    viewportInst.debugStyle = s;
   });
 
   // Reactive scroll offset → node (so controlled/external change relayouts)
