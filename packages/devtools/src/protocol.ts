@@ -26,6 +26,7 @@ export interface SnapshotNode {
 
 export interface ChangedNode { id: number; fields: string[] }
 export interface SignalRef { id: number; name?: string }
+export interface SignalInfo { id: number; name?: string; value: string; type: 'number' | 'string' | 'boolean' | 'other'; observers: number }
 export interface CommitMeta {
   frame: number;
   signalWrites: number;

@@ -88,8 +88,9 @@ export function writeSignal<T>(node: SignalState<T>, value: T): T {
 }
 
 /** Dev-only: write a raw SignalState (used by @cairn/devtools to set a signal's value). */
-export function devWriteSignal(node: SignalState<unknown>, value: unknown): void {
-  writeSignal(node, value);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function devWriteSignal(node: SignalState<any>, value: unknown): void {
+  writeSignal(node, value as any);
 }
 
 // ---- dirty propagation ----
