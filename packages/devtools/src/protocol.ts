@@ -34,9 +34,17 @@ export interface CommitMeta {
   durationMs: number;
 }
 
+export interface SnapshotDelta {
+  added: SnapshotNode[];               // full subtrees newly present (with parentId)
+  removed: number[];                   // ids no longer present
+  changed: { id: number; patch: Partial<Omit<SnapshotNode, 'children'>> }[];
+  addedParents: Record<number, number>; // addedNodeId -> parentId
+}
+
 export type AgentEvent =
   | { type: 'hello'; version: string }
   | { type: 'commit'; snapshot: SnapshotNode; changed: ChangedNode[]; meta: CommitMeta }
+  | { type: 'commit-delta'; delta: SnapshotDelta; meta: CommitMeta }
   | { type: 'selection'; id: number };
 
 export type PanelCommand =
