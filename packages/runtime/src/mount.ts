@@ -49,6 +49,7 @@ export function mount(component: () => Instance, host: Host): () => void {
       const list = overlays.list();
       for (const o of list) o.layout.layout({ minW: 0, maxW: w, minH: 0, maxH: h }, ctx);
       flushAfterLayout();
+      const tLayout = now();
       if (host.a11y) {
         // Collect from the app root AND every overlay (Portal content — Select
         // listboxes, Menus, Dialogs — lives in the overlay layer, not under root).
@@ -56,12 +57,19 @@ export function mount(component: () => Instance, host: Host): () => void {
         for (const o of list) nodes.push(...collectSemantics(o));
         host.a11y.sync(nodes);
       }
+      const tA11y = now();
       host.renderer.beginFrame();
       host.renderer.clear();
       paint(root, host.renderer);
       for (const o of list) paint(o, host.renderer);
       host.renderer.endFrame();
-      emitCommit(root, ctx.viewport, now() - t0);
+      const tPaint = now();
+      emitCommit(root, ctx.viewport, {
+        total: tPaint - t0,
+        layout: tLayout - t0,
+        a11y: tA11y - tLayout,
+        paint: tPaint - tA11y,
+      });
     };
 
     // Build the tree first. Effects run now; scheduleFrame() no-ops because the

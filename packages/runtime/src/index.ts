@@ -27,7 +27,7 @@ export type { SpringOptions, SpringHandle } from './spring';
 export { createOverlayRegistry, overlayContext, useOverlays } from './overlays';
 export type { OverlayRegistry } from './overlays';
 export { setRuntimeDevHooks } from './devtools-hook';
-export type { RuntimeDevHooks } from './devtools-hook';
+export type { RuntimeDevHooks, FrameTiming } from './devtools-hook';
 export {
   activateStyleOverrides, deactivateStyleOverrides, readStyleOverride, applyStyleOverride,
   setStyleProp, toggleStyleProp, removeStyleProp, clearStyleOverride,

@@ -37,3 +37,6 @@ Inspector panel for Cairn canvas apps.
 - [ ] Signals tab lists all signals with current values (named ones by name, others as #id).
 - [ ] Editing a scalar signal's value updates the app and highlights changed nodes in the tree.
 - [ ] Object/other signals are shown read-only.
+- [ ] Performance tab shows a phase flame (layout/a11y/paint) for the slowest frame with a ms scale.
+- [ ] Record captures a window of frames; Stop freezes it; Reload re-renders.
+- [ ] Stats show avg commit / slowest frame / frames over budget / effects run.

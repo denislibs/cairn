@@ -10,6 +10,8 @@ let changedIds = new Set<number>();
 const openState = new Map<number, boolean>();   // id -> expanded (default true)
 const commitLog: CommitMeta[] = [];
 let signals: SignalInfo[] = [];
+let recording = false;
+const recorded: CommitMeta[] = [];
 
 const port = chrome.runtime.connect({ name: 'cairn-panel' });
 port.postMessage({ tabId: chrome.devtools.inspectedWindow.tabId });
@@ -22,6 +24,7 @@ function handleEvent(e: AgentEvent): void {
     snapshot = e.snapshot;
     changedIds = new Set(e.changed.map((c) => c.id));
     commitLog.push(e.meta); if (commitLog.length > 60) commitLog.shift();
+    if (recording) recorded.push(e.meta);
     if (selected == null) selected = snapshot.id;
     renderTree(); renderStyles(); renderComputed(); renderSpark();
   } else if (e.type === 'signals') {
@@ -55,6 +58,16 @@ document.querySelectorAll('.maintab[data-panel]').forEach((t) => ((t as HTMLElem
   const b = ev.currentTarget as HTMLElement; b.classList.toggle('on');
   send({ type: b.classList.contains('on') ? 'inspect-start' : 'inspect-stop' });
 };
+const recBtn = document.getElementById('recBtn');
+if (recBtn) recBtn.onclick = () => {
+  recording = !recording;
+  recBtn.classList.toggle('recording', recording);
+  recBtn.textContent = recording ? '● Stop' : '● Record';
+  if (recording) recorded.length = 0;   // start a fresh capture
+  renderPerf();
+};
+const reloadBtn = document.getElementById('reloadBtn');
+if (reloadBtn) reloadBtn.onclick = () => renderPerf();
 
 function renderTree(): void {
   treeEl.replaceChildren();
@@ -193,16 +206,18 @@ function statEl(v: string, sub: string, k: string, cls: string): HTMLElement {
 }
 function renderPerf(): void {
   const budget = 16.7;
-  const frames = commitLog.map((m) => m.durationMs);
+  const windowLog = recording || recorded.length ? recorded : commitLog;
+  const frames = windowLog.map((m) => m.durationMs);
   const avg = frames.length ? frames.reduce((a, b) => a + b, 0) / frames.length : 0;
-  const worst = frames.length ? Math.max(...frames) : 0;
+  const worst = windowLog.reduce<CommitMeta | null>((a, m) => (!a || m.durationMs > a.durationMs ? m : a), null);
+  const worstMs = worst ? worst.durationMs : 0;
   const jank = frames.filter((d) => d > budget).length;
-  const totalEff = commitLog.reduce((a, m) => a + m.effectRuns, 0);
+  const totalEff = windowLog.reduce((a, m) => a + m.effectRuns, 0);
 
   const stats = $('perfStats'); stats.replaceChildren();
   stats.append(
     statEl(avg.toFixed(1), 'ms', 'avg commit', avg > budget ? 'warn' : 'good'),
-    statEl(worst.toFixed(1), 'ms', 'slowest frame', worst > budget ? 'bad' : 'good'),
+    statEl(worstMs.toFixed(1), 'ms', 'slowest frame', worstMs > budget ? 'bad' : 'good'),
     statEl(String(jank), '', 'frames over budget', jank ? 'warn' : 'good'),
     statEl(String(totalEff), '', 'effects run', ''),
   );
@@ -215,11 +230,52 @@ function renderPerf(): void {
     bar.style.height = `${Math.max(4, d / maxMs * 60)}px`; bar.title = `${d.toFixed(1)}ms`;
     fps.appendChild(bar);
   }
-  $('perfRange').textContent = `last ${frames.length} commits`;
+  $('perfRange').textContent = recording ? `recording… ${frames.length} frames`
+    : recorded.length ? `recorded ${frames.length} frames`
+    : `last ${frames.length} commits`;
 
+  renderPhaseFlame(worst);
+}
+
+function renderPhaseFlame(worst: CommitMeta | null): void {
   const flame = $('flame'); flame.replaceChildren();
-  const note = document.createElement('div'); note.className = 'tip';
-  note.textContent = 'Per-effect flame chart arrives in a later cycle (needs effect→node attribution).';
-  flame.appendChild(note);
-  $('flameScale').replaceChildren();
+  const scale = $('flameScale'); scale.replaceChildren();
+  if (!worst || worst.durationMs <= 0) {
+    const note = document.createElement('div'); note.className = 'tip';
+    note.textContent = worst ? 'Slowest frame took ~0ms — nothing to profile.' : 'No frames yet — interact with the app (or Record).';
+    flame.appendChild(note);
+    return;
+  }
+  const total = worst.durationMs;
+  const segs: { label: string; kind: string; ms: number }[] = [
+    { label: 'layout', kind: 'layout', ms: worst.phases.layout },
+    { label: 'a11y', kind: 'signal', ms: worst.phases.a11y },
+    { label: 'paint', kind: 'paint', ms: worst.phases.paint },
+  ];
+  const track = document.createElement('div'); track.className = 'track';
+  const tname = document.createElement('div'); tname.className = 'tname'; tname.textContent = `frame #${worst.frame}`;
+  const lane = document.createElement('div'); lane.className = 'lane';
+  // .lane is position:relative; .span is position:absolute — override to inline-block so segments flow side-by-side
+  lane.style.display = 'flex';
+  for (const s of segs) {
+    if (s.ms <= 0) continue;
+    const span = document.createElement('div'); span.className = `span ${s.kind}`;
+    span.style.position = 'relative';
+    span.style.display = 'inline-block';
+    span.style.height = '100%';
+    span.style.top = 'unset';
+    span.style.bottom = 'unset';
+    span.style.width = `${(s.ms / total) * 100}%`;
+    span.title = `${s.label} · ${s.ms.toFixed(1)}ms`;
+    span.textContent = s.ms / total > 0.12 ? s.label : '';
+    lane.appendChild(span);
+  }
+  track.append(tname, lane);
+  flame.appendChild(track);
+  const mk = (t: string) => { const el = document.createElement('span'); el.textContent = t; return el; };
+  scale.append(mk('0ms'), mk(`${(total / 2).toFixed(1)}ms`), mk(`${total.toFixed(1)}ms`));
+
+  const tip = document.createElement('div'); tip.className = 'tip';
+  tip.textContent = 'Per-effect flame + span→node arrives in a later cycle (needs effect→node attribution).';
+  flame.appendChild(tip);
 }
