@@ -23,9 +23,9 @@ export interface Instance {
   clipChildren?: Radii | null;
   transform?: TransformSpec | null;
   transformOrigin?: { x: number; y: number } | null;
-  /** Human-readable component name for devtools (set by widget/material factories). Negligible cost; always present. */
+  /** Human-readable component name for devtools; set by widget/material factories, undefined elsewhere (name is inferred from the layout node). */
   debugName?: string;
-  /** Resolved style snapshot for devtools, updated on each style change. Negligible cost; always present. */
+  /** Resolved style snapshot for devtools; set by Box/Text/Flex/Grid/ScrollView on each style change, undefined on other nodes. */
   debugStyle?: import('@cairn/style').BaseStyle;
 }
 
