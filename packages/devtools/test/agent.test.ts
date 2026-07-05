@@ -138,6 +138,27 @@ describe('installDevtools', () => {
     dispose();
   });
 
+  it('set-style command resolves the id and does not throw; get-snapshot still returns the node', () => {
+    installDevtools();
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+    const events: AgentEvent[] = [];
+    hook.subscribe((e: AgentEvent) => events.push(e));
+    const { host } = createFakeHost();
+    const dispose = mount(() => appRoot(), host);
+    const commit = events.find((e) => e.type === 'commit');
+    const rootId = commit && commit.type === 'commit' ? commit.snapshot.id : -1;
+
+    hook.send({ type: 'set-style', id: rootId, prop: 'opacity', value: '0.3' });
+    hook.send({ type: 'toggle-style', id: rootId, prop: 'opacity', enabled: false });
+    hook.send({ type: 'remove-style', id: rootId, prop: 'opacity' });
+    hook.send({ type: 'set-style', id: 999999, prop: 'opacity', value: '0.5' }); // unknown id — no-op
+    hook.send({ type: 'get-snapshot' });
+
+    const after = [...events].reverse().find((e) => e.type === 'commit');
+    expect(after && after.type === 'commit' && after.snapshot.id).toBe(rootId);
+    dispose();
+  });
+
   it('get-snapshot reply carries the real last-frame meta, not hardcoded zeros', () => {
     installDevtools();
     const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;

@@ -44,7 +44,10 @@ export type PanelCommand =
   | { type: 'inspect-stop' }
   | { type: 'highlight'; id: number | null }
   | { type: 'select'; id: number }
-  | { type: 'get-snapshot' };
+  | { type: 'get-snapshot' }
+  | { type: 'set-style'; id: number; prop: string; value: string }
+  | { type: 'toggle-style'; id: number; prop: string; enabled: boolean }
+  | { type: 'remove-style'; id: number; prop: string };
 
 export interface DevtoolsHook {
   version: string;
