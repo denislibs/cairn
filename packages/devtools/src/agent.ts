@@ -1,6 +1,6 @@
 import type { Instance } from '@cairn/runtime';
 import { setRuntimeDevHooks, activateStyleOverrides, deactivateStyleOverrides, setStyleProp, toggleStyleProp, removeStyleProp } from '@cairn/runtime';
-import { setReactiveDevHooks } from '@cairn/reactivity';
+import { setReactiveDevHooks, devWriteSignal } from '@cairn/reactivity';
 import { instanceById } from './ids';
 import { parseStyleValue, isEditableProp } from './parse-style';
 import type { AgentEvent, PanelCommand, DevtoolsHook, SnapshotNode, CommitMeta } from './protocol';
@@ -11,6 +11,7 @@ import { CommitLog } from './commit-log';
 import { WhyFrameTracker } from './why-frame';
 import { SignalRegistry } from './signal-registry';
 import { signalId } from './signal-id';
+import { coerceSignalValue } from './signal-value';
 import { findNode } from './find';
 import { Highlighter } from './highlight';
 import { PickController } from './pick';
@@ -84,6 +85,7 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
       if (s.pick) s.pick.update(snapshot);
       s.lastMeta = { frame: s.frame, ...counts, durationMs };
       emit({ type: 'commit', snapshot, changed, meta: s.lastMeta });
+      emitSignals();
     },
   });
 
@@ -114,6 +116,11 @@ export function uninstallDevtools(): void {
 function emit(e: AgentEvent): void {
   if (!state) return;
   for (const cb of state.subscribers) cb(e);
+}
+
+function emitSignals(): void {
+  if (!state || state.subscribers.size === 0) return;
+  emit({ type: 'signals', list: state.registry.list() });
 }
 
 function highlight(id: number | null): void {
@@ -153,6 +160,12 @@ function handleCommand(cmd: PanelCommand): void {
     case 'remove-style': {
       const inst = instanceById(cmd.id);
       if (inst && isEditableProp(cmd.prop)) removeStyleProp(inst, cmd.prop);
+      break;
+    }
+    case 'get-signals': emitSignals(); break;
+    case 'set-signal': {
+      const node = state.registry.resolve(cmd.id);
+      if (node) { const r = coerceSignalValue(node.value, cmd.value); if (r.ok) devWriteSignal(node as any, r.value); }
       break;
     }
   }

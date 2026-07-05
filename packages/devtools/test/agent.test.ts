@@ -212,4 +212,28 @@ describe('installDevtools', () => {
     void list;
     dispose();
   });
+
+  it('get-signals emits the registry list; set-signal updates a scalar', () => {
+    installDevtools();
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+    const events: AgentEvent[] = [];
+    hook.subscribe((e: AgentEvent) => events.push(e));
+
+    let getC!: () => number;
+    createRoot(() => {
+      const [c, setC] = createSignal(0, { name: 'count' });
+      getC = c;
+      void setC;
+    });
+
+    hook.send({ type: 'get-signals' });
+    const sig = [...events].reverse().find((e) => e.type === 'signals');
+    expect(sig && sig.type === 'signals').toBe(true);
+    const entry = sig && sig.type === 'signals' ? sig.list.find((x) => x.name === 'count') : undefined;
+    expect(entry).toBeTruthy();
+    expect(entry!.value).toBe('0');
+
+    hook.send({ type: 'set-signal', id: entry!.id, value: '7' });
+    expect(getC()).toBe(7); // the real signal was written
+  });
 });

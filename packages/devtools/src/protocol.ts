@@ -38,7 +38,8 @@ export interface CommitMeta {
 export type AgentEvent =
   | { type: 'hello'; version: string }
   | { type: 'commit'; snapshot: SnapshotNode; changed: ChangedNode[]; meta: CommitMeta }
-  | { type: 'selection'; id: number };
+  | { type: 'selection'; id: number }
+  | { type: 'signals'; list: SignalInfo[] };
 
 export type PanelCommand =
   | { type: 'inspect-start' }
@@ -48,7 +49,9 @@ export type PanelCommand =
   | { type: 'get-snapshot' }
   | { type: 'set-style'; id: number; prop: string; value: string }
   | { type: 'toggle-style'; id: number; prop: string; enabled: boolean }
-  | { type: 'remove-style'; id: number; prop: string };
+  | { type: 'remove-style'; id: number; prop: string }
+  | { type: 'set-signal'; id: number; value: string }
+  | { type: 'get-signals' };
 
 export interface DevtoolsHook {
   version: string;
