@@ -183,6 +183,7 @@ export function Box(props: BoxProps = {}): Instance {
   // Reactive: re-applies (and schedules a frame) when hovered/pressed change.
   bind(styleSource, (s) => {
     current = s;
+    instance.debugStyle = s;
     layout.width = s.width;
     layout.height = s.height;
     layout.minWidth = s.minWidth;

@@ -87,6 +87,7 @@ export function Text(props: TextProps = {}): Instance {
   // Reactive style: font drives both layout (measure) and paint; color is paint-only.
   bind(styleSource, (s) => {
     current = s;
+    instance.debugStyle = s;
     layout.style = { ...layout.style, font: composeFont(s), letterSpacing: s.letterSpacing };
     layout.text = applyTextTransform(rawText, s.textTransform);
     layout.maxLines = s.maxLines;

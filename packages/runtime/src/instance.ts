@@ -25,6 +25,8 @@ export interface Instance {
   transformOrigin?: { x: number; y: number } | null;
   /** Dev-only human-readable name for devtools; ignored in production. */
   debugName?: string;
+  /** Dev-only resolved style snapshot for devtools; ignored in production. */
+  debugStyle?: import('@cairn/style').BaseStyle;
 }
 
 // Walk the instance tree, translating into each node's local coordinate space.
