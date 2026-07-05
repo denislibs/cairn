@@ -1,5 +1,5 @@
 import { FlexNode, type FlexDirection } from '@cairn/layout';
-import { type Instance, bind } from '@cairn/runtime';
+import { type Instance, bind, applyStyleOverride, readStyleOverride } from '@cairn/runtime';
 import { type BaseStyle } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
@@ -36,7 +36,8 @@ function flex(direction: FlexDirection, props: FlexProps): Instance {
     },
   };
 
-  bind(styleSource, (s: BaseStyle) => {
+  bind(styleSource, (raw: BaseStyle) => {
+    const s = applyStyleOverride(raw, readStyleOverride(instance));
     layout.gap = s.gap ?? 0;
     layout.rowGap = s.rowGap;
     layout.columnGap = s.columnGap;

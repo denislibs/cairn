@@ -1,7 +1,7 @@
 import { type Renderer, type Radii, type FillStyle, type Gradient, createPath } from '@cairn/host';
 import { computeObjectFit } from './image';
 import { BoxNode } from '@cairn/layout';
-import { type Instance, bind } from '@cairn/runtime';
+import { type Instance, bind, applyStyleOverride, readStyleOverride } from '@cairn/runtime';
 import { type BaseStyle, type CornerRadius, type BorderSide, type StyleGradient, type Shadow } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
@@ -181,7 +181,8 @@ export function Box(props: BoxProps = {}): Instance {
   };
 
   // Reactive: re-applies (and schedules a frame) when hovered/pressed change.
-  bind(styleSource, (s) => {
+  bind(styleSource, (raw) => {
+    const s = applyStyleOverride(raw, readStyleOverride(instance));
     current = s;
     instance.debugStyle = s;
     layout.width = s.width;
