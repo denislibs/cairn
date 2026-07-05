@@ -22,25 +22,29 @@ describe('WhyFrameTracker', () => {
     tracker.stop();
   });
 
-  it('collects the set of changed signals with stable ids and names', () => {
+  it('collects changed signals with stable ids across frames', () => {
     const tracker = new WhyFrameTracker();
     tracker.start();
-    let firstId = -1;
+    let setA!: (v: number) => void;
     createRoot(() => {
-      const [a, setA] = createSignal(0, { name: 'a' });
-      const [, setB] = createSignal(0); // unnamed
-      setA(1); setA(2); // same signal twice → one entry
-      setB(1);
+      const [a, sa] = createSignal(0, { name: 'a' });
+      const [, sb] = createSignal(0); // unnamed
+      setA = sa as any;
+      sa(1); sa(2);   // same signal twice → one entry
+      sb(1);
       a();
     });
-    const r = tracker.take();
-    expect(r.signals.length).toBe(2);
-    const named = r.signals.find((s) => s.name === 'a');
-    expect(named).toBeTruthy();
-    firstId = named!.id;
-    // second frame: writing the same signal again yields the same id
-    tracker.take(); // drain
+    const f1 = tracker.take();
+    expect(f1.signals.length).toBe(2);
+    const aRef = f1.signals.find((s) => s.name === 'a');
+    expect(aRef).toBeTruthy();
+    const firstId = aRef!.id;
+    // second frame: write the same signal again — id must be identical
+    setA(3);
+    const f2 = tracker.take();
+    const aRef2 = f2.signals.find((s) => s.name === 'a');
+    expect(aRef2).toBeTruthy();
+    expect(aRef2!.id).toBe(firstId);
     tracker.stop();
-    expect(typeof firstId).toBe('number');
   });
 });

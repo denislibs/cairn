@@ -1,8 +1,7 @@
 import { setReactiveDevHooks } from '@cairn/reactivity';
+import type { SignalRef } from './protocol';
 
 interface SignalNode { name?: string }
-
-export interface SignalRef { id: number; name?: string }
 
 export class WhyFrameTracker {
   private signalWrites = 0;
@@ -19,6 +18,7 @@ export class WhyFrameTracker {
 
   start(): void {
     setReactiveDevHooks({
+      // Mint an id at creation time so ids reflect signal creation order and are ready before the first write.
       onSignalCreate: (n) => { this.idOf(n as object); },
       onSignalWrite: (n) => {
         this.signalWrites++;
