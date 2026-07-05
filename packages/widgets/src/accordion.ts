@@ -103,6 +103,7 @@ export function Accordion(props: AccordionProps): AccordionInstance {
     _ctx: ctx,
   };
 
+  instance.debugName = 'Accordion';
   applyLayoutChildProps(instance, props);
   return instance;
 }
@@ -144,6 +145,7 @@ Accordion.Item = function AccordionItem(props: AccordionItemProps): Instance {
     children: [innerContent],
   });
 
+  container.debugName = 'AccordionItem';
   applyLayoutChildProps(container, props);
   return container;
 };
@@ -195,6 +197,7 @@ Accordion.Trigger = function AccordionTrigger(props: AccordionTriggerProps): Ins
   });
 
   instance.semantics = sem;
+  instance.debugName = 'AccordionTrigger';
   applyLayoutChildProps(instance, props);
   return instance;
 };
@@ -215,6 +218,7 @@ Accordion.Content = function AccordionContent(props: AccordionContentProps): Ins
   const sem: SemanticsNode = { role: 'region' };
   createEffect(() => { sem.role = isShown() ? 'region' : 'none'; });
   shown.semantics = sem;
+  shown.debugName = 'AccordionContent';
   applyLayoutChildProps(shown, props);
   return shown;
 };
