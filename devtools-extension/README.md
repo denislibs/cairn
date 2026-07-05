@@ -34,3 +34,6 @@ Inspector panel for Cairn canvas apps.
 - [ ] The checkbox toggles a property off/on on the live canvas.
 - [ ] "+ add property" adds a style that appears on the canvas.
 - [ ] Signals tab lists signals seen in recent commits; Performance shows frame durations + stats.
+- [ ] Signals tab lists all signals with current values (named ones by name, others as #id).
+- [ ] Editing a scalar signal's value updates the app and highlights changed nodes in the tree.
+- [ ] Object/other signals are shown read-only.

@@ -92,3 +92,26 @@ test('set-style applies to the live instance and repaints the canvas', async ({ 
   expect(res.after).toContain('255,0,0');    // red at the sampled pixel
   expect(res.snapColor).toBe('#ff0000');     // snapshot reflects the override
 });
+
+test('get-signals lists the named count signal; set-signal updates the app', async ({ page }) => {
+  await page.goto('/');
+  const res = await page.evaluate(async () => {
+    const hook = (window as any).__CAIRN_DEVTOOLS_HOOK__;
+    const events: any[] = []; hook.subscribe((e: any) => events.push(e));
+    hook.send({ type: 'get-signals' });
+    const sig = [...events].reverse().find((e: any) => e.type === 'signals');
+    const count = sig?.list?.find((s: any) => s.name === 'count');
+    if (!count) return { ok: false };
+    const before = count.value;
+    hook.send({ type: 'set-signal', id: count.id, value: '9' });
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    // read updated signals list
+    const ev2: any[] = []; hook.subscribe((e: any) => ev2.push(e)); hook.send({ type: 'get-signals' });
+    const sig2 = [...ev2].reverse().find((e: any) => e.type === 'signals');
+    const count2 = sig2?.list?.find((s: any) => s.name === 'count');
+    return { ok: true, before, after: count2?.value };
+  });
+  expect(res.ok).toBe(true);
+  expect(res.before).toBe('0');
+  expect(res.after).toBe('9');
+});
