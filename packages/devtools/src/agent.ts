@@ -10,7 +10,6 @@ import { diffSnapshots } from './diff';
 import { CommitLog } from './commit-log';
 import { WhyFrameTracker } from './why-frame';
 import { SignalRegistry } from './signal-registry';
-import { signalId } from './signal-id';
 import { coerceSignalValue } from './signal-value';
 import { findNode } from './find';
 import { Highlighter } from './highlight';
@@ -36,6 +35,7 @@ interface AgentState {
 }
 
 let state: AgentState | null = null;
+let suppressSignalWrite = false;
 
 export function installDevtools(opts: DevtoolsOptions = {}): void {
   if (state) return; // idempotent
@@ -57,8 +57,8 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
   state = s;
 
   setReactiveDevHooks({
-    onSignalCreate: (n) => { signalId(n as object); s.registry.note(n as any); },
-    onSignalWrite: (n) => why.noteWrite(n as object),
+    onSignalCreate: (n) => { s.registry.note(n as any); },
+    onSignalWrite: (n) => { if (!suppressSignalWrite) why.noteWrite(n as object); },
     onComputationRun: (n) => why.noteEffectRun(n as object),
   });
   activateStyleOverrides();
@@ -165,7 +165,11 @@ function handleCommand(cmd: PanelCommand): void {
     case 'get-signals': emitSignals(); break;
     case 'set-signal': {
       const node = state.registry.resolve(cmd.id);
-      if (node) { const r = coerceSignalValue(node.value, cmd.value); if (r.ok) devWriteSignal(node as any, r.value); }
+      if (node) {
+        const r = coerceSignalValue(node.value, cmd.value);
+        if (r.ok) { suppressSignalWrite = true; try { devWriteSignal(node as any, r.value); } finally { suppressSignalWrite = false; } }
+      }
+      emitSignals();
       break;
     }
   }

@@ -22,6 +22,12 @@ describe('coerceSignalValue', () => {
     expect(coerceSignalValue(true, 'false')).toEqual({ ok: true, value: false });
     expect(coerceSignalValue('x', '"quoted"')).toEqual({ ok: true, value: 'quoted' });
   });
+  it('rejects non true/false boolean input', () => {
+    expect(coerceSignalValue(true, 'true')).toEqual({ ok: true, value: true });
+    expect(coerceSignalValue(true, 'FALSE')).toEqual({ ok: true, value: false });
+    expect(coerceSignalValue(true, 'yes').ok).toBe(false);
+    expect(coerceSignalValue(true, '').ok).toBe(false);
+  });
   it('rejects bad numbers and non-scalars', () => {
     expect(coerceSignalValue(0, 'abc').ok).toBe(false);
     expect(coerceSignalValue({ a: 1 }, '{}').ok).toBe(false);

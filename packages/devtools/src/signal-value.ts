@@ -19,7 +19,12 @@ export function coerceSignalValue(current: unknown, raw: string): CoerceResult {
     const n = Number(s);
     return s === '' || Number.isNaN(n) ? { ok: false } : { ok: true, value: n };
   }
-  if (t === 'boolean') return { ok: true, value: /^true$/i.test(raw.trim()) };
+  if (t === 'boolean') {
+    const s = raw.trim().toLowerCase();
+    if (s === 'true') return { ok: true, value: true };
+    if (s === 'false') return { ok: true, value: false };
+    return { ok: false };
+  }
   if (t === 'string') return { ok: true, value: raw.replace(/^"([\s\S]*)"$/, '$1') };
   return { ok: false }; // objects / undefined / functions — not editable
 }

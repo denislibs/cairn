@@ -196,21 +196,33 @@ describe('installDevtools', () => {
   it('composite hook registers created signals and still counts why-frame activity', () => {
     installDevtools();
     // create a signal AFTER install so onSignalCreate fires
-    let list: any[] = [];
     const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
     createRoot(() => {
       const [, setC] = createSignal(0, { name: 'probe' });
       setC(1);
     });
-    // registry is internal; assert via get-signals once Task 5 lands. For now assert install didn't throw
-    // and reactive counters still flow by mounting an app.
     const events: AgentEvent[] = [];
     hook.subscribe((e: AgentEvent) => events.push(e));
     const { host } = createFakeHost();
     const dispose = mount(() => appRoot(), host);
     expect(events.some((e) => e.type === 'commit')).toBe(true);
-    void list;
     dispose();
+  });
+
+  it('set-signal does not count as app signal activity', () => {
+    installDevtools();
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+    const events: AgentEvent[] = [];
+    hook.subscribe((e: AgentEvent) => events.push(e));
+    createRoot(() => { const [, ] = createSignal(0, { name: 'x' }); });
+    hook.send({ type: 'get-signals' });
+    const sig = [...events].reverse().find((e) => e.type === 'signals');
+    const id = sig && sig.type === 'signals' ? sig.list.find((s) => s.name === 'x')!.id : -1;
+    events.length = 0;
+    hook.send({ type: 'set-signal', id, value: '5' });
+    // the signals event emitted by set-signal must reflect value 5; and NO commit should attribute this as a signal write
+    const after = events.find((e) => e.type === 'signals');
+    expect(after && after.type === 'signals' && after.list.find((s) => s.name === 'x')?.value).toBe('5');
   });
 
   it('get-signals emits the registry list; set-signal updates a scalar', () => {
