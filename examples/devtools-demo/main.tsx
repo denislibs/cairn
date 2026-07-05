@@ -1,8 +1,9 @@
 import { createWebHost } from '@cairn/platform-web';
 import { mount } from '@cairn/runtime';
-import { Box, Column, Row, Text } from '@cairn/primitives';
+import { Column, Row, Text, ThemeProvider } from '@cairn/primitives';
 import { createSignal } from '@cairn/reactivity';
 import { installDevtools } from '@cairn/devtools';
+import { Button, createMaterialTheme } from '@cairn/material';
 
 const canvas = document.getElementById('stage') as HTMLCanvasElement;
 const host = createWebHost(canvas);
@@ -11,7 +12,7 @@ const host = createWebHost(canvas);
 installDevtools({ canvas });
 
 function App() {
-  const [count, setCount] = createSignal(0);
+  const [count, setCount] = createSignal(0, { name: 'count' });
   return Column({
     mainAxisSize: 'min',
     style: { gap: 16, padding: 24 },
@@ -21,11 +22,9 @@ function App() {
         mainAxisSize: 'min',
         style: { gap: 12, alignY: 'center' },
         children: [
-          Box({
-            style: { padding: { left: 16, right: 16, top: 8, bottom: 8 }, backgroundColor: '#1a73e8', borderRadius: 6, cursor: 'pointer' },
-            focusable: true,
+          Button({
+            label: 'Increment',
             onClick: () => setCount((c) => c + 1),
-            children: Text({ style: { color: '#fff', font: '500 14px sans-serif' }, children: 'Increment' }),
           }),
           Text({ style: { font: '16px sans-serif', color: '#202124' }, children: () => `count: ${count()}` }),
         ],
@@ -34,4 +33,11 @@ function App() {
   });
 }
 
-mount(App, host);
+function Root() {
+  return ThemeProvider({
+    theme: createMaterialTheme(),
+    children: () => App(),
+  });
+}
+
+mount(Root, host);

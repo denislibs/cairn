@@ -73,6 +73,7 @@ export function Checkbox(props: CheckboxProps): Instance {
     });
     instance.semantics = semantics;
     applyLayoutChildProps(instance, props);
+    instance.debugName = 'Checkbox';
     return instance;
   }
 
@@ -157,5 +158,6 @@ export function Checkbox(props: CheckboxProps): Instance {
 
   instance.semantics = semantics;
   applyLayoutChildProps(instance, props);
+  instance.debugName = 'Checkbox';
   return instance;
 }

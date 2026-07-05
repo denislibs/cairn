@@ -237,9 +237,11 @@ export function TextField(props: TextFieldProps): Instance {
     children: columnChildren,
   });
 
-  return Provider({
+  const inst = Provider({
     context: fieldContext.context,
     value: fieldCtxValue,
     children: () => inner,
-  });
+  }) as unknown as Instance;
+  inst.debugName = 'TextField';
+  return inst;
 }

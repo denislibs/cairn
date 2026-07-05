@@ -12,6 +12,7 @@ export type Setter<T> = (value: T | ((prev: T) => T)) => T;
 
 export interface SignalOptions<T> {
   equals?: EqualsFn<T> | false;
+  name?: string;
 }
 
 export function createSignal<T>(
@@ -23,6 +24,7 @@ export function createSignal<T>(
     observers: null,
     equals: options?.equals ?? defaultEquals,
   };
+  if (options?.name !== undefined) node.name = options.name;
   runSignalCreateHook(node as SignalState<unknown>);
   const read: Accessor<T> = () => readSource(node);
   const write: Setter<T> = (next) =>

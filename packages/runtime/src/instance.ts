@@ -23,8 +23,10 @@ export interface Instance {
   clipChildren?: Radii | null;
   transform?: TransformSpec | null;
   transformOrigin?: { x: number; y: number } | null;
-  /** Dev-only human-readable name for devtools; ignored in production. */
+  /** Human-readable component name for devtools; set by widget/material factories, undefined elsewhere (name is inferred from the layout node). */
   debugName?: string;
+  /** Resolved style snapshot for devtools; set by Box/Text/Flex/Grid/ScrollView on each style change, undefined on other nodes. */
+  debugStyle?: import('@cairn/style').BaseStyle;
 }
 
 // Walk the instance tree, translating into each node's local coordinate space.

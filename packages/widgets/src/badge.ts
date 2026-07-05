@@ -78,6 +78,7 @@ export function Badge(props: BadgeProps): Instance {
   // If no wrapped children: standalone badge — apply layout child props & style directly
   if (props.children == null) {
     applyLayoutChildProps(pill, props);
+    pill.debugName = 'Badge';
     return pill;
   }
 
@@ -98,6 +99,7 @@ export function Badge(props: BadgeProps): Instance {
 
   const container = Stack({ children: [wrappedChild, pill] });
   applyLayoutChildProps(container, props);
+  container.debugName = 'Badge';
   return container;
 }
 

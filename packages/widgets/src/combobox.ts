@@ -119,7 +119,9 @@ export function ComboboxOption(props: ComboboxOptionProps): Instance {
 
   // Show only when the option matches the current filter — filtered-out options
   // render nothing, so they are absent from BOTH the canvas and the a11y tree.
-  return Show({ when: isVisible, children: buildRow });
+  const inst = Show({ when: isVisible, children: buildRow });
+  inst.debugName = 'ComboboxOption';
+  return inst;
 }
 
 // ─── Combobox ─────────────────────────────────────────────────────────────────
@@ -342,6 +344,7 @@ function _Combobox(props: ComboboxProps): Instance {
     if (open()) portalContent();
   });
 
+  wrapper.debugName = 'Combobox';
   return wrapper;
 }
 

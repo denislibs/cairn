@@ -204,5 +204,6 @@ export function Chip(props: ChipProps): Instance {
   }
 
   applyLayoutChildProps(instance, props);
+  instance.debugName = 'Chip';
   return instance;
 }

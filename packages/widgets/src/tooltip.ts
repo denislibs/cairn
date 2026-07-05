@@ -113,5 +113,6 @@ export function Tooltip(props: TooltipProps): Instance {
     if (shown()) portalContent();
   });
 
+  trigger.debugName = 'Tooltip';
   return trigger;
 }

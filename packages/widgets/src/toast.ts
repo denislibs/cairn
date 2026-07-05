@@ -265,9 +265,11 @@ export function ToastProvider(props: ToastProviderProps): Instance {
   });
 
   // Render children inside the ToastProvider context
-  return Provider({
+  const inst = Provider({
     context: toastContext.context,
     value: ctx,
     children: props.children,
   }) as unknown as Instance;
+  inst.debugName = 'ToastProvider';
+  return inst;
 }

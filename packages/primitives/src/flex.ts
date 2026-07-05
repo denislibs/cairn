@@ -53,6 +53,7 @@ function flex(direction: FlexDirection, props: FlexProps): Instance {
     instance.cursor = s.cursor;
     instance.pointerEvents = s.pointerEvents;
     instance.userSelect = s.userSelect;
+    instance.debugStyle = s;
   });
 
   applyLayoutChildProps(instance, props);

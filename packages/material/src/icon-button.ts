@@ -51,5 +51,7 @@ export function IconButton(props: IconButtonProps): Instance {
     }] as any,
     children: childInstance,
   };
-  return HeadlessButton(headlessProps);
+  const inst = HeadlessButton(headlessProps);
+  inst.debugName = 'IconButton';
+  return inst;
 }

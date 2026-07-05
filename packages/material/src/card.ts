@@ -93,6 +93,7 @@ export function Card(props: CardProps = {}): Instance {
     };
   }
 
+  inst.debugName = 'Card';
   return inst;
 }
 
@@ -108,10 +109,12 @@ Card.Content = function CardContent(props: CardContentProps): Instance {
 
   // Padding lives on a Box (FlexNode ignores padding); the inner Column hugs its
   // content (mainAxisSize:'min') so it doesn't fill the available height.
-  return Box({
+  const inst = Box({
     style: { padding: { left: 16, right: 16, top: 16, bottom: 16 } },
     children: Column({ mainAxisSize: 'min', children: kids }),
   });
+  inst.debugName = 'CardContent';
+  return inst;
 };
 
 // ─── Card.Actions — padded Row slot ──────────────────────────────────────────
@@ -124,8 +127,10 @@ Card.Actions = function CardActions(props: CardActionsProps): Instance {
       : [children]
     : [];
 
-  return Box({
+  const inst = Box({
     style: { padding: { left: 8, right: 8, top: 8, bottom: 8 } },
     children: Row({ mainAxisSize: 'min', style: { gap: 8, alignX: 'end' }, children: kids }),
   });
+  inst.debugName = 'CardActions';
+  return inst;
 };

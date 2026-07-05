@@ -146,8 +146,10 @@ export function Checkbox(props: CheckboxProps): Instance {
     inst.semantics = undefined;
     inst.focusable = false;
     inst.handlers = undefined;
+    row.debugName = 'Checkbox';
     return row;
   }
 
+  inst.debugName = 'Checkbox';
   return inst;
 }

@@ -117,5 +117,7 @@ export function Button(props: ButtonProps): Instance {
     style: [{ ...baseStyle, ...variantStyle, ...fullWidthStyle }] as any,
     children: childInstance,
   };
-  return HeadlessButton(headlessProps);
+  const inst = HeadlessButton(headlessProps);
+  inst.debugName = 'Button';
+  return inst;
 }

@@ -116,5 +116,6 @@ export function Stepper(props: StepperProps): Instance {
   const listSem: SemanticsNode = { role: 'list' };
   container.semantics = listSem;
   applyLayoutChildProps(container, props);
+  container.debugName = 'Stepper';
   return container;
 }

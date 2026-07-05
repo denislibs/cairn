@@ -199,6 +199,7 @@ export function Menu(props: MenuProps): Instance {
     if (open()) portalContent();
   });
 
+  trigger.debugName = 'Menu';
   return trigger;
 }
 
@@ -302,5 +303,6 @@ export function MenuItem(props: MenuItemProps): Instance {
     itemSemantics.autoFocus = isActive();
   });
 
+  instance.debugName = 'MenuItem';
   return instance;
 }

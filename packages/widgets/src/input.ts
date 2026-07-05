@@ -136,5 +136,6 @@ export function Input(props: InputProps): Instance {
   });
 
   applyLayoutChildProps(instance, props);
+  instance.debugName = 'Input';
   return instance;
 }

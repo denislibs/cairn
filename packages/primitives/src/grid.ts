@@ -45,6 +45,7 @@ export function Grid(props: GridProps = {}): Instance {
     instance.transform = s.transform;
     instance.transformOrigin = s.transformOrigin;
     instance.paintOpacity = s.opacity;
+    instance.debugStyle = s;
   });
 
   applyLayoutChildProps(instance, props);

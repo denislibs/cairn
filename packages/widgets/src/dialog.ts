@@ -163,6 +163,7 @@ function DialogRoot(props: DialogProps): Instance {
     if (open()) portalContent();
   });
 
+  inline.debugName = 'Dialog';
   return inline;
 }
 
@@ -216,6 +217,7 @@ function DialogTrigger(props: DialogTriggerProps): Instance {
   });
 
   trigger.semantics = triggerSemantics;
+  trigger.debugName = 'DialogTrigger';
   return trigger;
 }
 
@@ -239,7 +241,9 @@ function DialogContent(props: DialogContentProps): Instance {
       children: [child],
     });
   });
-  return Box({ style: { width: 0, height: 0 } });
+  const inst = Box({ style: { width: 0, height: 0 } });
+  inst.debugName = 'DialogContent';
+  return inst;
 }
 
 // ─── Dialog.Title ─────────────────────────────────────────────────────────────
@@ -258,7 +262,7 @@ function DialogTitle(props: DialogTitleProps): Instance {
     ctx.setTitle(props.children);
   });
 
-  return Text({
+  const inst = Text({
     style: mergeStyles(
       () => ({
         color: theme.colors.text,
@@ -269,6 +273,8 @@ function DialogTitle(props: DialogTitleProps): Instance {
     ),
     children: props.children,
   });
+  inst.debugName = 'DialogTitle';
+  return inst;
 }
 
 // ─── Dialog.Description ───────────────────────────────────────────────────────
@@ -280,13 +286,15 @@ export interface DialogDescriptionProps {
 
 function DialogDescription(props: DialogDescriptionProps): Instance {
   const theme = useWidgetTheme();
-  return Text({
+  const inst = Text({
     style: mergeStyles(
       () => ({ color: theme.colors.textMuted, fontSize: theme.fontSizes.sm }),
       props.style,
     ),
     children: props.children,
   });
+  inst.debugName = 'DialogDescription';
+  return inst;
 }
 
 // ─── Dialog.Close ─────────────────────────────────────────────────────────────
@@ -333,6 +341,7 @@ function DialogClose(props: DialogCloseProps): Instance {
   });
 
   btn.semantics = closeSemantics;
+  btn.debugName = 'DialogClose';
   return btn;
 }
 

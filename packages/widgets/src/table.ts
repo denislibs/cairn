@@ -144,5 +144,6 @@ export function Table(props: TableProps): Instance {
   container.semantics = tableSem;
 
   applyLayoutChildProps(container, props);
+  container.debugName = 'Table';
   return container;
 }

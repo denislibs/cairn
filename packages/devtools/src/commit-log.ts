@@ -3,6 +3,8 @@ export interface CommitEntry {
   changedIds: number[];
   signalWrites: number;
   effectRuns: number;
+  signals: { id: number; name?: string }[];
+  durationMs: number;
 }
 
 export class CommitLog {

@@ -149,5 +149,6 @@ export function Popover(props: PopoverProps): Instance {
     if (open()) portalContent();
   });
 
+  trigger.debugName = 'Popover';
   return trigger;
 }

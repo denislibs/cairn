@@ -33,7 +33,9 @@ export type {
 // which is rendered *after* the List in a Column wrapper produced by Tabs.List.
 
 function TabsRoot(props: HeadlessTabsProps): TabsInstance {
-  return HeadlessTabs(props);
+  const inst = HeadlessTabs(props);
+  inst.debugName = 'Tabs';
+  return inst;
 }
 
 // ─── Tabs.List ────────────────────────────────────────────────────────────────
@@ -106,6 +108,7 @@ TabsRoot.List = function MaterialTabsList(props: HeadlessTabsListProps): Instanc
   column.semantics = headlessList.semantics;
   headlessList.semantics = undefined;
 
+  column.debugName = 'TabList';
   return column;
 };
 
@@ -184,6 +187,7 @@ TabsRoot.Tab = function MaterialTab(props: HeadlessTabProps): Instance {
     };
   }
 
+  inst.debugName = 'Tab';
   return inst;
 };
 
@@ -193,7 +197,9 @@ TabsRoot.Tab = function MaterialTab(props: HeadlessTabProps): Instance {
 // the headless Panel.
 
 TabsRoot.Panel = function MaterialTabsPanel(props: HeadlessTabsPanelProps): Instance {
-  return HeadlessTabs.Panel(props);
+  const inst = HeadlessTabs.Panel(props);
+  inst.debugName = 'TabPanel';
+  return inst;
 };
 
 // ─── Export ───────────────────────────────────────────────────────────────────

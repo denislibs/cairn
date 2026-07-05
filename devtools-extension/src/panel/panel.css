@@ -13,3 +13,5 @@ body { margin: 0; font: 12px/1.5 -apple-system, sans-serif; color: #202124; }
 .kv { display: flex; justify-content: space-between; gap: 8px; }
 .kv b { color: #5f6368; font-weight: 500; }
 .commit { font-variant-numeric: tabular-nums; color: #5f6368; }
+#profiler { display: flex; align-items: flex-end; gap: 1px; height: 44px; overflow: hidden; border-bottom: 1px solid #eee; padding: 2px; }
+.bar { width: 3px; background: #4c8bf5; }

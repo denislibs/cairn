@@ -65,7 +65,9 @@ function DialogRoot(props: DialogProps): Instance {
     onOpenChange: props.onOpenChange,
     children: props.children,
   };
-  return HeadlessDialog(headlessProps);
+  const inst = HeadlessDialog(headlessProps);
+  inst.debugName = 'Dialog';
+  return inst;
 }
 
 // ─── Dialog.Trigger ────────────────────────────────────────────────────────────
@@ -81,7 +83,9 @@ function DialogTrigger(props: DialogTriggerProps): Instance {
     children: props.children,
     style: props.style,
   };
-  return HeadlessDialog.Trigger(headlessProps);
+  const inst = HeadlessDialog.Trigger(headlessProps);
+  inst.debugName = 'DialogTrigger';
+  return inst;
 }
 
 // ─── Dialog.Content ─────────────────────────────────────────────────────────
@@ -126,7 +130,9 @@ function DialogContent(props: DialogContentProps): Instance {
     // No extra style on the headless wrapper itself — all style is on our Box.
   };
 
-  return HeadlessDialog.Content(headlessProps);
+  const inst = HeadlessDialog.Content(headlessProps);
+  inst.debugName = 'DialogContent';
+  return inst;
 }
 
 // ─── Dialog.Title ────────────────────────────────────────────────────────────
@@ -155,7 +161,9 @@ function DialogTitle(props: DialogTitleProps): Instance {
     children: props.children,
     style: titleStyle,
   };
-  return HeadlessDialog.Title(headlessProps);
+  const inst = HeadlessDialog.Title(headlessProps);
+  inst.debugName = 'DialogTitle';
+  return inst;
 }
 
 // ─── Dialog.Description ──────────────────────────────────────────────────────
@@ -183,7 +191,9 @@ function DialogDescription(props: DialogDescriptionProps): Instance {
     children: props.children,
     style: descStyle,
   };
-  return HeadlessDialog.Description(headlessProps);
+  const inst = HeadlessDialog.Description(headlessProps);
+  inst.debugName = 'DialogDescription';
+  return inst;
 }
 
 // ─── Dialog.Actions ──────────────────────────────────────────────────────────
@@ -194,7 +204,7 @@ function DialogDescription(props: DialogDescriptionProps): Instance {
  */
 function DialogActions(props: DialogActionsProps): Instance {
   const children = Array.isArray(props.children) ? props.children : [props.children];
-  return Row({
+  const inst = Row({
     mainAxisSize: 'max',
     style: mergeStyles(
       {
@@ -206,6 +216,8 @@ function DialogActions(props: DialogActionsProps): Instance {
     ),
     children,
   });
+  inst.debugName = 'DialogActions';
+  return inst;
 }
 
 // ─── Dialog.Close ────────────────────────────────────────────────────────────
@@ -219,7 +231,9 @@ function DialogClose(props: DialogCloseProps): Instance {
     children: props.children,
     style: props.style,
   };
-  return HeadlessDialog.Close(headlessProps);
+  const inst = HeadlessDialog.Close(headlessProps);
+  inst.debugName = 'DialogClose';
+  return inst;
 }
 
 // ─── Compound export ─────────────────────────────────────────────────────────

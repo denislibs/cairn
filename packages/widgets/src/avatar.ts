@@ -48,6 +48,7 @@ export function Avatar(props: AvatarProps = {}): Instance {
     const sem: SemanticsNode = { role: 'image', label };
     container.semantics = sem;
     applyLayoutChildProps(container, props);
+    container.debugName = 'Avatar';
     return container;
   }
 
@@ -81,5 +82,6 @@ export function Avatar(props: AvatarProps = {}): Instance {
   const sem: SemanticsNode = { role: 'image', label };
   container.semantics = sem;
   applyLayoutChildProps(container, props);
+  container.debugName = 'Avatar';
   return container;
 }

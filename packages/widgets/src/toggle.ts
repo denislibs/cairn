@@ -93,6 +93,7 @@ export function Toggle(props: ToggleProps): Instance {
       children: child,
     });
     applyLayoutChildProps(instance, props);
+    instance.debugName = 'Toggle';
     return instance;
   }
 
@@ -115,5 +116,6 @@ export function Toggle(props: ToggleProps): Instance {
   });
 
   applyLayoutChildProps(instance, props);
+  instance.debugName = 'Toggle';
   return instance;
 }

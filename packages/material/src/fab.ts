@@ -51,5 +51,7 @@ export function Fab(props: FabProps): Instance {
     }] as any,
     children: childInstance,
   };
-  return HeadlessButton(headlessProps);
+  const inst = HeadlessButton(headlessProps);
+  inst.debugName = 'Fab';
+  return inst;
 }

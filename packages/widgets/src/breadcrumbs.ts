@@ -91,5 +91,6 @@ export function Breadcrumbs(props: BreadcrumbsProps): Instance {
   const navSem: SemanticsNode = { role: 'navigation', label: 'Breadcrumb' };
   container.semantics = navSem;
   applyLayoutChildProps(container, props);
+  container.debugName = 'Breadcrumbs';
   return container;
 }

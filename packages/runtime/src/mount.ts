@@ -9,6 +9,8 @@ import { hostContext } from './host-context';
 import { createOverlayRegistry, overlayContext } from './overlays';
 import { collectSemantics } from './semantics';
 
+const now = (): number => (typeof performance !== 'undefined' && performance.now ? performance.now() : 0);
+
 // Returns the topmost cursor in a target-first path, falling back to 'default'.
 export function cursorOf(path: { cursor?: string }[]): string {
   for (const node of path) if (node.cursor) return node.cursor;
@@ -39,6 +41,7 @@ export function mount(component: () => Instance, host: Host): () => void {
     });
 
     const renderFrame = (): void => {
+      const t0 = now();
       const w = host.metrics.width;
       const h = host.metrics.height;
       ctx.viewport = { w, h };
@@ -58,7 +61,7 @@ export function mount(component: () => Instance, host: Host): () => void {
       paint(root, host.renderer);
       for (const o of list) paint(o, host.renderer);
       host.renderer.endFrame();
-      emitCommit(root, ctx.viewport);
+      emitCommit(root, ctx.viewport, now() - t0);
     };
 
     // Build the tree first. Effects run now; scheduleFrame() no-ops because the

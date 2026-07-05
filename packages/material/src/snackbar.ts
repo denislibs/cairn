@@ -141,6 +141,7 @@ export function SnackbarItem(props: SnackbarItemProps): Instance {
   };
   surface.semantics = surfaceSemantics;
 
+  surface.debugName = 'SnackbarItem';
   return surface;
 }
 
@@ -263,9 +264,11 @@ export function SnackbarProvider(props: SnackbarProviderProps): Instance {
   });
 
   // Render children inside the shared toastContext — `useSnackbar` / `useToast` both work.
-  return Provider({
+  const inst = Provider({
     context: toastContext.context,
     value: ctx,
     children: props.children,
   }) as unknown as Instance;
+  inst.debugName = 'SnackbarProvider';
+  return inst;
 }

@@ -3,6 +3,7 @@ import type { AgentEvent, PanelCommand, SnapshotNode, ChangedNode, CommitMeta } 
 const treeEl = document.getElementById('tree') as HTMLDivElement;
 const propsEl = document.getElementById('props') as HTMLDivElement;
 const logEl = document.getElementById('log') as HTMLDivElement;
+const profilerEl = document.getElementById('profiler') as HTMLDivElement;
 const statusEl = document.getElementById('status') as HTMLSpanElement;
 const inspectBtn = document.getElementById('inspect') as HTMLButtonElement;
 
@@ -27,6 +28,7 @@ function handleEvent(event: AgentEvent): void {
     renderTree();
     renderProps();
     appendCommit(event.meta);
+    appendProfilerBar(event.meta);
   } else if (event.type === 'selection') {
     selectedId = event.id;
     renderTree();
@@ -86,14 +88,36 @@ function renderProps(): void {
   kv('focusable', String(node.flags.focusable));
   kv('pointerEvents', node.flags.pointerEvents);
   if (node.semantics) kv('role', node.semantics.role + (node.semantics.label ? ` "${node.semantics.label}"` : ''));
+  if (node.style) {
+    const head = document.createElement('div');
+    head.className = 'kv';
+    const b = document.createElement('b'); b.textContent = '— style —'; head.append(b);
+    propsEl.appendChild(head);
+    for (const [k, v] of Object.entries(node.style)) {
+      kv(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+    }
+  }
 }
 
 function appendCommit(meta: CommitMeta): void {
   const line = document.createElement('div');
   line.className = 'commit';
-  line.textContent = `#${meta.frame}  signals:${meta.signalWrites}  effects:${meta.effectRuns}  changed:${changedIds.size}`;
+  const sig = meta.signals && meta.signals.length
+    ? '  signals:[' + meta.signals.map((s) => s.name ?? '#' + s.id).join(',') + ']'
+    : '';
+  line.textContent = `#${meta.frame}  ${Math.round(meta.durationMs)}ms  signals:${meta.signalWrites} effects:${meta.effectRuns} changed:${changedIds.size}${sig}`;
   logEl.prepend(line);
   while (logEl.childElementCount > 50) logEl.lastElementChild?.remove();
+}
+
+function appendProfilerBar(meta: CommitMeta): void {
+  const bar = document.createElement('div');
+  bar.className = 'bar';
+  const h = Math.min(40, 2 + Math.round(meta.durationMs * 2));
+  bar.style.height = `${h}px`;
+  bar.title = `#${meta.frame} · ${Math.round(meta.durationMs)}ms · ${changedIds.size} changed`;
+  profilerEl.appendChild(bar);
+  while (profilerEl.childElementCount > 120) profilerEl.firstElementChild?.remove();
 }
 
 function r(n: number): number { return Math.round(n); }

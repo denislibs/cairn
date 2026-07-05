@@ -56,7 +56,9 @@ export function List(props: ListProps): ListInstance {
     ...(props.flex !== undefined ? { flex: props.flex } : {}),
     ...(props.alignSelf !== undefined ? { alignSelf: props.alignSelf } : {}),
   };
-  return HeadlessList(headlessProps);
+  const inst = HeadlessList(headlessProps);
+  inst.debugName = 'List';
+  return inst;
 }
 
 // ---------------------------------------------------------------------------
@@ -154,5 +156,6 @@ List.Item = function MaterialListItem(props: ListItemProps): Instance {
     inst.semantics.label = props.children;
   }
 
+  inst.debugName = 'ListItem';
   return inst;
 };
