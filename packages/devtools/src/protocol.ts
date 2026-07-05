@@ -33,6 +33,7 @@ export interface CommitMeta {
   effectRuns: number;
   signals: SignalRef[];
   durationMs: number;
+  phases: { layout: number; a11y: number; paint: number };
 }
 
 export type AgentEvent =

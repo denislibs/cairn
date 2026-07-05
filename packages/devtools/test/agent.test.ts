@@ -225,6 +225,24 @@ describe('installDevtools', () => {
     expect(after && after.type === 'signals' && after.list.find((s) => s.name === 'x')?.value).toBe('5');
   });
 
+  it('commit meta carries per-phase timing', () => {
+    installDevtools();
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+    const events: AgentEvent[] = [];
+    hook.subscribe((e: AgentEvent) => events.push(e));
+    const { host } = createFakeHost();
+    const dispose = mount(() => appRoot(), host);
+    const commit = events.find((e) => e.type === 'commit');
+    expect(commit && commit.type === 'commit').toBe(true);
+    if (commit && commit.type === 'commit') {
+      expect(typeof commit.meta.phases.layout).toBe('number');
+      expect(typeof commit.meta.phases.a11y).toBe('number');
+      expect(typeof commit.meta.phases.paint).toBe('number');
+      expect(commit.meta.durationMs).toBeGreaterThanOrEqual(0);
+    }
+    dispose();
+  });
+
   it('get-signals emits the registry list; set-signal updates a scalar', () => {
     installDevtools();
     const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;

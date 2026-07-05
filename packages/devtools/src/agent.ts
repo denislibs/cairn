@@ -71,7 +71,7 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
   }
 
   setRuntimeDevHooks({
-    onCommit: (root, viewport, durationMs) => {
+    onCommit: (root, viewport, timing) => {
       s.viewport = viewport;
       s.lastRoot = root;
       // Lazy: build snapshots only when someone is watching.
@@ -80,10 +80,11 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
       const changed = diffSnapshots(s.last, snapshot);
       const counts = why.take();
       s.frame++;
-      s.log.push({ frame: s.frame, changedIds: changed.map((c) => c.id), ...counts, durationMs });
+      const phases = { layout: timing.layout, a11y: timing.a11y, paint: timing.paint };
+      s.log.push({ frame: s.frame, changedIds: changed.map((c) => c.id), ...counts, durationMs: timing.total });
       s.last = snapshot;
       if (s.pick) s.pick.update(snapshot);
-      s.lastMeta = { frame: s.frame, ...counts, durationMs };
+      s.lastMeta = { frame: s.frame, ...counts, durationMs: timing.total, phases };
       emit({ type: 'commit', snapshot, changed, meta: s.lastMeta });
       emitSignals();
     },
@@ -143,7 +144,7 @@ function handleCommand(cmd: PanelCommand): void {
       if (snapshot) {
         state.last = snapshot;
         state.pick?.update(snapshot);
-        emit({ type: 'commit', snapshot, changed: [], meta: state.lastMeta ?? { frame: state.frame, signalWrites: 0, effectRuns: 0, signals: [], durationMs: 0 } });
+        emit({ type: 'commit', snapshot, changed: [], meta: state.lastMeta ?? { frame: state.frame, signalWrites: 0, effectRuns: 0, signals: [], durationMs: 0, phases: { layout: 0, a11y: 0, paint: 0 } } });
       }
       break;
     }
