@@ -1,6 +1,6 @@
 // Shared signal identity — used by both the WhyFrameTracker changed-set and the SignalRegistry
 // so a signal has ONE id everywhere.
-const ids = new WeakMap<object, number>();
+let ids = new WeakMap<object, number>();
 let next = 1;
 
 export function signalId(node: object): number {
@@ -9,5 +9,5 @@ export function signalId(node: object): number {
   return id;
 }
 
-/** Test-only: reset the counter (WeakMap keyed by identity persists per object). */
-export function resetSignalIds(): void { next = 1; }
+/** Test-only: reset the counter and clear the id map. */
+export function resetSignalIds(): void { ids = new WeakMap(); next = 1; }

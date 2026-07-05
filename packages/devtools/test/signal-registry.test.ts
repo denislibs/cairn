@@ -14,6 +14,13 @@ describe('signalId', () => {
     expect(signalId(a)).toBe(signalId(a));
     expect(signalId(a)).not.toBe(signalId(b));
   });
+  it('resetSignalIds fully resets id assignment', () => {
+    const a = sig(1);
+    expect(signalId(a)).toBe(1);
+    resetSignalIds();
+    const b = sig(2);
+    expect(signalId(b)).toBe(1); // counter restarted AND map cleared (a no longer mapped)
+  });
 });
 
 describe('SignalRegistry', () => {

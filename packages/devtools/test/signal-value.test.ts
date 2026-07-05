@@ -27,4 +27,11 @@ describe('coerceSignalValue', () => {
     expect(coerceSignalValue({ a: 1 }, '{}').ok).toBe(false);
     expect(coerceSignalValue(undefined, 'x').ok).toBe(false);
   });
+  it('rejects numbers with trailing garbage and empty input', () => {
+    expect(coerceSignalValue(0, '42abc').ok).toBe(false);
+    expect(coerceSignalValue(0, '').ok).toBe(false);
+    expect(coerceSignalValue(0, '  ').ok).toBe(false);
+    expect(coerceSignalValue(0, '3.5')).toEqual({ ok: true, value: 3.5 });
+    expect(coerceSignalValue(0, '-2')).toEqual({ ok: true, value: -2 });
+  });
 });

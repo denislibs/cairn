@@ -14,7 +14,11 @@ export type CoerceResult = { ok: true; value: unknown } | { ok: false };
 
 export function coerceSignalValue(current: unknown, raw: string): CoerceResult {
   const t = typeof current;
-  if (t === 'number') { const n = parseFloat(raw); return Number.isNaN(n) ? { ok: false } : { ok: true, value: n }; }
+  if (t === 'number') {
+    const s = raw.trim();
+    const n = Number(s);
+    return s === '' || Number.isNaN(n) ? { ok: false } : { ok: true, value: n };
+  }
   if (t === 'boolean') return { ok: true, value: /^true$/i.test(raw.trim()) };
   if (t === 'string') return { ok: true, value: raw.replace(/^"([\s\S]*)"$/, '$1') };
   return { ok: false }; // objects / undefined / functions — not editable
