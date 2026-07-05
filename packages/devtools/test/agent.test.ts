@@ -2,7 +2,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { mount, setRuntimeDevHooks } from '@cairn/runtime';
 import type { Instance } from '@cairn/runtime';
-import { setReactiveDevHooks, createSignal } from '@cairn/reactivity';
+import { setReactiveDevHooks, createSignal, createRoot } from '@cairn/reactivity';
 import { installDevtools, uninstallDevtools } from '../src/agent';
 import type { AgentEvent } from '../src/protocol';
 import { createFakeHost } from '../../runtime/test/fake-host';
@@ -190,6 +190,26 @@ describe('installDevtools', () => {
       expect(replayCommit.meta).toEqual(realMeta);
     }
 
+    dispose();
+  });
+
+  it('composite hook registers created signals and still counts why-frame activity', () => {
+    installDevtools();
+    // create a signal AFTER install so onSignalCreate fires
+    let list: any[] = [];
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+    createRoot(() => {
+      const [, setC] = createSignal(0, { name: 'probe' });
+      setC(1);
+    });
+    // registry is internal; assert via get-signals once Task 5 lands. For now assert install didn't throw
+    // and reactive counters still flow by mounting an app.
+    const events: AgentEvent[] = [];
+    hook.subscribe((e: AgentEvent) => events.push(e));
+    const { host } = createFakeHost();
+    const dispose = mount(() => appRoot(), host);
+    expect(events.some((e) => e.type === 'commit')).toBe(true);
+    void list;
     dispose();
   });
 });

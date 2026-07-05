@@ -1,5 +1,6 @@
 import type { Instance } from '@cairn/runtime';
 import { setRuntimeDevHooks, activateStyleOverrides, deactivateStyleOverrides, setStyleProp, toggleStyleProp, removeStyleProp } from '@cairn/runtime';
+import { setReactiveDevHooks } from '@cairn/reactivity';
 import { instanceById } from './ids';
 import { parseStyleValue, isEditableProp } from './parse-style';
 import type { AgentEvent, PanelCommand, DevtoolsHook, SnapshotNode, CommitMeta } from './protocol';
@@ -8,6 +9,8 @@ import { serialize } from './serialize';
 import { diffSnapshots } from './diff';
 import { CommitLog } from './commit-log';
 import { WhyFrameTracker } from './why-frame';
+import { SignalRegistry } from './signal-registry';
+import { signalId } from './signal-id';
 import { findNode } from './find';
 import { Highlighter } from './highlight';
 import { PickController } from './pick';
@@ -21,6 +24,7 @@ interface AgentState {
   subscribers: Set<(e: AgentEvent) => void>;
   log: CommitLog;
   why: WhyFrameTracker;
+  registry: SignalRegistry;
   last: SnapshotNode | null;
   lastRoot: Instance | null;
   lastMeta: CommitMeta | null;
@@ -40,6 +44,7 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
     subscribers: new Set(),
     log: new CommitLog(),
     why,
+    registry: new SignalRegistry(),
     last: null,
     lastRoot: null,
     lastMeta: null,
@@ -50,7 +55,11 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
   };
   state = s;
 
-  why.start();
+  setReactiveDevHooks({
+    onSignalCreate: (n) => { signalId(n as object); s.registry.note(n as any); },
+    onSignalWrite: (n) => why.noteWrite(n as object),
+    onComputationRun: (n) => why.noteEffectRun(n as object),
+  });
   activateStyleOverrides();
 
   if (opts.canvas) {
@@ -93,7 +102,7 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
 
 export function uninstallDevtools(): void {
   if (!state) return;
-  state.why.stop();
+  setReactiveDevHooks(null);
   setRuntimeDevHooks(null);
   deactivateStyleOverrides();
   if (state.pick) state.pick.stop();

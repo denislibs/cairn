@@ -1,50 +1,29 @@
-import { describe, it, expect, afterEach } from 'vitest';
-import { createSignal, createEffect, createRoot, setReactiveDevHooks } from '@cairn/reactivity';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { WhyFrameTracker } from '../src/why-frame';
+import { resetSignalIds, signalId } from '../src/signal-id';
 
-afterEach(() => setReactiveDevHooks(null));
+function node(name?: string, isEffect = false): any { return { name, isEffect }; }
 
 describe('WhyFrameTracker', () => {
-  it('counts signal writes and effect runs, then resets on take', () => {
-    const tracker = new WhyFrameTracker();
-    tracker.start();
-    createRoot(() => {
-      const [get, set] = createSignal(0);
-      createEffect(() => { get(); });
-      set(1);
-      set(2);
-    });
-    const first = tracker.take();
-    expect(first.signalWrites).toBe(2);
-    expect(first.effectRuns).toBeGreaterThanOrEqual(1);
-    const second = tracker.take();
-    expect(second).toEqual({ signalWrites: 0, effectRuns: 0, signals: [] });
-    tracker.stop();
+  beforeEach(() => resetSignalIds());
+
+  it('counts writes/effect-runs and dedups changed signals by id', () => {
+    const t = new WhyFrameTracker();
+    const a = node('a'); const b = node();
+    t.noteWrite(a); t.noteWrite(a); t.noteWrite(b); // a twice -> one entry
+    t.noteEffectRun(node(undefined, true));
+    t.noteEffectRun(node(undefined, false)); // not an effect
+    const r = t.take();
+    expect(r.signalWrites).toBe(3);
+    expect(r.effectRuns).toBe(1);
+    expect(r.signals.length).toBe(2);
+    expect(r.signals.find((s) => s.name === 'a')?.id).toBe(signalId(a));
   });
 
-  it('collects changed signals with stable ids across frames', () => {
-    const tracker = new WhyFrameTracker();
-    tracker.start();
-    let setA!: (v: number) => void;
-    createRoot(() => {
-      const [a, sa] = createSignal(0, { name: 'a' });
-      const [, sb] = createSignal(0); // unnamed
-      setA = sa as any;
-      sa(1); sa(2);   // same signal twice → one entry
-      sb(1);
-      a();
-    });
-    const f1 = tracker.take();
-    expect(f1.signals.length).toBe(2);
-    const aRef = f1.signals.find((s) => s.name === 'a');
-    expect(aRef).toBeTruthy();
-    const firstId = aRef!.id;
-    // second frame: write the same signal again — id must be identical
-    setA(3);
-    const f2 = tracker.take();
-    const aRef2 = f2.signals.find((s) => s.name === 'a');
-    expect(aRef2).toBeTruthy();
-    expect(aRef2!.id).toBe(firstId);
-    tracker.stop();
+  it('take() resets state', () => {
+    const t = new WhyFrameTracker();
+    t.noteWrite(node('x'));
+    t.take();
+    expect(t.take()).toEqual({ signalWrites: 0, effectRuns: 0, signals: [] });
   });
 });
