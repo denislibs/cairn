@@ -122,6 +122,7 @@ export function Badge(props: BadgeProps): Instance {
       // Merge style override into the indicator's existing style
       (indicator as any).style = mergeStyles((indicator as any).style, props.style);
     }
+    indicator.debugName = 'Badge';
     return indicator;
   }
 
@@ -144,5 +145,6 @@ export function Badge(props: BadgeProps): Instance {
     (container as any).style = mergeStyles((container as any).style, props.style);
   }
 
+  container.debugName = 'Badge';
   return container;
 }

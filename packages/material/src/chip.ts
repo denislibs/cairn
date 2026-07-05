@@ -91,5 +91,7 @@ export function Chip(props: ChipProps): Instance {
     style: materialStyle,
   };
 
-  return HeadlessChip(headlessProps);
+  const inst = HeadlessChip(headlessProps);
+  inst.debugName = 'Chip';
+  return inst;
 }

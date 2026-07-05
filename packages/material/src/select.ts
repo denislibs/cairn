@@ -84,7 +84,9 @@ export function Select(props: SelectProps): Instance {
     children: childrenFactory,
   };
 
-  return HeadlessSelect(headlessProps);
+  const inst = HeadlessSelect(headlessProps);
+  inst.debugName = 'Select';
+  return inst;
 }
 
 // ─── Option ───────────────────────────────────────────────────────────────────
@@ -170,5 +172,6 @@ export function Option(props: OptionProps): Instance {
     optionSemantics.autoFocus = isActive();
   });
 
+  instance.debugName = 'SelectOption';
   return instance;
 }

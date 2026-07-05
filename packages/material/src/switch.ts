@@ -99,6 +99,7 @@ export function Switch(props: SwitchProps): Instance {
   const switchInstance = HeadlessSwitch(headlessProps);
 
   if (!props.label) {
+    switchInstance.debugName = 'Switch';
     return switchInstance;
   }
 
@@ -125,5 +126,6 @@ export function Switch(props: SwitchProps): Instance {
     style: { gap: 8, alignY: 'center' },
     children: [switchInstance, labelText],
   });
+  row.debugName = 'Switch';
   return row;
 }

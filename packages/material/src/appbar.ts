@@ -36,7 +36,7 @@ function AppBarTitle(props: AppBarTitleProps): Instance {
   const typ = t.typography.h6;
   const color = props.color ?? t.palette.primary.contrastText;
 
-  return Text({
+  const inst = Text({
     children: props.children ?? '',
     style: {
       color,
@@ -46,6 +46,8 @@ function AppBarTitle(props: AppBarTitleProps): Instance {
       letterSpacing: typ.letterSpacing,
     },
   });
+  inst.debugName = 'AppBarTitle';
+  return inst;
 }
 
 export function AppBar(props: AppBarProps): Instance {
@@ -95,6 +97,7 @@ export function AppBar(props: AppBarProps): Instance {
 
   inst.semantics = { role: 'navigation', label: 'App bar' };
 
+  inst.debugName = 'AppBar';
   return inst;
 }
 

@@ -48,5 +48,6 @@ export function Paper(props: PaperProps): Instance {
   // Material semantics: Paper is a grouping surface
   inst.role = 'group';
 
+  inst.debugName = 'Paper';
   return inst as Instance;
 }

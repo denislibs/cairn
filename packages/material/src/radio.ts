@@ -180,5 +180,6 @@ export function Radio(props: RadioProps): Instance {
     semantics: headless.semantics,
   };
 
+  inst.debugName = 'Radio';
   return inst;
 }

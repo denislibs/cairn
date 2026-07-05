@@ -91,6 +91,7 @@ export function LinearProgress(props: LinearProgressProps): Instance {
   });
 
   track.semantics = semantics;
+  track.debugName = 'LinearProgress';
   return track;
 }
 
@@ -187,5 +188,6 @@ export function CircularProgress(props: CircularProgressProps): Instance {
     },
   };
 
+  inst.debugName = 'CircularProgress';
   return inst;
 }
