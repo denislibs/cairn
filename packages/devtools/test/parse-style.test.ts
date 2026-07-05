@@ -11,7 +11,10 @@ describe('parseStyleValue', () => {
     expect(parseStyleValue('opacity', '0.5')).toEqual({ ok: true, value: 0.5 });
     expect(parseStyleValue('borderRadius', '6')).toEqual({ ok: true, value: 6 });
     expect(parseStyleValue('gap', '8')).toEqual({ ok: true, value: 8 });
-    expect(parseStyleValue('width', '250')).toEqual({ ok: true, value: 250 });
+  });
+  it('rejects width and height (not reliably editable in the real tree)', () => {
+    expect(parseStyleValue('width', '250px').ok).toBe(false);
+    expect(parseStyleValue('height', '10').ok).toBe(false);
   });
   it('parses padding shorthand', () => {
     expect(parseStyleValue('padding', '4')).toEqual({ ok: true, value: 4 });

@@ -279,7 +279,8 @@ export class Canvas2DRenderer implements Renderer {
 }
 
 function normalizeRadii(r: Radii): [number, number, number, number] {
-  return typeof r === 'number' ? [r, r, r, r] : [r.tl, r.tr, r.br, r.bl];
+  const c = (n: number) => (n > 0 ? n : 0);
+  return typeof r === 'number' ? [c(r), c(r), c(r), c(r)] : [c(r.tl), c(r.tr), c(r.br), c(r.bl)];
 }
 
 // Multiply the first px length (the font-size) in a CSS font string by `s`.

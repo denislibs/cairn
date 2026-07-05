@@ -21,6 +21,11 @@ describe('applyStyleOverride', () => {
     expect(out).toEqual({ backgroundColor: '#f00' });
     expect(base).toEqual({ backgroundColor: '#fff', opacity: 1 }); // base untouched
   });
+  it('disabled wins over patch for the same key', () => {
+    const base = { backgroundColor: '#fff' } as any;
+    const out = applyStyleOverride(base, { patch: { backgroundColor: '#f00' }, disabled: new Set(['backgroundColor']) });
+    expect(out.backgroundColor).toBeUndefined();
+  });
 });
 
 describe('override store reactivity', () => {

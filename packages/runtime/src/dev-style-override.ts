@@ -33,8 +33,8 @@ export function readStyleOverride(inst: Instance): StyleOverride | undefined {
 export function applyStyleOverride(base: BaseStyle, ovr: StyleOverride | undefined): BaseStyle {
   if (!ovr || (Object.keys(ovr.patch).length === 0 && ovr.disabled.size === 0)) return base;
   const out: Record<string, unknown> = { ...base };
-  for (const k of ovr.disabled) delete out[k];
   Object.assign(out, ovr.patch);
+  for (const k of ovr.disabled) delete out[k];
   return out as BaseStyle;
 }
 

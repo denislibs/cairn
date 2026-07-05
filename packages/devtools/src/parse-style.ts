@@ -1,7 +1,7 @@
 export type ParseResult = { ok: true; value: unknown } | { ok: false };
 
 const STRING_PROPS = new Set(['backgroundColor', 'color', 'font']);
-const NUMBER_PROPS = new Set(['opacity', 'borderRadius', 'gap', 'width', 'height']);
+const NUMBER_PROPS = new Set(['opacity', 'borderRadius', 'gap']);
 
 export const EDITABLE_PROPS: ReadonlySet<string> = new Set([...STRING_PROPS, ...NUMBER_PROPS, 'padding']);
 export function isEditableProp(prop: string): boolean { return EDITABLE_PROPS.has(prop); }

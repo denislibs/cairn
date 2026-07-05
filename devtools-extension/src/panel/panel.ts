@@ -76,7 +76,7 @@ function walkTree(node: SnapshotNode, depth: number): void {
   if (parent && isOpen(node.id)) for (const c of node.children) walkTree(c, depth + 1);
 }
 
-const EDITABLE = new Set(['backgroundColor','color','font','opacity','borderRadius','gap','width','height','padding']);
+const EDITABLE = new Set(['backgroundColor','color','font','opacity','borderRadius','gap','padding']);
 const isColor = (v: string) => /^#([0-9a-f]{3,8})$/i.test(v.trim()) || /^(rgb|hsl)/i.test(v.trim());
 const fmt = (v: unknown): string =>
   v !== null && typeof v === 'object' ? Object.values(v as Record<string, unknown>).join(' ') : String(v);
