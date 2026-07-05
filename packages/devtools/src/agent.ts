@@ -1,7 +1,7 @@
 import type { Instance } from '@cairn/runtime';
-import { setRuntimeDevHooks, activateStyleOverrides, setStyleProp, toggleStyleProp, removeStyleProp } from '@cairn/runtime';
+import { setRuntimeDevHooks, activateStyleOverrides, deactivateStyleOverrides, setStyleProp, toggleStyleProp, removeStyleProp } from '@cairn/runtime';
 import { instanceById } from './ids';
-import { parseStyleValue } from './parse-style';
+import { parseStyleValue, isEditableProp } from './parse-style';
 import type { AgentEvent, PanelCommand, DevtoolsHook, SnapshotNode, CommitMeta } from './protocol';
 import { DEVTOOLS_VERSION } from './protocol';
 import { serialize } from './serialize';
@@ -95,6 +95,7 @@ export function uninstallDevtools(): void {
   if (!state) return;
   state.why.stop();
   setRuntimeDevHooks(null);
+  deactivateStyleOverrides();
   if (state.pick) state.pick.stop();
   if (state.highlighter) state.highlighter.dispose();
   delete (globalThis as { __CAIRN_DEVTOOLS_HOOK__?: DevtoolsHook }).__CAIRN_DEVTOOLS_HOOK__;
@@ -137,12 +138,12 @@ function handleCommand(cmd: PanelCommand): void {
     }
     case 'toggle-style': {
       const inst = instanceById(cmd.id);
-      if (inst) toggleStyleProp(inst, cmd.prop, cmd.enabled);
+      if (inst && isEditableProp(cmd.prop)) toggleStyleProp(inst, cmd.prop, cmd.enabled);
       break;
     }
     case 'remove-style': {
       const inst = instanceById(cmd.id);
-      if (inst) removeStyleProp(inst, cmd.prop);
+      if (inst && isEditableProp(cmd.prop)) removeStyleProp(inst, cmd.prop);
       break;
     }
   }

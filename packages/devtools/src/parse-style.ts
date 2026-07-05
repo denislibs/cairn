@@ -3,8 +3,11 @@ export type ParseResult = { ok: true; value: unknown } | { ok: false };
 const STRING_PROPS = new Set(['backgroundColor', 'color', 'border', 'font']);
 const NUMBER_PROPS = new Set(['opacity', 'borderRadius', 'gap', 'width', 'height']);
 
+export const EDITABLE_PROPS: ReadonlySet<string> = new Set([...STRING_PROPS, ...NUMBER_PROPS, 'padding']);
+export function isEditableProp(prop: string): boolean { return EDITABLE_PROPS.has(prop); }
+
 function num(raw: string): number | null {
-  const m = raw.trim().match(/^-?\d+(?:\.\d+)?/);
+  const m = raw.trim().match(/^-?(?:\d+(?:\.\d+)?|\.\d+)$/);
   if (!m) return null;
   const n = parseFloat(m[0]);
   return Number.isNaN(n) ? null : n;

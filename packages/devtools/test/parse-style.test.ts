@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseStyleValue } from '../src/parse-style';
+import { parseStyleValue, isEditableProp } from '../src/parse-style';
 
 describe('parseStyleValue', () => {
   it('passes colors and font strings through', () => {
@@ -9,9 +9,9 @@ describe('parseStyleValue', () => {
   });
   it('parses numeric props', () => {
     expect(parseStyleValue('opacity', '0.5')).toEqual({ ok: true, value: 0.5 });
-    expect(parseStyleValue('borderRadius', '6px')).toEqual({ ok: true, value: 6 });
+    expect(parseStyleValue('borderRadius', '6')).toEqual({ ok: true, value: 6 });
     expect(parseStyleValue('gap', '8')).toEqual({ ok: true, value: 8 });
-    expect(parseStyleValue('width', '250px')).toEqual({ ok: true, value: 250 });
+    expect(parseStyleValue('width', '250')).toEqual({ ok: true, value: 250 });
   });
   it('parses padding shorthand', () => {
     expect(parseStyleValue('padding', '4')).toEqual({ ok: true, value: 4 });
@@ -22,5 +22,15 @@ describe('parseStyleValue', () => {
     expect(parseStyleValue('boxShadow', 'whatever').ok).toBe(false);
     expect(parseStyleValue('transform', 'x').ok).toBe(false);
     expect(parseStyleValue('opacity', 'abc').ok).toBe(false);
+  });
+  it('anchors numbers and accepts leading-dot decimals', () => {
+    expect(parseStyleValue('opacity', '0.5abc').ok).toBe(false);   // trailing garbage rejected
+    expect(parseStyleValue('opacity', '.5')).toEqual({ ok: true, value: 0.5 });
+    expect(parseStyleValue('width', '250xyz').ok).toBe(false);
+    expect(parseStyleValue('gap', '-4')).toEqual({ ok: true, value: -4 });
+  });
+  it('isEditableProp guards known props', () => {
+    expect(isEditableProp('backgroundColor')).toBe(true);
+    expect(isEditableProp('boxShadow')).toBe(false);
   });
 });

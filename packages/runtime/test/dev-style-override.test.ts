@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createRoot, createEffect } from '@cairn/reactivity';
 import type { Instance } from '../src/instance';
 import {
-  activateStyleOverrides, readStyleOverride, applyStyleOverride,
+  activateStyleOverrides, deactivateStyleOverrides, readStyleOverride, applyStyleOverride,
   setStyleProp, toggleStyleProp, removeStyleProp, clearStyleOverride,
 } from '../src/dev-style-override';
 
@@ -68,5 +68,15 @@ describe('override store reactivity', () => {
     expect(readStyleOverride(a)?.patch.opacity).toBeUndefined();
     clearStyleOverride(a);
     expect(readStyleOverride(a)).toBeUndefined();
+  });
+
+  it('deactivate restores the inert path', () => {
+    const a = inst();
+    activateStyleOverrides();
+    setStyleProp(a, 'opacity', 0.5);
+    expect(readStyleOverride(a)).toBeTruthy();
+    deactivateStyleOverrides();
+    expect(readStyleOverride(a)).toBeUndefined(); // inert again
+    activateStyleOverrides(); // restore for other tests in this file
   });
 });

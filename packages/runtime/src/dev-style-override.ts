@@ -18,6 +18,9 @@ export function activateStyleOverrides(): void {
   active = true;
 }
 
+/** Disable the override system (called by uninstallDevtools). Restores the inert path. */
+export function deactivateStyleOverrides(): void { active = false; }
+
 /** REACTIVE read — call inside a style bind. Returns the instance's override, or undefined.
  *  When inactive it returns immediately without subscribing (zero prod cost). */
 export function readStyleOverride(inst: Instance): StyleOverride | undefined {
