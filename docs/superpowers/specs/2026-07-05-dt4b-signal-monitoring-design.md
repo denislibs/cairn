@@ -59,7 +59,7 @@ export function devWriteSignal(node: SignalState<unknown>, value: unknown): void
 ### 4. Протокол (дополнения)
 
 - `SignalInfo { id: number; name?: string; value: string; type: 'number'|'string'|'boolean'|'other'; observers: number }`.
-- `AgentEvent` += `{ type: 'signals'; list: SignalInfo[] }` — агент шлёт после каждого коммита (лениво: только при наличии подписчиков) и по команде `get-signals`, и один раз на subscribe (после `hello`, как `get-snapshot`).
+- `AgentEvent` += `{ type: 'signals'; list: SignalInfo[] }` — агент шлёт после каждого коммита (лениво: только при наличии подписчиков) и по команде `get-signals`. (Реализация: агент не эмитит на subscribe сам — панель запрашивает `get-signals` по `hello`, симметрично `get-snapshot`; агент остаётся ленивым.)
 - `PanelCommand` += `{ type: 'set-signal'; id: number; value: string }` и `{ type: 'get-signals' }`.
 - Агент `handleCommand`: `set-signal` → `registry.resolve(id)` → `coerceSignalValue(node.value, cmd.value)` → при ok `devWriteSignal(node, value)` (иначе тихо игнор). `get-signals` → emit `{ type:'signals', list: registry.list() }`.
 
