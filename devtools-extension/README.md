@@ -25,3 +25,7 @@ Inspector panel for Cairn canvas apps.
       the node in the tree.
 - [ ] Interacting with the app (e.g. Increment) appends commit-log lines with
       signal/effect counts and marks changed nodes (orange outline).
+- [ ] Tree shows component names (Button/Card/Chip), not just Box/Row/Text.
+- [ ] Selecting a node shows a Style section (backgroundColor/padding/…).
+- [ ] Commit log lines show changed signal names (e.g. `signals:[count]`) and frame duration.
+- [ ] Profiler strip shows a bar per commit; taller = slower frame.
