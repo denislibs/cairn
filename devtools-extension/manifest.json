@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Cairn DevTools",
+  "version": "0.0.1",
+  "description": "Inspector for Cairn canvas apps.",
+  "devtools_page": "devtools.html",
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    { "matches": ["<all_urls>"], "js": ["content.js"], "run_at": "document_start" }
+  ],
+  "web_accessible_resources": [
+    { "resources": ["injected.js"], "matches": ["<all_urls>"] }
+  ],
+  "permissions": []
+}

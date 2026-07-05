@@ -4,6 +4,7 @@ import type { Host } from '@cairn/host';
 import type { LayoutContext } from '@cairn/layout';
 import { type Instance, paint } from './instance';
 import { setFrameRequester, flushAfterLayout, scheduleFrame } from './scheduler';
+import { emitCommit } from './devtools-hook';
 import { hostContext } from './host-context';
 import { createOverlayRegistry, overlayContext } from './overlays';
 import { collectSemantics } from './semantics';
@@ -57,6 +58,7 @@ export function mount(component: () => Instance, host: Host): () => void {
       paint(root, host.renderer);
       for (const o of list) paint(o, host.renderer);
       host.renderer.endFrame();
+      emitCommit(root, ctx.viewport);
     };
 
     // Build the tree first. Effects run now; scheduleFrame() no-ops because the

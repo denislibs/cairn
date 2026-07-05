@@ -23,6 +23,8 @@ export interface Instance {
   clipChildren?: Radii | null;
   transform?: TransformSpec | null;
   transformOrigin?: { x: number; y: number } | null;
+  /** Dev-only human-readable name for devtools; ignored in production. */
+  debugName?: string;
 }
 
 // Walk the instance tree, translating into each node's local coordinate space.

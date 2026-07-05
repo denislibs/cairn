@@ -1,0 +1,15 @@
+* { box-sizing: border-box; }
+body { margin: 0; font: 12px/1.5 -apple-system, sans-serif; color: #202124; }
+#toolbar { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-bottom: 1px solid #ddd; }
+#status { color: #5f6368; }
+#main { display: flex; height: calc(100vh - 33px); }
+#tree { flex: 1; overflow: auto; padding: 4px; }
+#side { width: 300px; border-left: 1px solid #ddd; overflow: auto; }
+#props, #log { padding: 8px; border-bottom: 1px solid #eee; }
+.row { white-space: pre; cursor: pointer; padding: 1px 4px; border-radius: 3px; }
+.row:hover { background: #eef3ff; }
+.row.selected { background: #d7e6ff; }
+.row.changed { outline: 1px solid #f9ab00; }
+.kv { display: flex; justify-content: space-between; gap: 8px; }
+.kv b { color: #5f6368; font-weight: 500; }
+.commit { font-variant-numeric: tabular-nums; color: #5f6368; }

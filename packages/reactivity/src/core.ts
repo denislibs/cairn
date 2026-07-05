@@ -4,6 +4,18 @@
 export type EqualsFn<T> = (prev: T, next: T) => boolean;
 export const defaultEquals = <T>(a: T, b: T): boolean => a === b;
 
+// ---- dev hooks (null in production; set only by @cairn/devtools) ----
+export interface ReactiveDevHooks {
+  onSignalCreate?(node: SignalState<unknown>): void;
+  onSignalWrite?(node: SignalState<unknown>, prev: unknown, next: unknown): void;
+  onComputationRun?(node: Computation<unknown>): void;
+}
+let devHooks: ReactiveDevHooks | null = null;
+export function setReactiveDevHooks(h: ReactiveDevHooks | null): void { devHooks = h; }
+export function runSignalCreateHook(node: SignalState<unknown>): void {
+  if (devHooks && devHooks.onSignalCreate) devHooks.onSignalCreate(node);
+}
+
 // ---- context ----
 export interface Context<T> {
   readonly id: symbol;
@@ -62,6 +74,7 @@ export function readSource<T>(node: SignalState<T>): T {
 
 export function writeSignal<T>(node: SignalState<T>, value: T): T {
   if (node.equals === false || !node.equals(node.value, value)) {
+    if (devHooks && devHooks.onSignalWrite) devHooks.onSignalWrite(node as SignalState<unknown>, node.value, value);
     node.value = value;
     const observers = node.observers;
     if (observers && observers.length) {
@@ -106,6 +119,7 @@ export function updateIfNecessary(node: Computation<any>): void {
 }
 
 function runComputation<T>(node: Computation<T>): void {
+  if (devHooks && devHooks.onComputationRun) devHooks.onComputationRun(node as Computation<unknown>);
   cleanNode(node);
   // Clear state BEFORE running fn. If fn writes one of this node's own
   // dependencies, markDirty must see a CLEAN node so it re-schedules this node

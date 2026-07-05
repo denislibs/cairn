@@ -5,3 +5,8 @@ dist/
 .idea/
 .playwright-mcp/
 .claude/worktrees/
+
+# Playwright
+test-results/
+playwright-report/
+/playwright/.cache/
