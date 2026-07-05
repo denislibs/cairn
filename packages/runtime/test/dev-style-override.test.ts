@@ -42,6 +42,21 @@ describe('override store reactivity', () => {
     expect(seen).toBe('#f00');
   });
 
+  it('toggle bumps only on a real change', () => {
+    const a = inst();
+    let runs = 0;
+    createRoot(() => { createEffect(() => { readStyleOverride(a); runs++; }); });
+    expect(runs).toBe(1);
+    toggleStyleProp(a, 'opacity', true); // not disabled → no-op, no bump
+    expect(runs).toBe(1);
+    toggleStyleProp(a, 'opacity', false); // real change → bump
+    expect(runs).toBe(2);
+    toggleStyleProp(a, 'opacity', false); // already disabled → no-op
+    expect(runs).toBe(2);
+    toggleStyleProp(a, 'opacity', true); // real change → bump
+    expect(runs).toBe(3);
+  });
+
   it('toggle disables/enables and remove/clear reset a prop', () => {
     const a = inst();
     setStyleProp(a, 'opacity', 0.5);

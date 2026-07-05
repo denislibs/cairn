@@ -46,7 +46,16 @@ export function setStyleProp(inst: Instance, prop: string, value: unknown): void
   const o = edit(inst); o.patch[prop] = value; o.disabled.delete(prop); bump();
 }
 export function toggleStyleProp(inst: Instance, prop: string, enabled: boolean): void {
-  const o = edit(inst); if (enabled) o.disabled.delete(prop); else o.disabled.add(prop); bump();
+  if (enabled) {
+    const o = store.get(inst);
+    if (!o || !o.disabled.has(prop)) return; // already enabled — nothing to do
+    o.disabled.delete(prop);
+  } else {
+    const o = edit(inst);
+    if (o.disabled.has(prop)) return; // already disabled — nothing to do
+    o.disabled.add(prop);
+  }
+  bump();
 }
 export function removeStyleProp(inst: Instance, prop: string): void {
   const o = store.get(inst); if (!o) return; delete o.patch[prop]; o.disabled.delete(prop); bump();
