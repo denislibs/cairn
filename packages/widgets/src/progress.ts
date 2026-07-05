@@ -79,5 +79,6 @@ export function Progress(props: ProgressProps): Instance {
 
   track.semantics = semantics;
   applyLayoutChildProps(track, props);
+  track.debugName = 'Progress';
   return track;
 }

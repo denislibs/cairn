@@ -158,6 +158,7 @@ export function Button(props: ButtonProps): Instance {
     });
     instance.semantics = semantics;
     applyLayoutChildProps(instance, props);
+    instance.debugName = 'Button';
     return instance;
   }
 
@@ -197,5 +198,6 @@ export function Button(props: ButtonProps): Instance {
 
   instance.semantics = semantics;
   applyLayoutChildProps(instance, props);
+  instance.debugName = 'Button';
   return instance;
 }

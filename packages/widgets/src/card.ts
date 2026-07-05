@@ -109,6 +109,7 @@ export function Card(props: CardProps = {}): Instance {
 
     instance.semantics = semantics;
     applyLayoutChildProps(instance, props);
+    instance.debugName = 'Card';
     return instance;
   }
 
@@ -128,5 +129,6 @@ export function Card(props: CardProps = {}): Instance {
 
   instance.semantics = semantics;
   applyLayoutChildProps(instance, props);
+  instance.debugName = 'Card';
   return instance;
 }

@@ -168,6 +168,7 @@ function DrawerRoot(props: DrawerProps): Instance {
     if (open()) portalContent();
   });
 
+  inline.debugName = 'Drawer';
   return inline;
 }
 
@@ -221,6 +222,7 @@ function DrawerTrigger(props: DrawerTriggerProps): Instance {
   });
 
   trigger.semantics = triggerSemantics;
+  trigger.debugName = 'DrawerTrigger';
   return trigger;
 }
 
@@ -242,7 +244,9 @@ function DrawerContent(props: DrawerContentProps): Instance {
       children: [child],
     });
   });
-  return Box({ style: { width: 0, height: 0 } });
+  const inst = Box({ style: { width: 0, height: 0 } });
+  inst.debugName = 'DrawerContent';
+  return inst;
 }
 
 // ─── Drawer.Title ─────────────────────────────────────────────────────────────
@@ -260,7 +264,7 @@ function DrawerTitle(props: DrawerTitleProps): Instance {
     ctx.setTitle(props.children);
   });
 
-  return Text({
+  const inst = Text({
     style: mergeStyles(
       () => ({
         color: theme.colors.text,
@@ -271,6 +275,8 @@ function DrawerTitle(props: DrawerTitleProps): Instance {
     ),
     children: props.children,
   });
+  inst.debugName = 'DrawerTitle';
+  return inst;
 }
 
 // ─── Drawer.Close ─────────────────────────────────────────────────────────────
@@ -317,6 +323,7 @@ function DrawerClose(props: DrawerCloseProps): Instance {
   });
 
   btn.semantics = closeSemantics;
+  btn.debugName = 'DrawerClose';
   return btn;
 }
 

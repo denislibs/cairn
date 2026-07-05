@@ -122,5 +122,6 @@ export function Switch(props: SwitchProps): Instance {
 
   instance.semantics = semantics;
   applyLayoutChildProps(instance, props);
+  instance.debugName = 'Switch';
   return instance;
 }

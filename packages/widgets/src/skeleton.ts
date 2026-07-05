@@ -40,5 +40,6 @@ export function Skeleton(props: SkeletonProps = {}): Instance {
   instance.semantics = sem;
 
   applyLayoutChildProps(instance, props);
+  instance.debugName = 'Skeleton';
   return instance;
 }

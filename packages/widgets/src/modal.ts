@@ -14,7 +14,7 @@ export function Modal(props: ModalProps): Instance {
     typeof props.open === 'function' ? (props.open as Accessor<boolean>)() : props.open;
   const close = (): void => props.onClose?.();
 
-  return Show({
+  const inst = Show({
     when: isOpen,
     children: () =>
       Portal({
@@ -36,4 +36,6 @@ export function Modal(props: ModalProps): Instance {
         }),
       }),
   }) as unknown as Instance;
+  inst.debugName = 'Modal';
+  return inst;
 }

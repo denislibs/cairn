@@ -212,5 +212,6 @@ export function Slider(props: SliderProps): Instance {
 
   wrapper.semantics = semantics;
   applyLayoutChildProps(wrapper, props);
+  wrapper.debugName = 'Slider';
   return wrapper;
 }

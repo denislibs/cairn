@@ -105,6 +105,7 @@ export function Tabs(props: TabsProps): TabsInstance {
   };
 
   applyLayoutChildProps(instance, props);
+  instance.debugName = 'Tabs';
   return instance;
 }
 
@@ -143,6 +144,7 @@ Tabs.List = function TabsList(props: TabsListProps): Instance {
   const sem: SemanticsNode = { role: 'tablist' };
   container.semantics = sem;
   applyLayoutChildProps(container, props);
+  container.debugName = 'TabList';
   return container;
 };
 
@@ -219,6 +221,7 @@ Tabs.Tab = function Tab(props: TabProps): Instance {
 
   instance.semantics = sem;
   applyLayoutChildProps(instance, props);
+  instance.debugName = 'Tab';
   return instance;
 };
 
@@ -238,5 +241,6 @@ Tabs.Panel = function TabsPanel(props: TabsPanelProps): Instance {
   createEffect(() => { sem.role = isShown() ? 'tabpanel' : 'none'; });
   shown.semantics = sem;
   applyLayoutChildProps(shown, props);
+  shown.debugName = 'TabPanel';
   return shown;
 };

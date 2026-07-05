@@ -151,6 +151,7 @@ export function RadioGroup(props: RadioGroupProps): RadioGroupInstance {
 
   instance.semantics = groupSemantics;
   applyLayoutChildProps(instance, props);
+  instance.debugName = 'RadioGroup';
   return instance;
 }
 
@@ -307,5 +308,6 @@ export function Radio(props: RadioProps): Instance {
 
   instance.semantics = semantics;
   applyLayoutChildProps(instance, props);
+  instance.debugName = 'Radio';
   return instance;
 }

@@ -286,6 +286,7 @@ export function Select(props: SelectProps): Instance {
     if (open()) portalContent();
   });
 
+  trigger.debugName = 'Select';
   return trigger;
 }
 
@@ -379,5 +380,6 @@ export function Option(props: OptionProps): Instance {
     optionSemantics.autoFocus = isActive();
   });
 
+  instance.debugName = 'SelectOption';
   return instance;
 }

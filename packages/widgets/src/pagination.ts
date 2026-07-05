@@ -140,5 +140,6 @@ export function Pagination(props: PaginationProps): Instance {
   const navSem: SemanticsNode = { role: 'navigation', label: 'Pagination' };
   container.semantics = navSem;
   applyLayoutChildProps(container, props);
+  container.debugName = 'Pagination';
   return container;
 }

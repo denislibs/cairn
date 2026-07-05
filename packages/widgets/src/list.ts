@@ -83,6 +83,7 @@ export function List(props: ListProps): ListInstance {
     _ctx: ctx,
   };
 
+  instance.debugName = 'List';
   return instance;
 }
 
@@ -144,6 +145,7 @@ List.Item = function ListItem(props: ListItemProps): Instance {
 
     instance.semantics = sem;
     applyLayoutChildProps(instance, props);
+    instance.debugName = 'ListItem';
     return instance;
   }
 
@@ -161,5 +163,6 @@ List.Item = function ListItem(props: ListItemProps): Instance {
 
   instance.semantics = sem;
   applyLayoutChildProps(instance, props);
+  instance.debugName = 'ListItem';
   return instance;
 };
