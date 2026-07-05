@@ -138,6 +138,81 @@ function beginAdd(): void {
   send({ type: 'set-style', id: selected!, prop: name.trim(), value });
 }
 
-function renderSignals(): void {}
-function renderSpark(): void {}
-function renderPerf(): void {}
+function renderSignals(): void {
+  const seen = new Map<number, { id: number; name?: string; count: number }>();
+  for (const m of commitLog) for (const s of m.signals) {
+    const e = seen.get(s.id) ?? { id: s.id, name: s.name, count: 0 };
+    e.count++; if (s.name) e.name = s.name; seen.set(s.id, e);
+  }
+  const arr = [...seen.values()].sort((a, b) => b.count - a.count);
+  $('sigN').textContent = `(${arr.length})`;
+  sigList.replaceChildren();
+  if (arr.length === 0) {
+    const e = document.createElement('div'); e.className = 'sig'; e.style.color = 'var(--ink-faint)';
+    e.textContent = 'No signal writes captured yet — interact with the app.'; sigList.appendChild(e); return;
+  }
+  for (const s of arr) {
+    const row = document.createElement('div'); row.className = 'sig';
+    const dot = document.createElement('span'); dot.className = 'dot';
+    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = s.name ?? `#${s.id}`;
+    const drives = document.createElement('span'); drives.className = 'drives';
+    drives.textContent = `${s.count} commit${s.count !== 1 ? 's' : ''}`;
+    row.append(dot, nm, drives);
+    sigList.appendChild(row);
+  }
+}
+
+function renderSpark(): void {
+  const max = Math.max(1, ...commitLog.map((m) => m.signalWrites + m.effectRuns));
+  sparkEl.replaceChildren();
+  for (const m of commitLog.slice(-16)) {
+    const total = m.signalWrites + m.effectRuns;
+    const bar = document.createElement('div'); bar.className = 'bar' + (total === 0 ? ' empty' : '');
+    if (total > 0) {
+      const e = document.createElement('span'); e.className = 'e'; e.style.height = `${Math.round(m.effectRuns / max * 40)}px`;
+      const s = document.createElement('span'); s.className = 's'; s.style.height = `${Math.round(m.signalWrites / max * 40)}px`;
+      bar.append(e, s);
+    }
+    sparkEl.appendChild(bar);
+  }
+}
+
+function statEl(v: string, sub: string, k: string, cls: string): HTMLElement {
+  const s = document.createElement('div'); s.className = 'stat';
+  const val = document.createElement('div'); val.className = 'v' + (cls ? ' ' + cls : ''); val.textContent = v;
+  if (sub) { const sm = document.createElement('small'); sm.textContent = sub; val.appendChild(sm); }
+  const key = document.createElement('div'); key.className = 'k'; key.textContent = k;
+  s.append(val, key); return s;
+}
+function renderPerf(): void {
+  const budget = 16.7;
+  const frames = commitLog.map((m) => m.durationMs);
+  const avg = frames.length ? frames.reduce((a, b) => a + b, 0) / frames.length : 0;
+  const worst = frames.length ? Math.max(...frames) : 0;
+  const jank = frames.filter((d) => d > budget).length;
+  const totalEff = commitLog.reduce((a, m) => a + m.effectRuns, 0);
+
+  const stats = $('perfStats'); stats.replaceChildren();
+  stats.append(
+    statEl(avg.toFixed(1), 'ms', 'avg commit', avg > budget ? 'warn' : 'good'),
+    statEl(worst.toFixed(1), 'ms', 'slowest frame', worst > budget ? 'bad' : 'good'),
+    statEl(String(jank), '', 'frames over budget', jank ? 'warn' : 'good'),
+    statEl(String(totalEff), '', 'effects run', ''),
+  );
+
+  const maxMs = Math.max(budget * 1.4, ...frames, 1);
+  const fps = $('fps'); fps.replaceChildren();
+  for (const d of frames.slice(-60)) {
+    const bar = document.createElement('div');
+    bar.className = 'frame' + (d > budget ? ' jank' : d > budget * 0.6 ? ' slow' : '');
+    bar.style.height = `${Math.max(4, d / maxMs * 60)}px`; bar.title = `${d.toFixed(1)}ms`;
+    fps.appendChild(bar);
+  }
+  $('perfRange').textContent = `last ${frames.length} commits`;
+
+  const flame = $('flame'); flame.replaceChildren();
+  const note = document.createElement('div'); note.className = 'tip';
+  note.textContent = 'Per-effect flame chart arrives in a later cycle (needs effect→node attribution).';
+  flame.appendChild(note);
+  $('flameScale').replaceChildren();
+}
