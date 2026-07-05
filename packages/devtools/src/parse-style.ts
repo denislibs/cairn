@@ -1,6 +1,6 @@
 export type ParseResult = { ok: true; value: unknown } | { ok: false };
 
-const STRING_PROPS = new Set(['backgroundColor', 'color', 'border', 'font']);
+const STRING_PROPS = new Set(['backgroundColor', 'color', 'font']);
 const NUMBER_PROPS = new Set(['opacity', 'borderRadius', 'gap', 'width', 'height']);
 
 export const EDITABLE_PROPS: ReadonlySet<string> = new Set([...STRING_PROPS, ...NUMBER_PROPS, 'padding']);

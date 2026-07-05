@@ -76,16 +76,16 @@ function walkTree(node: SnapshotNode, depth: number): void {
   if (parent && isOpen(node.id)) for (const c of node.children) walkTree(c, depth + 1);
 }
 
-const EDITABLE = new Set(['backgroundColor','color','border','font','opacity','borderRadius','gap','width','height','padding']);
+const EDITABLE = new Set(['backgroundColor','color','font','opacity','borderRadius','gap','width','height','padding']);
 const isColor = (v: string) => /^#([0-9a-f]{3,8})$/i.test(v.trim()) || /^(rgb|hsl)/i.test(v.trim());
 const fmt = (v: unknown): string =>
-  typeof v === 'object' && v ? JSON.stringify(v).replace(/[{}"]/g, '').replace(/,/g, ' ').replace(/:/g, ' ') : String(v);
+  v !== null && typeof v === 'object' ? Object.values(v as Record<string, unknown>).join(' ') : String(v);
 
-function declRow(prop: string, v: unknown, editable: boolean): HTMLElement {
+function declRow(prop: string, v: unknown, editable: boolean, nodeId: number): HTMLElement {
   const row = document.createElement('div'); row.className = 'decl';
   if (editable) {
     const chk = document.createElement('input'); chk.type = 'checkbox'; chk.className = 'chk'; chk.checked = true;
-    chk.onchange = () => send({ type: 'toggle-style', id: selected!, prop, enabled: chk.checked });
+    chk.onchange = () => send({ type: 'toggle-style', id: nodeId, prop, enabled: chk.checked });
     row.appendChild(chk);
   }
   const p = document.createElement('span'); p.className = 'prop'; p.textContent = prop;
@@ -97,7 +97,7 @@ function declRow(prop: string, v: unknown, editable: boolean): HTMLElement {
   if (editable && EDITABLE.has(prop)) {
     val.contentEditable = 'true';
     val.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); (val as HTMLElement).blur(); } };
-    val.onblur = () => send({ type: 'set-style', id: selected!, prop, value: val.textContent || '' });
+    val.onblur = () => send({ type: 'set-style', id: nodeId, prop, value: val.textContent || '' });
   }
   const semi = document.createElement('span'); semi.className = 'semi'; semi.textContent = ';';
   row.append(val, semi);
@@ -110,7 +110,7 @@ function styleRule(node: SnapshotNode, editable: boolean): HTMLElement {
   sel.textContent = editable ? node.name : `computed for ${node.name}`;
   const open = document.createElement('span'); open.className = 'brace'; open.textContent = ' {';
   rule.append(sel, open);
-  for (const [pr, v] of Object.entries(node.style ?? {})) rule.appendChild(declRow(pr, v, editable));
+  for (const [pr, v] of Object.entries(node.style ?? {})) rule.appendChild(declRow(pr, v, editable, node.id));
   if (editable) {
     const add = document.createElement('div'); add.className = 'addrow'; add.textContent = '+ add property';
     add.onclick = beginAdd; rule.appendChild(add);
@@ -163,9 +163,10 @@ function renderSignals(): void {
 }
 
 function renderSpark(): void {
-  const max = Math.max(1, ...commitLog.map((m) => m.signalWrites + m.effectRuns));
+  const visible = commitLog.slice(-16);
+  const max = Math.max(1, ...visible.map((m) => m.signalWrites + m.effectRuns));
   sparkEl.replaceChildren();
-  for (const m of commitLog.slice(-16)) {
+  for (const m of visible) {
     const total = m.signalWrites + m.effectRuns;
     const bar = document.createElement('div'); bar.className = 'bar' + (total === 0 ? ' empty' : '');
     if (total > 0) {

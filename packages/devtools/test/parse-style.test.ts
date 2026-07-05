@@ -33,4 +33,11 @@ describe('parseStyleValue', () => {
     expect(isEditableProp('backgroundColor')).toBe(true);
     expect(isEditableProp('boxShadow')).toBe(false);
   });
+  it('border is not editable and does not parse', () => {
+    expect(isEditableProp('border')).toBe(false);
+    expect(parseStyleValue('border', '1px solid #000').ok).toBe(false);
+  });
+  it('padding 4-token round-trips correctly', () => {
+    expect(parseStyleValue('padding', '4 8 4 8')).toEqual({ ok: true, value: { top: 4, right: 8, bottom: 4, left: 8 } });
+  });
 });
