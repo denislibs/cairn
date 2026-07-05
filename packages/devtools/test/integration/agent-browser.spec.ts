@@ -17,6 +17,36 @@ test('agent hook emits a commit snapshot', async ({ page }) => {
   expect(result.hasChildren).toBe(true);
 });
 
+test('tree shows material component names', async ({ page }) => {
+  await page.goto('/');
+  const names = await page.evaluate(() => {
+    const hook = (window as any).__CAIRN_DEVTOOLS_HOOK__;
+    const evts: any[] = []; hook.subscribe((e: any) => evts.push(e));
+    hook.send({ type: 'get-snapshot' });
+    const commit = evts.find((e) => e.type === 'commit');
+    const out: string[] = [];
+    const walk = (n: any) => { out.push(n.name); n.children.forEach(walk); };
+    if (commit) walk(commit.snapshot);
+    return out;
+  });
+  expect(names).toContain('Button');
+});
+
+test('nodes carry resolved style', async ({ page }) => {
+  await page.goto('/');
+  const hasStyle = await page.evaluate(() => {
+    const hook = (window as any).__CAIRN_DEVTOOLS_HOOK__;
+    const evts: any[] = []; hook.subscribe((e: any) => evts.push(e));
+    hook.send({ type: 'get-snapshot' });
+    const commit = evts.find((e) => e.type === 'commit');
+    let found = false;
+    const walk = (n: any) => { if (n.style && (n.style.backgroundColor || n.style.padding)) found = true; n.children.forEach(walk); };
+    if (commit) walk(commit.snapshot);
+    return found;
+  });
+  expect(hasStyle).toBe(true);
+});
+
 test('pick highlights a node on canvas hover', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => {
