@@ -103,8 +103,8 @@ export function Accordion(props: AccordionProps): AccordionInstance {
     _ctx: ctx,
   };
 
-  instance.debugName = 'Accordion';
   applyLayoutChildProps(instance, props);
+  instance.debugName = 'Accordion';
   return instance;
 }
 
