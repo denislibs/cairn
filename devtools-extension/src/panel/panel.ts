@@ -1,4 +1,4 @@
-import type { AgentEvent, PanelCommand, SnapshotNode, CommitMeta } from '@cairn/devtools';
+import type { AgentEvent, PanelCommand, SnapshotNode, CommitMeta, SignalInfo } from '@cairn/devtools';
 
 const $ = (id: string) => document.getElementById(id)!;
 const treeEl = $('tree'), stylesPane = $('stylesPane'), computedPane = $('computedPane');
@@ -9,6 +9,7 @@ let selected: number | null = null;
 let changedIds = new Set<number>();
 const openState = new Map<number, boolean>();   // id -> expanded (default true)
 const commitLog: CommitMeta[] = [];
+let signals: SignalInfo[] = [];
 
 const port = chrome.runtime.connect({ name: 'cairn-panel' });
 port.postMessage({ tabId: chrome.devtools.inspectedWindow.tabId });
@@ -16,13 +17,16 @@ port.onMessage.addListener((e: AgentEvent) => handleEvent(e));
 function send(command: PanelCommand): void { port.postMessage({ command }); }
 
 function handleEvent(e: AgentEvent): void {
-  if (e.type === 'hello') { send({ type: 'get-snapshot' }); return; }
+  if (e.type === 'hello') { send({ type: 'get-snapshot' }); send({ type: 'get-signals' }); return; }
   if (e.type === 'commit') {
     snapshot = e.snapshot;
     changedIds = new Set(e.changed.map((c) => c.id));
     commitLog.push(e.meta); if (commitLog.length > 60) commitLog.shift();
     if (selected == null) selected = snapshot.id;
-    renderTree(); renderStyles(); renderComputed(); renderSignals(); renderSpark();
+    renderTree(); renderStyles(); renderComputed(); renderSpark();
+  } else if (e.type === 'signals') {
+    signals = e.list;
+    renderSignals();
   } else if (e.type === 'selection') {
     selected = e.id; renderTree(); renderStyles(); renderComputed();
   }
@@ -139,25 +143,27 @@ function beginAdd(): void {
 }
 
 function renderSignals(): void {
-  const seen = new Map<number, { id: number; name?: string; count: number }>();
-  for (const m of commitLog) for (const s of m.signals) {
-    const e = seen.get(s.id) ?? { id: s.id, name: s.name, count: 0 };
-    e.count++; if (s.name) e.name = s.name; seen.set(s.id, e);
-  }
-  const arr = [...seen.values()].sort((a, b) => b.count - a.count);
-  $('sigN').textContent = `(${arr.length})`;
+  const sigN = document.getElementById('sigN');
+  if (sigN) sigN.textContent = `(${signals.length})`;
   sigList.replaceChildren();
-  if (arr.length === 0) {
+  if (signals.length === 0) {
     const e = document.createElement('div'); e.className = 'sig'; e.style.color = 'var(--ink-faint)';
-    e.textContent = 'No signal writes captured yet — interact with the app.'; sigList.appendChild(e); return;
+    e.textContent = 'No signals yet — interact with the app.'; sigList.appendChild(e); return;
   }
-  for (const s of arr) {
+  for (const s of signals) {
     const row = document.createElement('div'); row.className = 'sig';
     const dot = document.createElement('span'); dot.className = 'dot';
     const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = s.name ?? `#${s.id}`;
+    const eq = document.createElement('span'); eq.className = 'eq'; eq.textContent = '=';
+    const vv = document.createElement('span'); vv.className = 'vv'; vv.textContent = s.type === 'string' ? `"${s.value}"` : s.value;
+    if (s.type !== 'other') {
+      vv.contentEditable = 'true';
+      vv.onkeydown = (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); (vv as HTMLElement).blur(); } };
+      vv.onblur = () => send({ type: 'set-signal', id: s.id, value: vv.textContent || '' });
+    }
     const drives = document.createElement('span'); drives.className = 'drives';
-    drives.textContent = `${s.count} commit${s.count !== 1 ? 's' : ''}`;
-    row.append(dot, nm, drives);
+    drives.textContent = `${s.observers} eff`;
+    row.append(dot, nm, eq, vv, drives);
     sigList.appendChild(row);
   }
 }

@@ -1,5 +1,6 @@
 import type { Instance } from '@cairn/runtime';
 import { setRuntimeDevHooks, activateStyleOverrides, deactivateStyleOverrides, setStyleProp, toggleStyleProp, removeStyleProp } from '@cairn/runtime';
+import { setReactiveDevHooks, devWriteSignal } from '@cairn/reactivity';
 import { instanceById } from './ids';
 import { parseStyleValue, isEditableProp } from './parse-style';
 import type { AgentEvent, PanelCommand, DevtoolsHook, SnapshotNode, CommitMeta } from './protocol';
@@ -8,6 +9,8 @@ import { serialize } from './serialize';
 import { diffSnapshots } from './diff';
 import { CommitLog } from './commit-log';
 import { WhyFrameTracker } from './why-frame';
+import { SignalRegistry } from './signal-registry';
+import { coerceSignalValue } from './signal-value';
 import { findNode } from './find';
 import { Highlighter } from './highlight';
 import { PickController } from './pick';
@@ -21,6 +24,7 @@ interface AgentState {
   subscribers: Set<(e: AgentEvent) => void>;
   log: CommitLog;
   why: WhyFrameTracker;
+  registry: SignalRegistry;
   last: SnapshotNode | null;
   lastRoot: Instance | null;
   lastMeta: CommitMeta | null;
@@ -31,6 +35,7 @@ interface AgentState {
 }
 
 let state: AgentState | null = null;
+let suppressSignalWrite = false;
 
 export function installDevtools(opts: DevtoolsOptions = {}): void {
   if (state) return; // idempotent
@@ -40,6 +45,7 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
     subscribers: new Set(),
     log: new CommitLog(),
     why,
+    registry: new SignalRegistry(),
     last: null,
     lastRoot: null,
     lastMeta: null,
@@ -50,7 +56,11 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
   };
   state = s;
 
-  why.start();
+  setReactiveDevHooks({
+    onSignalCreate: (n) => { s.registry.note(n as any); },
+    onSignalWrite: (n) => { if (!suppressSignalWrite) why.noteWrite(n as object); },
+    onComputationRun: (n) => why.noteEffectRun(n as object),
+  });
   activateStyleOverrides();
 
   if (opts.canvas) {
@@ -75,6 +85,7 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
       if (s.pick) s.pick.update(snapshot);
       s.lastMeta = { frame: s.frame, ...counts, durationMs };
       emit({ type: 'commit', snapshot, changed, meta: s.lastMeta });
+      emitSignals();
     },
   });
 
@@ -93,7 +104,7 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
 
 export function uninstallDevtools(): void {
   if (!state) return;
-  state.why.stop();
+  setReactiveDevHooks(null);
   setRuntimeDevHooks(null);
   deactivateStyleOverrides();
   if (state.pick) state.pick.stop();
@@ -105,6 +116,11 @@ export function uninstallDevtools(): void {
 function emit(e: AgentEvent): void {
   if (!state) return;
   for (const cb of state.subscribers) cb(e);
+}
+
+function emitSignals(): void {
+  if (!state || state.subscribers.size === 0) return;
+  emit({ type: 'signals', list: state.registry.list() });
 }
 
 function highlight(id: number | null): void {
@@ -144,6 +160,16 @@ function handleCommand(cmd: PanelCommand): void {
     case 'remove-style': {
       const inst = instanceById(cmd.id);
       if (inst && isEditableProp(cmd.prop)) removeStyleProp(inst, cmd.prop);
+      break;
+    }
+    case 'get-signals': emitSignals(); break;
+    case 'set-signal': {
+      const node = state.registry.resolve(cmd.id);
+      if (node) {
+        const r = coerceSignalValue(node.value, cmd.value);
+        if (r.ok) { suppressSignalWrite = true; try { devWriteSignal(node as any, r.value); } finally { suppressSignalWrite = false; } }
+      }
+      emitSignals();
       break;
     }
   }

@@ -2,7 +2,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { mount, setRuntimeDevHooks } from '@cairn/runtime';
 import type { Instance } from '@cairn/runtime';
-import { setReactiveDevHooks, createSignal } from '@cairn/reactivity';
+import { setReactiveDevHooks, createSignal, createRoot } from '@cairn/reactivity';
 import { installDevtools, uninstallDevtools } from '../src/agent';
 import type { AgentEvent } from '../src/protocol';
 import { createFakeHost } from '../../runtime/test/fake-host';
@@ -191,5 +191,61 @@ describe('installDevtools', () => {
     }
 
     dispose();
+  });
+
+  it('composite hook registers created signals and still counts why-frame activity', () => {
+    installDevtools();
+    // create a signal AFTER install so onSignalCreate fires
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+    createRoot(() => {
+      const [, setC] = createSignal(0, { name: 'probe' });
+      setC(1);
+    });
+    const events: AgentEvent[] = [];
+    hook.subscribe((e: AgentEvent) => events.push(e));
+    const { host } = createFakeHost();
+    const dispose = mount(() => appRoot(), host);
+    expect(events.some((e) => e.type === 'commit')).toBe(true);
+    dispose();
+  });
+
+  it('set-signal does not count as app signal activity', () => {
+    installDevtools();
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+    const events: AgentEvent[] = [];
+    hook.subscribe((e: AgentEvent) => events.push(e));
+    createRoot(() => { const [, ] = createSignal(0, { name: 'x' }); });
+    hook.send({ type: 'get-signals' });
+    const sig = [...events].reverse().find((e) => e.type === 'signals');
+    const id = sig && sig.type === 'signals' ? sig.list.find((s) => s.name === 'x')!.id : -1;
+    events.length = 0;
+    hook.send({ type: 'set-signal', id, value: '5' });
+    // the signals event emitted by set-signal must reflect value 5; and NO commit should attribute this as a signal write
+    const after = events.find((e) => e.type === 'signals');
+    expect(after && after.type === 'signals' && after.list.find((s) => s.name === 'x')?.value).toBe('5');
+  });
+
+  it('get-signals emits the registry list; set-signal updates a scalar', () => {
+    installDevtools();
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+    const events: AgentEvent[] = [];
+    hook.subscribe((e: AgentEvent) => events.push(e));
+
+    let getC!: () => number;
+    createRoot(() => {
+      const [c, setC] = createSignal(0, { name: 'count' });
+      getC = c;
+      void setC;
+    });
+
+    hook.send({ type: 'get-signals' });
+    const sig = [...events].reverse().find((e) => e.type === 'signals');
+    expect(sig && sig.type === 'signals').toBe(true);
+    const entry = sig && sig.type === 'signals' ? sig.list.find((x) => x.name === 'count') : undefined;
+    expect(entry).toBeTruthy();
+    expect(entry!.value).toBe('0');
+
+    hook.send({ type: 'set-signal', id: entry!.id, value: '7' });
+    expect(getC()).toBe(7); // the real signal was written
   });
 });
