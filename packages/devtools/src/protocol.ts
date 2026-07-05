@@ -25,7 +25,14 @@ export interface SnapshotNode {
 }
 
 export interface ChangedNode { id: number; fields: string[] }
-export interface CommitMeta { frame: number; signalWrites: number; effectRuns: number }
+export interface SignalRef { id: number; name?: string }
+export interface CommitMeta {
+  frame: number;
+  signalWrites: number;
+  effectRuns: number;
+  signals: SignalRef[];
+  durationMs: number;
+}
 
 export type AgentEvent =
   | { type: 'hello'; version: string }

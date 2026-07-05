@@ -125,6 +125,19 @@ describe('installDevtools', () => {
     expect(snapshot?.name).toBe('Box');
   });
 
+  it('commit meta includes signals array and durationMs field', () => {
+    installDevtools();
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+    const events: AgentEvent[] = [];
+    hook.subscribe((e: AgentEvent) => events.push(e));
+    const { host } = createFakeHost();
+    const dispose = mount(() => appRoot(), host);
+    const commit = events.find((e) => e.type === 'commit');
+    expect(commit && commit.type === 'commit' && Array.isArray(commit.meta.signals)).toBe(true);
+    expect(commit && commit.type === 'commit' && typeof commit.meta.durationMs).toBe('number');
+    dispose();
+  });
+
   it('get-snapshot reply carries the real last-frame meta, not hardcoded zeros', () => {
     installDevtools();
     const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
