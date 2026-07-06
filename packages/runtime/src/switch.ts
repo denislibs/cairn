@@ -1,4 +1,5 @@
 import { createEffect, createMemo, createRoot, onCleanup, untrack } from '@cairn/reactivity';
+import { runWithDevOwner } from './dev-owner';
 import { BoxNode } from '@cairn/layout';
 import { type Instance } from './instance';
 import { scheduleFrame } from './scheduler';
@@ -40,7 +41,7 @@ export function Switch(props: SwitchProps): Instance {
     return -1;
   });
 
-  createEffect(() => {
+  runWithDevOwner(instance, 'switch', () => createEffect(() => {
     const idx = chosen();
     if (scope) {
       scope();
@@ -57,7 +58,7 @@ export function Switch(props: SwitchProps): Instance {
       );
     }
     setChild(child);
-  });
+  }));
 
   onCleanup(() => {
     if (scope) scope();

@@ -1,8 +1,12 @@
 import { describe, it, expect, afterEach } from 'vitest';
+import { createRoot } from '@cairn/reactivity';
+import { setReactiveDevHooks } from '@cairn/reactivity';
 import type { Instance } from '../src/instance';
 import { runWithDevOwner, getDevOwner, activateDevOwner, deactivateDevOwner } from '../src/dev-owner';
+import { For, Switch, Match } from '../src/index';
+import { setFrameRequester } from '../src/index';
 
-afterEach(() => deactivateDevOwner());
+afterEach(() => { setReactiveDevHooks(null); deactivateDevOwner(); setFrameRequester(null); });
 
 function inst(): Instance {
   return { layout: { offsetX: 0, offsetY: 0, size: { w: 0, h: 0 } } as any, children: [], paintSelf() {} };
@@ -37,5 +41,37 @@ describe('dev-owner', () => {
     });
     expect(inner).toEqual({ inst: b, label: 'b' });
     expect(afterInner).toEqual({ inst: a, label: 'a' });
+  });
+});
+
+describe('control-flow effect attribution', () => {
+  it("For's structural effect runs under its own dev owner (label === 'for')", () => {
+    setFrameRequester(() => {});
+    activateDevOwner();
+    const owners: Array<{ inst: unknown; label: string } | null> = [];
+    setReactiveDevHooks({
+      onComputationRun: (n) => { if ((n as { isEffect?: boolean }).isEffect) owners.push(getDevOwner()); },
+    });
+    let forInst: Instance | undefined;
+    createRoot(() => {
+      forInst = For({ each: () => [], children: () => ({ layout: {} as any, children: [], paintSelf() {} }) });
+    });
+    const hit = owners.find((o) => o && o.inst === forInst && o.label === 'for');
+    expect(hit).toBeTruthy();
+  });
+
+  it("Switch's structural effect runs under its own dev owner (label === 'switch')", () => {
+    setFrameRequester(() => {});
+    activateDevOwner();
+    const owners: Array<{ inst: unknown; label: string } | null> = [];
+    setReactiveDevHooks({
+      onComputationRun: (n) => { if ((n as { isEffect?: boolean }).isEffect) owners.push(getDevOwner()); },
+    });
+    let switchInst: Instance | undefined;
+    createRoot(() => {
+      switchInst = Switch({ children: Match({ when: () => false, children: () => ({ layout: {} as any, children: [], paintSelf() {} }) }) });
+    });
+    const hit = owners.find((o) => o && o.inst === switchInst && o.label === 'switch');
+    expect(hit).toBeTruthy();
   });
 });
