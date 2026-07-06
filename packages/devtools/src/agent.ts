@@ -173,6 +173,20 @@ function handleCommand(cmd: PanelCommand): void {
       break;
     }
     case 'get-signals': emitSignals(); break;
+    case 'signal-graph': {
+      const node = state.registry.resolve(cmd.id) as { observers?: { isEffect?: boolean }[] } | undefined;
+      const effects: { label: string; nodeId: number }[] = [];
+      const nodeIds = new Set<number>();
+      if (node && node.observers) {
+        for (const c of node.observers) {
+          if (!c.isEffect) continue;
+          const owner = effectOwnerOf(c as object);
+          if (owner) { effects.push({ label: owner.label, nodeId: owner.instanceId }); nodeIds.add(owner.instanceId); }
+        }
+      }
+      emit({ type: 'signal-graph', id: cmd.id, graph: { effects, nodeIds: [...nodeIds] } });
+      break;
+    }
     case 'set-signal': {
       const node = state.registry.resolve(cmd.id);
       if (node) {

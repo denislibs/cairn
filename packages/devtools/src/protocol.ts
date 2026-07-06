@@ -36,11 +36,14 @@ export interface CommitMeta {
   phases: { layout: number; a11y: number; paint: number };
 }
 
+export interface SignalGraph { effects: { label: string; nodeId: number }[]; nodeIds: number[] }
+
 export type AgentEvent =
   | { type: 'hello'; version: string }
   | { type: 'commit'; snapshot: SnapshotNode; changed: ChangedNode[]; meta: CommitMeta }
   | { type: 'selection'; id: number }
-  | { type: 'signals'; list: SignalInfo[] };
+  | { type: 'signals'; list: SignalInfo[] }
+  | { type: 'signal-graph'; id: number; graph: SignalGraph };
 
 export type PanelCommand =
   | { type: 'inspect-start' }
@@ -52,7 +55,8 @@ export type PanelCommand =
   | { type: 'toggle-style'; id: number; prop: string; enabled: boolean }
   | { type: 'remove-style'; id: number; prop: string }
   | { type: 'set-signal'; id: number; value: string }
-  | { type: 'get-signals' };
+  | { type: 'get-signals' }
+  | { type: 'signal-graph'; id: number };
 
 export interface DevtoolsHook {
   version: string;
