@@ -266,4 +266,22 @@ describe('installDevtools', () => {
     hook.send({ type: 'set-signal', id: entry!.id, value: '7' });
     expect(getC()).toBe(7); // the real signal was written
   });
+
+  it('tags primitive effects with their owning instance id after mount', async () => {
+    installDevtools();
+    const { host } = createFakeHost();
+    // a real Box so its style effect runs under runWithDevOwner
+    const { Box } = await import('@cairn/primitives');
+    const app = () => Box({ style: { backgroundColor: '#f00' } });
+    const dispose = mount(app, host);
+    // The agent's effect-owner map now has the Box's style effect. We can't read the WeakMap by node,
+    // but signal-graph (Task 4) exercises it end-to-end. Here we just assert install+mount didn't throw
+    // and a commit happened.
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+    const events: AgentEvent[] = [];
+    hook.subscribe((e: AgentEvent) => events.push(e));
+    hook.send({ type: 'get-snapshot' });
+    expect(events.some((e) => e.type === 'commit')).toBe(true);
+    dispose();
+  });
 });

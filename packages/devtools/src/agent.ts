@@ -1,7 +1,8 @@
 import type { Instance } from '@cairn/runtime';
-import { setRuntimeDevHooks, activateStyleOverrides, deactivateStyleOverrides, setStyleProp, toggleStyleProp, removeStyleProp } from '@cairn/runtime';
+import { setRuntimeDevHooks, activateStyleOverrides, deactivateStyleOverrides, setStyleProp, toggleStyleProp, removeStyleProp, activateDevOwner, deactivateDevOwner, getDevOwner } from '@cairn/runtime';
 import { setReactiveDevHooks, devWriteSignal } from '@cairn/reactivity';
-import { instanceById } from './ids';
+import { idOf, instanceById } from './ids';
+import { tagEffect, effectOwnerOf } from './effect-owner';
 import { parseStyleValue, isEditableProp } from './parse-style';
 import type { AgentEvent, PanelCommand, DevtoolsHook, SnapshotNode, CommitMeta } from './protocol';
 import { DEVTOOLS_VERSION } from './protocol';
@@ -59,9 +60,16 @@ export function installDevtools(opts: DevtoolsOptions = {}): void {
   setReactiveDevHooks({
     onSignalCreate: (n) => { s.registry.note(n as any); },
     onSignalWrite: (n) => { if (!suppressSignalWrite) why.noteWrite(n as object); },
-    onComputationRun: (n) => why.noteEffectRun(n as object),
+    onComputationRun: (n) => {
+      why.noteEffectRun(n as object);
+      if ((n as { isEffect?: boolean }).isEffect && !effectOwnerOf(n as object)) {
+        const owner = getDevOwner();
+        if (owner) tagEffect(n as object, idOf(owner.inst), owner.label);
+      }
+    },
   });
   activateStyleOverrides();
+  activateDevOwner();
 
   if (opts.canvas) {
     s.pick = new PickController(opts.canvas, () => s.viewport, {
@@ -108,6 +116,7 @@ export function uninstallDevtools(): void {
   setReactiveDevHooks(null);
   setRuntimeDevHooks(null);
   deactivateStyleOverrides();
+  deactivateDevOwner();
   if (state.pick) state.pick.stop();
   if (state.highlighter) state.highlighter.dispose();
   delete (globalThis as { __CAIRN_DEVTOOLS_HOOK__?: DevtoolsHook }).__CAIRN_DEVTOOLS_HOOK__;
