@@ -33,3 +33,5 @@ export {
   setStyleProp, toggleStyleProp, removeStyleProp, clearStyleOverride,
 } from './dev-style-override';
 export type { StyleOverride } from './dev-style-override';
+export { runWithDevOwner, getDevOwner, activateDevOwner, deactivateDevOwner } from './dev-owner';
+export type { DevOwner } from './dev-owner';
