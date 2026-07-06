@@ -1,4 +1,4 @@
-import type { AgentEvent, PanelCommand, SnapshotNode, CommitMeta, SignalInfo } from '@cairn/devtools';
+import type { AgentEvent, PanelCommand, SnapshotNode, CommitMeta, SignalInfo, SignalGraph } from '@cairn/devtools';
 
 const $ = (id: string) => document.getElementById(id)!;
 const treeEl = $('tree'), stylesPane = $('stylesPane'), computedPane = $('computedPane');
@@ -10,6 +10,8 @@ let changedIds = new Set<number>();
 const openState = new Map<number, boolean>();   // id -> expanded (default true)
 const commitLog: CommitMeta[] = [];
 let signals: SignalInfo[] = [];
+let selSignal: number | null = null;
+let graphNodeIds = new Set<number>();
 let recording = false;
 const recorded: CommitMeta[] = [];
 
@@ -30,6 +32,8 @@ function handleEvent(e: AgentEvent): void {
   } else if (e.type === 'signals') {
     signals = e.list;
     renderSignals();
+  } else if (e.type === 'signal-graph') {
+    if (e.id === selSignal) { renderDep(e.graph); graphNodeIds = new Set(e.graph.nodeIds); renderTree(); }
   } else if (e.type === 'selection') {
     selected = e.id; renderTree(); renderStyles(); renderComputed();
   }
@@ -76,7 +80,9 @@ function renderTree(): void {
 function walkTree(node: SnapshotNode, depth: number): void {
   const parent = node.children.length > 0;
   const row = document.createElement('div');
-  row.className = 'node' + (node.id === selected ? ' sel' : '') + (changedIds.has(node.id) ? ' affected' : '');
+  row.className = 'node'
+    + (node.id === selected ? ' sel' : '')
+    + (changedIds.has(node.id) || graphNodeIds.has(node.id) ? ' affected' : '');
   const ind = document.createElement('span'); ind.className = 'ind'; ind.textContent = ' '.repeat(depth * 3);
   const caret = document.createElement('span');
   caret.className = 'caret' + (parent ? '' : ' leaf'); caret.textContent = parent ? (isOpen(node.id) ? '▾' : '▸') : '▸';
@@ -165,6 +171,13 @@ function renderSignals(): void {
   }
   for (const s of signals) {
     const row = document.createElement('div'); row.className = 'sig';
+    row.classList.toggle('on', s.id === selSignal);
+    row.onclick = (ev) => {
+      if ((ev.target as HTMLElement).classList.contains('vv')) return; // don't select when editing value
+      selSignal = s.id;
+      send({ type: 'signal-graph', id: s.id });
+      renderSignals();
+    };
     const dot = document.createElement('span'); dot.className = 'dot';
     const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = s.name ?? `#${s.id}`;
     const eq = document.createElement('span'); eq.className = 'eq'; eq.textContent = '=';
@@ -179,6 +192,41 @@ function renderSignals(): void {
     row.append(dot, nm, eq, vv, drives);
     sigList.appendChild(row);
   }
+}
+
+function renderDep(graph: SignalGraph): void {
+  const dep = document.getElementById('dep');
+  if (!dep) return;
+  dep.replaceChildren();
+  const h = document.createElement('h4'); h.textContent = 'Dependency graph';
+  dep.appendChild(h);
+  if (!graph.effects.length) {
+    const empty = document.createElement('div'); empty.className = 'empty';
+    empty.textContent = 'No attributed nodes (best-effort — dynamic subtrees may be missing).';
+    dep.appendChild(empty); return;
+  }
+  const flow = document.createElement('div'); flow.className = 'flow';
+  for (const ef of graph.effects) {
+    const line = document.createElement('div'); line.className = 'lvl';
+    const branch = document.createElement('span'); branch.className = 'branch'; branch.textContent = '└─ ';
+    const effName = document.createElement('span'); effName.className = 'eff'; effName.textContent = `${ef.label}()`;
+    line.append(branch, effName);
+    const node = findNode(snapshot, ef.nodeId);
+    if (node) {
+      const chip = document.createElement('span'); chip.className = 'nodechip';
+      const t = document.createElement('span'); t.className = 't'; t.textContent = `<${node.name}>`;
+      chip.append(t, document.createTextNode(` ${Math.round(node.rect.w)}×${Math.round(node.rect.h)}`));
+      chip.onclick = () => {
+        selected = ef.nodeId;
+        document.querySelector('.subtab[data-tab="styles"]')?.dispatchEvent(new MouseEvent('click'));
+        send({ type: 'select', id: ef.nodeId });
+        renderTree(); renderStyles(); renderComputed();
+      };
+      line.append(document.createTextNode(' '), chip);
+    }
+    flow.appendChild(line);
+  }
+  dep.appendChild(flow);
 }
 
 function renderSpark(): void {
