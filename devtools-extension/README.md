@@ -40,3 +40,5 @@ Inspector panel for Cairn canvas apps.
 - [ ] Performance tab shows a phase flame (layout/a11y/paint) for the slowest frame with a ms scale.
 - [ ] Record captures a window of frames; Stop freezes it; Reload re-renders.
 - [ ] Stats show avg commit / slowest frame / frames over budget / effects run.
+- [ ] Selecting a signal in the Signals tab shows a dependency flow (signal → effect → node chips).
+- [ ] The nodes a signal updates are highlighted in the tree; clicking a node chip opens that node.

@@ -138,3 +138,21 @@ test('commit meta carries per-phase timing that sums to durationMs', async ({ pa
   expect(typeof res.p.paint).toBe('number');
   expect(res.total).toBeGreaterThanOrEqual(res.sum - 0.001);
 });
+
+test('signal-graph attributes the count signal to at least one node', async ({ page }) => {
+  await page.goto('/');
+  const res = await page.evaluate(async () => {
+    const hook = (window as any).__CAIRN_DEVTOOLS_HOOK__;
+    const events: any[] = []; hook.subscribe((e: any) => events.push(e));
+    hook.send({ type: 'get-signals' });
+    const sig = [...events].reverse().find((e) => e.type === 'signals');
+    const count = sig?.list?.find((s: any) => s.name === 'count');
+    if (!count) return { ok: false };
+    hook.send({ type: 'signal-graph', id: count.id });
+    const g = [...events].reverse().find((e) => e.type === 'signal-graph');
+    return { ok: true, nodeIds: g?.graph?.nodeIds ?? [], labels: (g?.graph?.effects ?? []).map((e: any) => e.label) };
+  });
+  expect(res.ok).toBe(true);
+  expect(res.nodeIds.length).toBeGreaterThan(0);
+  expect(res.labels).toContain('text');
+});
