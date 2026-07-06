@@ -1,4 +1,5 @@
 import { createEffect, createMemo, createRoot, onCleanup, untrack } from '@cairn/reactivity';
+import { runWithDevOwner } from './dev-owner';
 import { BoxNode } from '@cairn/layout';
 import { type Instance } from './instance';
 import { scheduleFrame } from './scheduler';
@@ -23,7 +24,7 @@ export function Show(props: ShowProps): Instance {
   };
 
   const cond = createMemo(() => !!props.when());
-  createEffect(() => {
+  runWithDevOwner(instance, 'show', () => createEffect(() => {
     const show = cond();
     if (scope) {
       scope();
@@ -40,7 +41,7 @@ export function Show(props: ShowProps): Instance {
       );
     }
     setChild(child);
-  });
+  }));
 
   onCleanup(() => {
     if (scope) scope();

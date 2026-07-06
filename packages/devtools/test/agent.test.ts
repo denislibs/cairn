@@ -266,4 +266,52 @@ describe('installDevtools', () => {
     hook.send({ type: 'set-signal', id: entry!.id, value: '7' });
     expect(getC()).toBe(7); // the real signal was written
   });
+
+  it('tags primitive effects with their owning instance id after mount', async () => {
+    installDevtools();
+    const { host } = createFakeHost();
+    // a real Box so its style effect runs under runWithDevOwner
+    const { Box } = await import('@cairn/primitives');
+    const app = () => Box({ style: { backgroundColor: '#f00' } });
+    const dispose = mount(app, host);
+    // The agent's effect-owner map now has the Box's style effect. We can't read the WeakMap by node,
+    // but signal-graph (Task 4) exercises it end-to-end. Here we just assert install+mount didn't throw
+    // and a commit happened.
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+    const events: AgentEvent[] = [];
+    hook.subscribe((e: AgentEvent) => events.push(e));
+    hook.send({ type: 'get-snapshot' });
+    expect(events.some((e) => e.type === 'commit')).toBe(true);
+    dispose();
+  });
+
+  it('signal-graph maps a signal to the nodes its effects own', async () => {
+    installDevtools();
+    const hook = (globalThis as any).__CAIRN_DEVTOOLS_HOOK__;
+    const events: AgentEvent[] = [];
+    hook.subscribe((e: AgentEvent) => events.push(e));
+
+    const { Text } = await import('@cairn/primitives');
+    const { createSignal } = await import('@cairn/reactivity');
+    const { host } = createFakeHost();
+    let n = 0;
+    // a Text whose content reads a named signal → the text effect observes it and is owned by the Text instance
+    const dispose = mount(() => {
+      const [c] = createSignal(0, { name: 'count' });
+      return Text({ value: () => `count: ${c()}` });
+    }, host);
+
+    hook.send({ type: 'get-signals' });
+    const sig = [...events].reverse().find((e) => e.type === 'signals');
+    const id = sig && sig.type === 'signals' ? sig.list.find((s) => s.name === 'count')!.id : -1;
+    hook.send({ type: 'signal-graph', id });
+    const g = [...events].reverse().find((e) => e.type === 'signal-graph');
+    expect(g && g.type === 'signal-graph').toBe(true);
+    if (g && g.type === 'signal-graph') {
+      expect(g.graph.nodeIds.length).toBeGreaterThan(0);
+      expect(g.graph.effects.some((ef) => ef.label === 'text')).toBe(true);
+    }
+    void n;
+    dispose();
+  });
 });

@@ -1,5 +1,5 @@
 import { GridNode, parseTracks } from '@cairn/layout';
-import { type Instance, bind, applyStyleOverride, readStyleOverride } from '@cairn/runtime';
+import { type Instance, bind, applyStyleOverride, readStyleOverride, runWithDevOwner } from '@cairn/runtime';
 import { type BaseStyle } from '@cairn/style';
 import { type StyleInput } from './resolve-input';
 import { createInteractive } from './interactive';
@@ -30,7 +30,7 @@ export function Grid(props: GridProps = {}): Instance {
     },
   };
 
-  bind(styleSource, (raw: BaseStyle) => {
+  runWithDevOwner(instance, 'style', () => bind(styleSource, (raw: BaseStyle) => {
     const s = applyStyleOverride(raw, readStyleOverride(instance));
     if (s.gridTemplateColumns !== undefined) layout.templateColumns = parseTracks(s.gridTemplateColumns);
     if (s.gridTemplateRows !== undefined) layout.templateRows = parseTracks(s.gridTemplateRows);
@@ -47,7 +47,7 @@ export function Grid(props: GridProps = {}): Instance {
     instance.transformOrigin = s.transformOrigin;
     instance.paintOpacity = s.opacity;
     instance.debugStyle = s;
-  });
+  }));
 
   applyLayoutChildProps(instance, props);
   return instance;

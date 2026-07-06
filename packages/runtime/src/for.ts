@@ -1,4 +1,5 @@
 import { createEffect, createRoot, onCleanup, untrack, runWithContext, useContext } from '@cairn/reactivity';
+import { runWithDevOwner } from './dev-owner';
 import { FlexNode, type FlexDirection } from '@cairn/layout';
 import { type EasingName, type EasingFn } from '@cairn/style';
 import { type Instance } from './instance';
@@ -56,7 +57,7 @@ export function For<T>(props: ForProps<T>): Instance {
     }
   };
 
-  createEffect(() => {
+  runWithDevOwner(instance, 'for', () => createEffect(() => {
     const items = props.each();
     // Capture the old key set before any mutations, for FLIP snapshot
     const hadKeys = new Set(entries.keys());
@@ -154,7 +155,7 @@ export function For<T>(props: ForProps<T>): Instance {
         for (const { key } of moving) flips.set(key, cancelAll);
       });
     }
-  });
+  }));
 
   onCleanup(() => {
     for (const e of entries.values()) e.dispose();

@@ -12,5 +12,8 @@
     "@cairn/reactivity": "workspace:*",
     "@cairn/layout": "workspace:*",
     "@cairn/style": "workspace:*"
+  },
+  "devDependencies": {
+    "@cairn/primitives": "workspace:*"
   }
 }
